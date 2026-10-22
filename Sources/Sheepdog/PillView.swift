@@ -33,6 +33,16 @@ struct PillView: View {
                     }
                     .buttonStyle(.plain)
                 }
+                Button(action: model.onClosePill) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .frame(width: 20, height: 20)
+                        .background(Theme.cream.opacity(0.15), in: Circle())
+                        .foregroundStyle(Theme.bone)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .help("Hide the countdown. The chimes and the alarm still come.")
             }
             .padding(.leading, 6)
             .padding(.trailing, 12)

@@ -22,6 +22,8 @@ final class AlertModel {
     var onSnooze: () -> Void = {}
     // onSkip is called when the user skips the meeting.
     var onSkip: () -> Void = {}
+    // onClosePill is called when the user closes the countdown pill.
+    var onClosePill: () -> Void = {}
 
     // hasStarted reports whether the meeting's start has passed.
     var hasStarted: Bool {

@@ -26,12 +26,15 @@ public struct MeetingState: Sendable, Equatable {
     public var snoozedUntil: Date?
     // SnoozeCount is how many snoozes have been used.
     public var snoozeCount: Int = 0
+    // PillHidden is set when the user closes the countdown pill without resolving the meeting.
+    public var pillHidden: Bool = false
 
     // init creates an untouched state.
-    public init(resolution: Resolution? = nil, snoozedUntil: Date? = nil, snoozeCount: Int = 0) {
+    public init(resolution: Resolution? = nil, snoozedUntil: Date? = nil, snoozeCount: Int = 0, pillHidden: Bool = false) {
         self.resolution = resolution
         self.snoozedUntil = snoozedUntil
         self.snoozeCount = snoozeCount
+        self.pillHidden = pillHidden
     }
 }
 
@@ -74,6 +77,11 @@ public enum Escalation {
         }
     }
 
+    // showsPill reports whether the countdown pill should be up for a meeting in the warning stage.
+    public static func showsPill(_ state: MeetingState, settings: AlertSettings) -> Bool {
+        settings.showPill && !state.pillHidden
+    }
+
     // canSnooze reports whether another snooze is allowed.
     public static func canSnooze(_ state: MeetingState, settings: AlertSettings) -> Bool {
         state.resolution == nil && state.snoozeCount < settings.maxSnoozes
@@ -86,6 +94,7 @@ public enum Escalation {
         }
         var next = state
         next.snoozeCount += 1
+        next.pillHidden = false
         if now < meeting.start {
             next.snoozedUntil = min(now.addingTimeInterval(settings.snoozeBeforeStart), meeting.start)
         } else {

@@ -51,6 +51,7 @@ final class Coordinator {
         model.onJoin = { [weak self] in self?.join() }
         model.onSnooze = { [weak self] in self?.snooze() }
         model.onSkip = { [weak self] in self?.resolveActive(.skipped) }
+        model.onClosePill = { [weak self] in self?.hidePill() }
         calendar.onChange = { [weak self] in self?.refresh() }
         accounts.onChange = { [weak self] in self?.refresh() }
         mic.onStart = { [weak self] in self?.micStarted() }
@@ -156,7 +157,7 @@ final class Coordinator {
         case .warning:
             sounds.stopAlarm()
             windows.hideTakeover()
-            if settings.showPill {
+            if Escalation.showsPill(state, settings: settings) {
                 windows.showPill()
             } else {
                 windows.hidePill()
@@ -195,6 +196,17 @@ final class Coordinator {
             return
         }
         states[meeting.id] = Escalation.snoozed(states[meeting.id] ?? MeetingState(), meeting: meeting, settings: settings, now: Date())
+        tick()
+    }
+
+    // hidePill closes the countdown for the active meeting and leaves its chimes and takeover in place.
+    private func hidePill() {
+        guard let meeting = active?.meeting else {
+            return
+        }
+        var state = states[meeting.id] ?? MeetingState()
+        state.pillHidden = true
+        states[meeting.id] = state
         tick()
     }
 

@@ -53,6 +53,12 @@ let stageCases: [StageCase] = [
         state: MeetingState(snoozedUntil: base.addingTimeInterval(10), snoozeCount: 1),
         wantStage: .takeover
     ),
+    StageCase( // Test 11: A closed pill keeps the warning stage.
+        name: "pill closed warning", now: -120, state: MeetingState(pillHidden: true), wantStage: .warning
+    ),
+    StageCase( // Test 12: A closed pill still lets the takeover through.
+        name: "pill closed takeover", now: -60, state: MeetingState(pillHidden: true), wantStage: .takeover
+    ),
 ]
 
 // testStage checks the stage at each point in a meeting's life.
@@ -83,6 +89,50 @@ func testStage(test: StageCase) {
     let third = Escalation.snoozed(second, meeting: meeting, settings: settings, now: base.addingTimeInterval(40))
     #expect(third == second)
     #expect(!Escalation.canSnooze(third, settings: settings))
+}
+
+// PillCase is one expectation for whether the countdown pill shows.
+struct PillCase: Sendable, CustomTestStringConvertible {
+    // Name labels the case in test output.
+    let name: String
+    // ShowPill is the user's setting for the floating countdown.
+    let showPill: Bool
+    // State is the user's history with the meeting.
+    let state: MeetingState
+    // WantShows is whether the pill should be up.
+    let wantShows: Bool
+
+    // testDescription labels the case in test output.
+    var testDescription: String { name }
+}
+
+// pillCases covers the setting and the close button.
+let pillCases: [PillCase] = [
+    PillCase(name: "default", showPill: true, state: MeetingState(), wantShows: true), // Test 0: Pill shows.
+    PillCase(name: "setting off", showPill: false, state: MeetingState(), wantShows: false), // Test 1: Setting wins.
+    PillCase( // Test 2: Closing hides it.
+        name: "closed", showPill: true, state: MeetingState(pillHidden: true), wantShows: false
+    ),
+    PillCase( // Test 3: Closed with the setting off stays hidden.
+        name: "closed and off", showPill: false, state: MeetingState(pillHidden: true), wantShows: false
+    ),
+]
+
+// testShowsPill checks the countdown pill against the setting and the close button.
+@Test(arguments: pillCases)
+func testShowsPill(test: PillCase) {
+    var settings = AlertSettings()
+    settings.showPill = test.showPill
+    #expect(Escalation.showsPill(test.state, settings: settings) == test.wantShows)
+}
+
+// testSnoozeReopensPill checks that a snooze brings a closed pill back as the countdown to the next takeover.
+@Test func testSnoozeReopensPill() {
+    let settings = AlertSettings()
+    let state = MeetingState(pillHidden: true)
+    let got = Escalation.snoozed(state, meeting: meetingAt(0), settings: settings, now: base.addingTimeInterval(-30))
+    #expect(!got.pillHidden)
+    #expect(got.resolution == nil)
 }
 
 // testSnoozeNeverOutlivesExpiry checks that a takeover cannot persist past the nag window.
