@@ -1,4 +1,9 @@
-<p align="center"><img src="art/tug.png" width="360" alt="Tug, a border collie, barking"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="art/tug.png">
+    <img src="art/tug-light.png" width="360" alt="Tug, a border collie, barking">
+  </picture>
+</p>
 
 # Sheepdog
 
