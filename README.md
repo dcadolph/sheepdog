@@ -8,15 +8,12 @@
 <h1 align="center">Sheepdog</h1>
 
 <p align="center">
-  A free macOS menu bar meeting alarm for people who lose track of time.<br>
-  Tug, the border collie, herds you into your meetings.
-</p>
-
-<p align="center">
   <img src="https://img.shields.io/badge/macOS-14%2B-black" alt="macOS 14 or later">
   <img src="https://img.shields.io/badge/Swift-6-orange" alt="Swift 6">
   <img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="Apache 2.0 license">
 </p>
+
+<p align="center"><strong>The meeting alarm that barks.</strong></p>
 
 <p align="center"><img src="art/demo.gif" width="720" alt="The countdown pill, then the full-screen alarm with Snooze and Join"></p>
 
