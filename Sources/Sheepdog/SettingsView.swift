@@ -6,6 +6,8 @@ import SheepdogCore
 struct SettingsView: View {
     // store holds the live settings.
     @Bindable var store: SettingsStore
+    // loginItem controls starting Sheepdog at login.
+    let loginItem: LoginItem
     // onTestAlarm runs a full takeover with a fake meeting.
     let onTestAlarm: () -> Void
     // leadsText is the editable warning leads, in minutes, separated by commas.
@@ -17,6 +19,24 @@ struct SettingsView: View {
     // body lays out the settings form.
     var body: some View {
         Form {
+            Section("General") {
+                Toggle("Start Sheepdog at login", isOn: Binding(
+                    get: { loginItem.isEnabled || loginItem.needsApproval },
+                    set: { loginItem.setEnabled($0) }
+                ))
+                if loginItem.needsApproval {
+                    HStack {
+                        Text("macOS needs you to allow Sheepdog in Login Items.")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Open Login Items") { loginItem.openSystemSettings() }
+                    }
+                }
+                if let error = loginItem.lastError {
+                    Text("Couldn't change the login item: \(error)")
+                        .foregroundStyle(.red)
+                }
+            }
             Section("Warnings") {
                 TextField("Warn at (minutes before, comma separated)", text: $leadsText)
                     .onSubmit(applyLeads)
@@ -86,7 +106,10 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 520)
-        .onAppear { leadsText = Self.format(store.settings.warningLeads) }
+        .onAppear {
+            leadsText = Self.format(store.settings.warningLeads)
+            loginItem.refresh()
+        }
     }
 
     // applyLeads parses the leads text and saves it when every value is a valid minute count.

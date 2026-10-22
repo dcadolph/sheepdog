@@ -6,6 +6,8 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     // settingsStore holds the live settings.
     private let settingsStore = SettingsStore()
+    // loginItem starts Sheepdog at login.
+    private let loginItem = LoginItem()
     // coordinator runs the alert loop.
     private var coordinator: Coordinator?
     // statusItem is the menu bar controller.
@@ -15,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // applicationDidFinishLaunching builds the menu bar item and starts the loop.
     func applicationDidFinishLaunching(_ notification: Notification) {
+        loginItem.configureOnFirstLaunch()
         let coordinator = Coordinator(settingsStore: settingsStore)
         let statusItem = StatusItemController(coordinator: coordinator) { [weak self] in
             self?.showSettings()
@@ -28,7 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // showSettings opens the settings window and brings it forward.
     private func showSettings() {
         if settingsWindow == nil {
-            let view = SettingsView(store: settingsStore) { [weak self] in
+            let view = SettingsView(store: settingsStore, loginItem: loginItem) { [weak self] in
                 self?.coordinator?.testAlarm()
             }
             let window = NSWindow(contentViewController: NSHostingController(rootView: view))
