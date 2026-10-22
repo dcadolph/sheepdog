@@ -62,6 +62,18 @@ let joinLinkCases: [JoinLinkCase] = [
         wantProvider: nil,
         wantNative: nil
     ),
+    JoinLinkCase( // Test 7: Slack huddle link in notes opens on the web, which hands off to the app.
+        name: "slack huddle",
+        text: "Huddle: https://app.slack.com/huddle/T0123ABCD/C0456EFGH, see you there",
+        wantProvider: .slack,
+        wantNative: "https://app.slack.com/huddle/T0123ABCD/C0456EFGH"
+    ),
+    JoinLinkCase( // Test 8: A Slack channel link is not a huddle.
+        name: "slack channel",
+        text: "https://app.slack.com/client/T0123ABCD/C0456EFGH",
+        wantProvider: nil,
+        wantNative: nil
+    ),
 ]
 
 // testJoinLinkFind checks link extraction from free text.

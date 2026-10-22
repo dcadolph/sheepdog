@@ -8,6 +8,7 @@ public struct JoinLink: Sendable, Equatable {
         case zoom = "Zoom"
         case meet = "Google Meet"
         case webex = "Webex"
+        case slack = "Slack"
         case other = "Link"
     }
 
@@ -36,6 +37,7 @@ public enum JoinLinkFinder {
         (.zoom, #"https://[\w.-]*zoom\.us/j/\d+[^\s"<>]*"#),
         (.meet, #"https://meet\.google\.com/[a-z]{3}-[a-z]{4}-[a-z]{3}[^\s"<>]*"#),
         (.webex, #"https://[\w.-]*webex\.com/[^\s"<>]+"#),
+        (.slack, #"https://app\.slack\.com/huddle/[A-Z0-9]+/[A-Z0-9]+[^\s"<>]*"#),
     ]
 
     // find returns the first meeting link in the entry's URL, location, then notes.
@@ -93,7 +95,7 @@ public enum JoinLinkFinder {
                 query += "&pwd=\(pwd)"
             }
             return URL(string: "zoommtg://\(web.host ?? "zoom.us")/join?action=join&\(query)") ?? web
-        case .meet, .webex, .other:
+        case .meet, .webex, .slack, .other:
             return web
         }
     }
