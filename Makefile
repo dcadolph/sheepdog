@@ -1,4 +1,5 @@
 APP := .build/Sheepdog.app
+DEMO_APP := .build/demo/Sheepdog.app
 SIGN_ID ?= -
 PLIST := $(APP)/Contents/Info.plist
 SHEEPDOG_MICROSOFT_CLIENT_ID ?=
@@ -10,7 +11,7 @@ ICNS := .build/AppIcon.icns
 RUNTIME_ART := art/glyph-idle.png art/glyph-warning.png art/glyph-takeover.png art/tug.png art/tug-head.png
 SOUNDS := sounds/tug-woof.caf sounds/tug-barking.caf
 
-.PHONY: build test app run clean
+.PHONY: build test app run demo clean
 
 build:
 	swift build
@@ -40,6 +41,14 @@ app: $(ICNS)
 	/usr/libexec/PlistBuddy -c "Set :SheepdogGoogleClientID '$(SHEEPDOG_GOOGLE_CLIENT_ID)'" $(PLIST)
 	/usr/libexec/PlistBuddy -c "Set :SheepdogGoogleClientSecret '$(SHEEPDOG_GOOGLE_CLIENT_SECRET)'" $(PLIST)
 	codesign --force --sign "$(SIGN_ID)" $(APP)
+
+demo:
+	$(MAKE) app APP=$(DEMO_APP)
+	rm -rf .build/demo-frames
+	$(DEMO_APP)/Contents/MacOS/Sheepdog --render-demo .build/demo-frames
+	ffmpeg -loglevel error -y -framerate 12 -i .build/demo-frames/frame-%04d.png \
+		-vf "scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle" \
+		-loop 0 art/demo.gif
 
 run: app
 	-pkill -x Sheepdog

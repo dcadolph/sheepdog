@@ -6,8 +6,6 @@ import SheepdogCore
 struct TakeoverView: View {
     // model supplies the meeting, countdown, and actions.
     @Bindable var model: AlertModel
-    // pulse drives the ring animation around Tug.
-    @State private var pulse = false
 
     // body lays out the card over a dimmed backdrop.
     var body: some View {
@@ -17,19 +15,15 @@ struct TakeoverView: View {
                 card(meeting)
             }
         }
-        .onAppear { pulse = true }
     }
 
     // card is the centered alert content.
     private func card(_ meeting: Meeting) -> some View {
         VStack(spacing: 28) {
             ZStack {
-                Circle()
-                    .stroke(Theme.cream.opacity(0.35), lineWidth: 6)
-                    .frame(width: 168, height: 168)
-                    .scaleEffect(pulse ? 1.18 : 0.92)
-                    .opacity(pulse ? 0 : 1)
-                    .animation(.easeOut(duration: 1.1).repeatForever(autoreverses: false), value: pulse)
+                TimelineView(.animation) { context in
+                    PulseRing(phase: PulseRing.phase(at: context.date))
+                }
                 TugImage(name: "tug")
                     .frame(width: 148, height: 148)
             }
@@ -104,5 +98,29 @@ struct TakeoverView: View {
             return "No join link found in this event"
         }
         return "Opens in \(link.provider.rawValue)"
+    }
+}
+
+// PulseRing is the ring that swells out from Tug and fades, once per period.
+struct PulseRing: View {
+    // period is the length of one pulse in seconds.
+    static let period: TimeInterval = 1.1
+
+    // phase is how far through the pulse the ring is, from 0 to 1.
+    let phase: Double
+
+    // phase returns the pulse position at a moment, so the ring is a pure function of time.
+    static func phase(at date: Date) -> Double {
+        date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: period) / period
+    }
+
+    // body draws the ring eased out toward its largest, faintest size.
+    var body: some View {
+        let eased = 1 - (1 - phase) * (1 - phase)
+        Circle()
+            .stroke(Theme.cream.opacity(0.35), lineWidth: 6)
+            .frame(width: 168, height: 168)
+            .scaleEffect(0.92 + 0.26 * eased)
+            .opacity(1 - eased)
     }
 }

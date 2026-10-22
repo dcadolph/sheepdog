@@ -53,6 +53,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 let app = NSApplication.shared
+if let flag = CommandLine.arguments.firstIndex(of: DemoRenderer.argument) {
+    let dir = CommandLine.arguments.dropFirst(flag + 1).first ?? "demo-frames"
+    exit(MainActor.assumeIsolated { DemoRenderer.run(dir: dir) })
+}
 let delegate = AppDelegate()
 app.delegate = delegate
 app.setActivationPolicy(.accessory)
