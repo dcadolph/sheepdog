@@ -36,9 +36,15 @@ final class CalendarProvider {
         access = Self.currentAccess()
     }
 
-    // requestAccess asks for full calendar access and returns whether it was granted.
+    // requestAccess asks for full calendar access and returns whether it was granted. It uses the
+    // completion handler form because the async form sends the main actor's store across actors,
+    // which the macOS 15 SDK rejects.
     func requestAccess() async -> Bool {
-        let granted = (try? await store.requestFullAccessToEvents()) ?? false
+        let granted = await withCheckedContinuation { continuation in
+            store.requestFullAccessToEvents { granted, _ in
+                continuation.resume(returning: granted)
+            }
+        }
         access = granted ? .granted : .denied
         return granted
     }
