@@ -1,0 +1,36 @@
+{
+  "value": [
+    {
+      "id": "AAMkFocus",
+      "subject": "  Design   sync ",
+      "start": {"dateTime": "2026-10-22T20:30:00.1234567", "timeZone": "UTC"},
+      "end": {"dateTime": "2026-10-22T21:00:00.0000000", "timeZone": "UTC"},
+      "isAllDay": false,
+      "isCancelled": false,
+      "isOrganizer": true,
+      "showAs": "busy",
+      "responseStatus": {"response": "organizer"},
+      "attendees": [
+        {"type": "required", "emailAddress": {"address": "c@example.com"}}
+      ],
+      "organizer": {"emailAddress": {"address": "me@example.com"}},
+      "onlineMeeting": null,
+      "onlineMeetingUrl": null,
+      "location": {"displayName": "Zoom"},
+      "body": {"contentType": "text", "content": "Join Zoom Meeting\nhttps://us02web.zoom.us/j/81234567890?pwd=XyZ123\nMeeting ID: 812 3456 7890"}
+    },
+    {
+      "id": "AAMkMaybe",
+      "subject": "Vendor demo",
+      "start": {"dateTime": "2026-10-22T22:00:00.0000000", "timeZone": "UTC"},
+      "end": {"dateTime": "2026-10-22T23:00:00.0000000", "timeZone": "UTC"},
+      "isAllDay": false,
+      "isCancelled": false,
+      "isOrganizer": false,
+      "showAs": "tentative",
+      "responseStatus": {"response": "tentativelyAccepted"},
+      "attendees": [],
+      "organizer": {"emailAddress": {"address": "sales@vendor.example"}}
+    }
+  ]
+}

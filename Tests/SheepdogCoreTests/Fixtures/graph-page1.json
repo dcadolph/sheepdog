@@ -1,0 +1,64 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('me')/calendarView",
+  "value": [
+    {
+      "id": "AAMkStandup",
+      "subject": "Platform standup",
+      "start": {"dateTime": "2026-10-22T15:00:00.0000000", "timeZone": "UTC"},
+      "end": {"dateTime": "2026-10-22T15:15:00.0000000", "timeZone": "UTC"},
+      "isAllDay": false,
+      "isCancelled": false,
+      "isOrganizer": false,
+      "showAs": "busy",
+      "responseStatus": {"response": "accepted", "time": "2026-10-01T12:00:00Z"},
+      "attendees": [
+        {"type": "required", "status": {"response": "accepted"}, "emailAddress": {"name": "Me", "address": "Me@Example.com"}},
+        {"type": "required", "status": {"response": "none"}, "emailAddress": {"name": "A", "address": "a@example.com"}},
+        {"type": "optional", "status": {"response": "none"}, "emailAddress": {"name": "B", "address": "b@example.com"}},
+        {"type": "resource", "status": {"response": "accepted"}, "emailAddress": {"name": "Room 4B", "address": "room4b@example.com"}}
+      ],
+      "organizer": {"emailAddress": {"name": "Lead", "address": "lead@example.com"}},
+      "onlineMeeting": {"joinUrl": "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc%40thread.v2/0?context=%7b%7d"},
+      "onlineMeetingUrl": null,
+      "location": {"displayName": "Microsoft Teams Meeting"},
+      "body": {"contentType": "text", "content": "Join on your computer or mobile app"}
+    },
+    {
+      "id": "AAMkDeclined",
+      "subject": "Budget review",
+      "start": {"dateTime": "2026-10-22T16:00:00.0000000", "timeZone": "UTC"},
+      "end": {"dateTime": "2026-10-22T17:00:00.0000000", "timeZone": "UTC"},
+      "isAllDay": false,
+      "isCancelled": false,
+      "isOrganizer": false,
+      "showAs": "free",
+      "responseStatus": {"response": "declined"},
+      "attendees": [],
+      "organizer": {"emailAddress": {"address": "cfo@example.com"}},
+      "onlineMeeting": null,
+      "location": {"displayName": ""},
+      "body": {"contentType": "text", "content": ""}
+    },
+    {
+      "id": "AAMkCanceled",
+      "subject": "Canceled: Retro",
+      "start": {"dateTime": "2026-10-22T18:00:00.0000000", "timeZone": "UTC"},
+      "end": {"dateTime": "2026-10-22T19:00:00.0000000", "timeZone": "UTC"},
+      "isAllDay": false,
+      "isCancelled": true,
+      "showAs": "free",
+      "responseStatus": {"response": "accepted"}
+    },
+    {
+      "id": "AAMkHoliday",
+      "subject": "Company holiday",
+      "start": {"dateTime": "2026-10-23T00:00:00.0000000", "timeZone": "UTC"},
+      "end": {"dateTime": "2026-10-24T00:00:00.0000000", "timeZone": "UTC"},
+      "isAllDay": true,
+      "isCancelled": false,
+      "showAs": "oof",
+      "responseStatus": {"response": "none"}
+    }
+  ],
+  "@odata.nextLink": "https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=2026-10-22T14:00:00Z&endDateTime=2026-10-23T02:00:00Z&$skip=4"
+}

@@ -1,0 +1,11 @@
+{
+  "kind": "calendar#calendarList",
+  "items": [
+    {"id": "me@example.com", "summary": "me@example.com", "primary": true, "accessRole": "owner", "selected": true},
+    {"id": "team-oncall#x@group.calendar.google.com", "summary": "On call", "accessRole": "owner", "selected": true},
+    {"id": "old@group.calendar.google.com", "summary": "Old project", "accessRole": "owner", "selected": false},
+    {"id": "coworker@example.com", "summary": "Coworker", "accessRole": "writer", "selected": true},
+    {"id": "en.usa#holiday@group.v.calendar.google.com", "summary": "Holidays", "accessRole": "reader", "selected": true},
+    {"id": "gone@group.calendar.google.com", "summary": "Gone", "accessRole": "owner", "selected": true, "deleted": true}
+  ]
+}

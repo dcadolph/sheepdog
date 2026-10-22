@@ -12,6 +12,10 @@ let package = Package(
             dependencies: ["SheepdogCore"],
             exclude: ["Info.plist"]
         ),
-        .testTarget(name: "SheepdogCoreTests", dependencies: ["SheepdogCore"]),
+        .testTarget(
+            name: "SheepdogCoreTests",
+            dependencies: ["SheepdogCore"],
+            resources: [.copy("Fixtures")]
+        ),
     ]
 )

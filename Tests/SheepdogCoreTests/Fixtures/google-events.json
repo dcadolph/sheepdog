@@ -1,0 +1,73 @@
+{
+  "kind": "calendar#events",
+  "items": [
+    {
+      "id": "meet1",
+      "status": "confirmed",
+      "summary": "1:1",
+      "start": {"dateTime": "2026-10-22T10:00:00-05:00", "timeZone": "America/Chicago"},
+      "end": {"dateTime": "2026-10-22T10:30:00-05:00", "timeZone": "America/Chicago"},
+      "eventType": "default",
+      "organizer": {"email": "boss@example.com"},
+      "attendees": [
+        {"email": "me@example.com", "self": true, "responseStatus": "accepted"},
+        {"email": "boss@example.com", "organizer": true, "responseStatus": "accepted"},
+        {"email": "peer@example.com", "responseStatus": "needsAction"},
+        {"email": "room@resource.calendar.google.com", "resource": true, "responseStatus": "accepted"}
+      ],
+      "hangoutLink": "https://meet.google.com/abc-defg-hij",
+      "conferenceData": {"entryPoints": [{"entryPointType": "video", "uri": "https://meet.google.com/abc-defg-hij"}]}
+    },
+    {
+      "id": "zoom1",
+      "status": "confirmed",
+      "summary": "Customer call",
+      "start": {"dateTime": "2026-10-22T17:00:00Z"},
+      "end": {"dateTime": "2026-10-22T18:00:00Z"},
+      "attendees": [
+        {"email": "me@example.com", "self": true, "responseStatus": "needsAction"},
+        {"email": "client@customer.example", "organizer": true, "responseStatus": "accepted"}
+      ],
+      "conferenceData": {"entryPoints": [
+        {"entryPointType": "phone", "uri": "tel:+1-555-0100"},
+        {"entryPointType": "video", "uri": "https://us02web.zoom.us/j/81234567890"}
+      ]}
+    },
+    {"id": "gone1", "status": "cancelled"},
+    {
+      "id": "where1",
+      "status": "confirmed",
+      "summary": "Home",
+      "eventType": "workingLocation",
+      "start": {"date": "2026-10-22"},
+      "end": {"date": "2026-10-23"}
+    },
+    {
+      "id": "allday1",
+      "status": "confirmed",
+      "summary": "Conference",
+      "start": {"date": "2026-10-22"},
+      "end": {"date": "2026-10-23"},
+      "transparency": "transparent"
+    },
+    {
+      "id": "block1",
+      "status": "confirmed",
+      "summary": "Deep work",
+      "start": {"dateTime": "2026-10-22T19:00:00.000Z"},
+      "end": {"dateTime": "2026-10-22T21:00:00.000Z"},
+      "eventType": "focusTime",
+      "organizer": {"email": "me@example.com", "self": true}
+    },
+    {
+      "id": "no1",
+      "status": "confirmed",
+      "summary": "Optional town hall",
+      "start": {"dateTime": "2026-10-22T21:00:00Z"},
+      "end": {"dateTime": "2026-10-22T22:00:00Z"},
+      "attendees": [
+        {"email": "me@example.com", "self": true, "responseStatus": "declined"}
+      ]
+    }
+  ]
+}

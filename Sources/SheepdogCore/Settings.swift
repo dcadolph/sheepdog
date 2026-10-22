@@ -52,6 +52,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var boostLevel: Double = 0.6
     // ShowPill reports whether the floating countdown appears during warnings.
     public var showPill: Bool = true
+    // UseMacCalendar reports whether events come from the calendars in macOS Calendar.
+    public var useMacCalendar: Bool = true
 
     // init creates settings with the defaults.
     public init() {}
@@ -76,6 +78,7 @@ public struct AlertSettings: Sendable, Codable, Equatable {
         boostVolume = try container.decodeIfPresent(Bool.self, forKey: .boostVolume) ?? defaults.boostVolume
         boostLevel = try container.decodeIfPresent(Double.self, forKey: .boostLevel) ?? defaults.boostLevel
         showPill = try container.decodeIfPresent(Bool.self, forKey: .showPill) ?? defaults.showPill
+        useMacCalendar = try container.decodeIfPresent(Bool.self, forKey: .useMacCalendar) ?? defaults.useMacCalendar
     }
 
     // earliestLead is the largest lead time, when the first alert for a meeting can appear.

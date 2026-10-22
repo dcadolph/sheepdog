@@ -56,6 +56,7 @@ func testCountdown(test: CountdownCase) {
     want.alarmOutput = .builtInSpeakers
     want.boostVolume = false
     want.includeTentative = true
+    want.useMacCalendar = false
     let got = try JSONDecoder().decode(AlertSettings.self, from: JSONEncoder().encode(want))
     #expect(got == want)
 }
