@@ -1,12 +1,12 @@
 import Foundation
 
 // AccountRecord is what Sheepdog stores in the Keychain for one signed-in account.
-public struct AccountRecord: Sendable, Codable, Equatable {
+public struct AccountRecord: Sendable, Codable, Equatable, CustomStringConvertible {
     // Kind is the service.
     public var kind: AccountKind
     // Address is the account's mail address, shown in settings.
     public var address: String?
-    // RefreshToken keeps the account signed in.
+    // RefreshToken keeps the account signed in. It is secret and only ever written to the Keychain.
     public var refreshToken: String
 
     // init creates a record.
@@ -14,6 +14,11 @@ public struct AccountRecord: Sendable, Codable, Equatable {
         self.kind = kind
         self.address = address
         self.refreshToken = refreshToken
+    }
+
+    // description identifies the account with the refresh token redacted, so logging a record never leaks it.
+    public var description: String {
+        "AccountRecord(kind: \(kind.rawValue), address: \(address ?? "nil"), refreshToken: <redacted>)"
     }
 }
 

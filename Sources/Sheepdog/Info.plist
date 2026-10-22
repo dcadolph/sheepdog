@@ -22,6 +22,12 @@
 	<true/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Sheepdog reads your calendars so it can make sure you get to your meetings.</string>
+	<key>SheepdogGoogleClientID</key>
+	<string></string>
+	<key>SheepdogGoogleClientSecret</key>
+	<string></string>
+	<key>SheepdogMicrosoftClientID</key>
+	<string></string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 </dict>

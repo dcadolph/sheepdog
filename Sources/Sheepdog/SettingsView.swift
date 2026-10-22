@@ -8,6 +8,10 @@ struct SettingsView: View {
     @Bindable var store: SettingsStore
     // loginItem controls starting Sheepdog at login.
     let loginItem: LoginItem
+    // accounts holds the Microsoft and Google sign-ins.
+    let accounts: Accounts
+    // onSourcesChanged rereads the calendars after a source is turned on or off.
+    let onSourcesChanged: () -> Void
     // onTestAlarm runs a full takeover with a fake meeting.
     let onTestAlarm: () -> Void
     // leadsText is the editable warning leads, in minutes, separated by commas.
@@ -36,6 +40,18 @@ struct SettingsView: View {
                     Text("Couldn't change the login item: \(error)")
                         .foregroundStyle(.red)
                 }
+            }
+            Section {
+                Toggle("Use calendars from macOS Calendar", isOn: $store.settings.useMacCalendar)
+                    .onChange(of: store.settings.useMacCalendar) { onSourcesChanged() }
+                ForEach(AccountKind.allCases) { kind in
+                    AccountRow(kind: kind, accounts: accounts)
+                }
+            } header: {
+                Text("Calendars")
+            } footer: {
+                Text("Sign-in happens in your browser. Sheepdog only reads your calendars, and keeps the sign-in in your Keychain.")
+                    .foregroundStyle(.secondary)
             }
             Section("Warnings") {
                 TextField("Warn at (minutes before, comma separated)", text: $leadsText)
@@ -128,5 +144,64 @@ struct SettingsView: View {
             let minutes = lead / 60
             return minutes == minutes.rounded() ? String(Int(minutes)) : String(minutes)
         }.joined(separator: ", ")
+    }
+}
+
+// AccountRow shows one service's sign-in state with the button that changes it.
+struct AccountRow: View {
+    // kind is the service.
+    let kind: AccountKind
+    // accounts holds the sign-ins.
+    let accounts: Accounts
+
+    // body lays out the label, status and button.
+    var body: some View {
+        let state = accounts.states[kind] ?? .notConfigured
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(kind.label)
+                    Text(Self.status(state))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                switch state {
+                case .notConfigured:
+                    EmptyView()
+                case .signedOut:
+                    Button("Connect…") { accounts.connect(kind) }
+                case .signingIn:
+                    ProgressView().controlSize(.small)
+                    Button("Cancel") { accounts.cancelSignIn(kind) }
+                case .connected:
+                    Button("Disconnect") { accounts.disconnect(kind) }
+                case .needsSignIn:
+                    Button("Sign in again…") { accounts.connect(kind) }
+                    Button("Disconnect") { accounts.disconnect(kind) }
+                }
+            }
+            if let problem = accounts.problems[kind] {
+                Text(problem)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+        }
+    }
+
+    // status describes a state in a few words.
+    private static func status(_ state: AccountState) -> String {
+        switch state {
+        case .notConfigured:
+            return "Not available in this build"
+        case .signedOut:
+            return "Not connected"
+        case .signingIn:
+            return "Finish signing in in your browser"
+        case .connected(let address):
+            return address.map { "Connected as \($0)" } ?? "Connected"
+        case .needsSignIn(let address):
+            return address.map { "\($0) needs you to sign in again" } ?? "Needs you to sign in again"
+        }
     }
 }

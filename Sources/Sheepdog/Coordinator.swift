@@ -8,8 +8,10 @@ import SheepdogCore
 final class Coordinator {
     // settingsStore holds the live settings.
     let settingsStore: SettingsStore
-    // calendar supplies upcoming events.
+    // calendar supplies upcoming events from macOS Calendar.
     let calendar = CalendarProvider()
+    // accounts supplies upcoming events from Microsoft and Google sign-ins.
+    let accounts: Accounts
     // onTick is called after every tick so the menu bar can update.
     var onTick: (() -> Void)?
 
@@ -29,6 +31,8 @@ final class Coordinator {
     private var states: [String: MeetingState] = [:]
     // lastTick is when the previous tick ran, for detecting warning crossings.
     private var lastTick = Date()
+    // requestingAccess reports a macOS Calendar permission prompt in progress.
+    private var requestingAccess = false
     // lastRefresh is when the calendar was last read.
     private var lastRefresh = Date.distantPast
     // timer drives the tick loop.
@@ -40,25 +44,23 @@ final class Coordinator {
     private var settings: AlertSettings { settingsStore.settings }
 
     // init wires the model actions and monitors.
-    init(settingsStore: SettingsStore) {
+    init(settingsStore: SettingsStore, accounts: Accounts) {
         self.settingsStore = settingsStore
+        self.accounts = accounts
         windows = AlertWindows(model: model)
         model.onJoin = { [weak self] in self?.join() }
         model.onSnooze = { [weak self] in self?.snooze() }
         model.onSkip = { [weak self] in self?.resolveActive(.skipped) }
         calendar.onChange = { [weak self] in self?.refresh() }
+        accounts.onChange = { [weak self] in self?.refresh() }
         mic.onStart = { [weak self] in self?.micStarted() }
     }
 
-    // start asks for calendar access and begins ticking.
+    // start asks for calendar access when macOS Calendar is in use, reads the accounts and begins ticking.
     func start() {
         mic.start()
-        Task {
-            if calendar.access != .granted {
-                _ = await calendar.requestAccess()
-            }
-            refresh()
-        }
+        requestCalendarAccessIfNeeded()
+        accounts.refresh(force: true)
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.tick()
@@ -68,11 +70,26 @@ final class Coordinator {
         self.timer = timer
     }
 
-    // refresh rereads the calendar and drops state for meetings that are gone and expired.
+    // requestCalendarAccessIfNeeded asks for macOS Calendar access once, when that source is on.
+    func requestCalendarAccessIfNeeded() {
+        guard settings.useMacCalendar, calendar.access == .unknown, !requestingAccess else {
+            return
+        }
+        requestingAccess = true
+        Task {
+            _ = await calendar.requestAccess()
+            requestingAccess = false
+            refresh()
+        }
+    }
+
+    // refresh rereads macOS Calendar, merges the account events and drops state for meetings that are gone.
     func refresh() {
         let now = Date()
         lastRefresh = now
-        meetings = calendar.entries(now: now)
+        requestCalendarAccessIfNeeded()
+        let local = settings.useMacCalendar ? calendar.entries(now: now) : []
+        meetings = EntryMerge.merge(accounts.entries + [local])
             .compactMap { Meeting(entry: $0, settings: settings) }
             .sorted { $0.start < $1.start }
         let known = Set((meetings + testMeetings).map(\.id))
@@ -98,6 +115,7 @@ final class Coordinator {
     // tick advances the alert state once.
     private func tick() {
         let now = Date()
+        accounts.refreshIfDue(now: now)
         if now.timeIntervalSince(lastRefresh) >= 60 {
             refresh()
             return

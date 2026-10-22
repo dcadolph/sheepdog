@@ -211,3 +211,12 @@ func testSignInComplete(test: SignInCase) async {
         #expect(error as? AuthError == test.want)
     }
 }
+
+// testAccountRecordRedacts checks that printing a record never shows the refresh token.
+@Test func testAccountRecordRedacts() {
+    let record = AccountRecord(kind: .google, address: "me@example.com", refreshToken: "1//secret-token")
+    for text in [String(describing: record), "\(record)", String(reflecting: [record])] {
+        #expect(!text.contains("secret-token"), "\(text)")
+        #expect(text.contains("<redacted>"))
+    }
+}

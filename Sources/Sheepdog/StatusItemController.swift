@@ -45,9 +45,20 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     // menuNeedsUpdate rebuilds the menu each time it opens.
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        if coordinator.calendar.access != .granted {
+        let settings = coordinator.settingsStore.settings
+        if settings.useMacCalendar && coordinator.calendar.access != .granted {
             menu.addItem(action("Allow calendar access…", #selector(openPrivacy)))
             menu.addItem(.separator())
+        }
+        if !settings.useMacCalendar && !coordinator.accounts.hasAccounts {
+            menu.addItem(action("Connect a calendar…", #selector(showSettings)))
+            menu.addItem(.separator())
+        }
+        for kind in AccountKind.allCases {
+            if case .needsSignIn = coordinator.accounts.states[kind] {
+                menu.addItem(action("Sign in to \(kind.label) again…", #selector(showSettings)))
+                menu.addItem(.separator())
+            }
         }
         let upcoming = coordinator.meetings.filter { $0.end > Date() }.prefix(6)
         if upcoming.isEmpty {
@@ -95,9 +106,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         coordinator.testAlarm()
     }
 
-    // refresh rereads the calendars.
+    // refresh rereads the calendars and the accounts.
     @objc private func refresh() {
         coordinator.refresh()
+        coordinator.accounts.refresh(force: true)
     }
 
     // showSettings opens the settings window.

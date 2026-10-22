@@ -8,6 +8,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settingsStore = SettingsStore()
     // loginItem starts Sheepdog at login.
     private let loginItem = LoginItem()
+    // accounts holds the Microsoft and Google sign-ins.
+    private let accounts = Accounts()
     // coordinator runs the alert loop.
     private var coordinator: Coordinator?
     // statusItem is the menu bar controller.
@@ -18,7 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // applicationDidFinishLaunching builds the menu bar item and starts the loop.
     func applicationDidFinishLaunching(_ notification: Notification) {
         loginItem.configureOnFirstLaunch()
-        let coordinator = Coordinator(settingsStore: settingsStore)
+        let coordinator = Coordinator(settingsStore: settingsStore, accounts: accounts)
         let statusItem = StatusItemController(coordinator: coordinator) { [weak self] in
             self?.showSettings()
         }
@@ -31,9 +33,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // showSettings opens the settings window and brings it forward.
     private func showSettings() {
         if settingsWindow == nil {
-            let view = SettingsView(store: settingsStore, loginItem: loginItem) { [weak self] in
-                self?.coordinator?.testAlarm()
-            }
+            let view = SettingsView(
+                store: settingsStore,
+                loginItem: loginItem,
+                accounts: accounts,
+                onSourcesChanged: { [weak self] in self?.coordinator?.refresh() },
+                onTestAlarm: { [weak self] in self?.coordinator?.testAlarm() }
+            )
             let window = NSWindow(contentViewController: NSHostingController(rootView: view))
             window.title = "Sheepdog Settings"
             window.styleMask = [.titled, .closable]
