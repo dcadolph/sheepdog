@@ -171,6 +171,7 @@ final class Coordinator {
         model.meeting = active.meeting
         model.snoozesLeft = max(0, settings.maxSnoozes - state.snoozeCount)
         model.snoozeLength = now < active.meeting.start ? settings.snoozeBeforeStart : settings.snoozeAfterStart
+        model.takeoverLead = settings.takeoverLead
 
         switch active.stage {
         case .takeover:

@@ -37,4 +37,12 @@ public enum Countdown {
         }
         return "\(Int((delta / 60).rounded(.up)))m"
     }
+
+    // remaining returns the share of span left before start, from 1 at span or more out to 0 at the start.
+    public static func remaining(start: Date, now: Date, span: TimeInterval) -> Double {
+        guard span > 0 else {
+            return 0
+        }
+        return min(1, max(0, start.timeIntervalSince(now) / span))
+    }
 }

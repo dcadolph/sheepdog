@@ -21,9 +21,10 @@ struct TakeoverView: View {
     private func card(_ meeting: Meeting) -> some View {
         VStack(spacing: 28) {
             ZStack {
-                TimelineView(.animation) { context in
-                    PulseRing(phase: PulseRing.phase(at: context.date))
-                }
+                CountdownRing(
+                    fraction: Countdown.remaining(start: meeting.start, now: model.now, span: model.takeoverLead),
+                    late: model.hasStarted
+                )
                 TugImage(name: "tug")
                     .frame(width: 148, height: 148)
                 closeButton
@@ -146,26 +147,25 @@ struct TakeoverView: View {
     }
 }
 
-// PulseRing is the ring that swells out from Tug and fades, once per period.
-struct PulseRing: View {
-    // period is the length of one pulse in seconds.
-    static let period: TimeInterval = 1.1
+// CountdownRing is the ring around Tug that drains counterclockwise back to twelve o'clock at the start.
+// It eases across each one-second tick, so it moves smoothly without a clock of its own.
+struct CountdownRing: View {
+    // fraction is the share of the takeover lead left before the start, from 0 to 1.
+    let fraction: Double
+    // late reports whether the meeting has started, which fills the ring in the late color.
+    let late: Bool
 
-    // phase is how far through the pulse the ring is, from 0 to 1.
-    let phase: Double
-
-    // phase returns the pulse position at a moment, so the ring is a pure function of time.
-    static func phase(at date: Date) -> Double {
-        date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: period) / period
-    }
-
-    // body draws the ring eased out toward its largest, faintest size.
+    // body draws a faint track under the arc of time left.
     var body: some View {
-        let eased = 1 - (1 - phase) * (1 - phase)
-        Circle()
-            .stroke(Theme.cream.opacity(0.35), lineWidth: 6)
-            .frame(width: 168, height: 168)
-            .scaleEffect(0.92 + 0.26 * eased)
-            .opacity(1 - eased)
+        ZStack {
+            Circle()
+                .stroke(Theme.cream.opacity(0.15), lineWidth: 8)
+            Circle()
+                .trim(from: 0, to: late ? 1 : fraction)
+                .stroke(late ? Theme.late : Theme.cream, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .animation(late ? nil : .linear(duration: 1), value: fraction)
+        .frame(width: 172, height: 172)
     }
 }

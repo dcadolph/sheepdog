@@ -15,6 +15,8 @@ final class AlertModel {
     var snoozesLeft = 0
     // snoozeLength is how long the next snooze lasts, in seconds.
     var snoozeLength: TimeInterval = 60
+    // takeoverLead is how long before the start the takeover opens, the full scale of its countdown ring.
+    var takeoverLead: TimeInterval = 60
     // askPlace reports whether the alert asks what the user was in the middle of.
     var askPlace = false
     // heldNote is the note already saved for the meeting.

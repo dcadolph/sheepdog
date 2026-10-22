@@ -60,3 +60,34 @@ func testCountdown(test: CountdownCase) {
     let got = try JSONDecoder().decode(AlertSettings.self, from: JSONEncoder().encode(want))
     #expect(got == want)
 }
+
+// RemainingCase is one countdown ring expectation, with now given relative to the start.
+struct RemainingCase: Sendable, CustomTestStringConvertible {
+    // Offset is the start time minus now, in seconds.
+    let offset: TimeInterval
+    // Span is the full scale of the ring, in seconds.
+    let span: TimeInterval
+    // WantFraction is the expected share of the span left.
+    let wantFraction: Double
+
+    // testDescription labels the case in test output.
+    var testDescription: String { "offset \(offset) span \(span)" }
+}
+
+// remainingCases covers the full, partial, empty, past, and degenerate ring.
+let remainingCases: [RemainingCase] = [
+    RemainingCase(offset: 60, span: 60, wantFraction: 1), // Test 0: Full at the lead.
+    RemainingCase(offset: 45, span: 60, wantFraction: 0.75), // Test 1: Test the alarm opens at three quarters.
+    RemainingCase(offset: 0, span: 60, wantFraction: 0), // Test 2: Empty at the start.
+    RemainingCase(offset: -30, span: 60, wantFraction: 0), // Test 3: Past clamps to empty.
+    RemainingCase(offset: 300, span: 60, wantFraction: 1), // Test 4: Early clamps to full.
+    RemainingCase(offset: 30, span: 0, wantFraction: 0), // Test 5: Zero span.
+    RemainingCase(offset: 30, span: -10, wantFraction: 0), // Test 6: Negative span.
+]
+
+// testRemaining checks the countdown ring fraction.
+@Test(arguments: remainingCases)
+func testRemaining(test: RemainingCase) {
+    let start = base.addingTimeInterval(test.offset)
+    #expect(Countdown.remaining(start: start, now: base, span: test.span) == test.wantFraction)
+}
