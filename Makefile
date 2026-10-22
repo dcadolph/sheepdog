@@ -49,6 +49,7 @@ demo:
 	ffmpeg -loglevel error -y -framerate 12 -i .build/demo-frames/frame-%04d.png \
 		-vf "scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle" \
 		-loop 0 art/demo.gif
+	$(DEMO_APP)/Contents/MacOS/Sheepdog --render-stills art
 
 run: app
 	-pkill -x Sheepdog

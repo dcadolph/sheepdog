@@ -57,6 +57,10 @@ if let flag = CommandLine.arguments.firstIndex(of: DemoRenderer.argument) {
     let dir = CommandLine.arguments.dropFirst(flag + 1).first ?? "demo-frames"
     exit(MainActor.assumeIsolated { DemoRenderer.run(dir: dir) })
 }
+if let flag = CommandLine.arguments.firstIndex(of: DemoRenderer.stillsArgument) {
+    let dir = CommandLine.arguments.dropFirst(flag + 1).first ?? "art"
+    exit(MainActor.assumeIsolated { DemoRenderer.runStills(dir: dir) })
+}
 let delegate = AppDelegate()
 app.delegate = delegate
 app.setActivationPolicy(.accessory)
