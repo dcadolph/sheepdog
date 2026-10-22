@@ -185,6 +185,7 @@ final class Coordinator {
         guard let link = meeting.link else {
             return
         }
+        windows.forgetPreviousApp()
         if !NSWorkspace.shared.open(link.native) {
             NSWorkspace.shared.open(link.web)
         }

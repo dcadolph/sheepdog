@@ -18,6 +18,8 @@ final class AlertWindows {
     private var takeovers: [NSPanel] = []
     // pill is the floating countdown panel.
     private var pill: NSPanel?
+    // previousApp is the app that was in front before the takeover took focus.
+    private var previousApp: NSRunningApplication?
 
     // init binds the windows to a model.
     init(model: AlertModel) {
@@ -53,14 +55,29 @@ final class AlertWindows {
             panel.orderFrontRegardless()
             takeovers.append(panel)
         }
+        let front = NSWorkspace.shared.frontmostApplication
+        previousApp = front == .current ? nil : front
         NSApp.activate()
         takeovers.first?.makeKeyAndOrderFront(nil)
     }
 
-    // hideTakeover removes the full-screen panels.
+    // hideTakeover removes the full-screen panels and hands focus back to the app that had it,
+    // so the next click in that app is not spent bringing it forward.
     func hideTakeover() {
+        guard !takeovers.isEmpty else {
+            return
+        }
         takeovers.forEach { $0.orderOut(nil) }
         takeovers.removeAll()
+        if NSApp.isActive, let previousApp, !previousApp.isTerminated {
+            previousApp.activate()
+        }
+        previousApp = nil
+    }
+
+    // forgetPreviousApp skips the focus hand-back, for when Join opens a meeting app that should stay in front.
+    func forgetPreviousApp() {
+        previousApp = nil
     }
 
     // showPill floats the countdown near the top center of the main display.
