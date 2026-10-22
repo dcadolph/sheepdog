@@ -135,6 +135,33 @@ func testShowsPill(test: PillCase) {
     #expect(got.resolution == nil)
 }
 
+// testQuietedKeepsTakeover checks that holding a place from the takeover stops only the sound, and
+// that a snooze lets the next takeover bark again.
+@Test func testQuietedKeepsTakeover() {
+    let settings = AlertSettings()
+    let quiet = Escalation.quieted(MeetingState())
+    #expect(quiet.quieted)
+    #expect(quiet.resolution == nil)
+    let stage = Escalation.stage(for: meetingAt(0), state: quiet, settings: settings, now: base.addingTimeInterval(-30))
+    #expect(stage == .takeover)
+    let now = base.addingTimeInterval(-30)
+    let snoozed = Escalation.snoozed(quiet, meeting: meetingAt(0), settings: settings, now: now)
+    #expect(!snoozed.quieted)
+}
+
+// testClosedTakeoverFallsBackToPill checks that closing the takeover leaves the pill up until expiry.
+@Test func testClosedTakeoverFallsBackToPill() {
+    let settings = AlertSettings()
+    let closed = Escalation.closedTakeover(MeetingState(pillHidden: true))
+    #expect(closed.resolution == nil)
+    #expect(Escalation.showsPill(closed, settings: settings))
+    for (offset, want) in [(-30.0, Stage.warning), (120, .warning), (600, .idle)] {
+        let now = base.addingTimeInterval(offset)
+        let got = Escalation.stage(for: meetingAt(0), state: closed, settings: settings, now: now)
+        #expect(got == want)
+    }
+}
+
 // testSnoozeNeverOutlivesExpiry checks that a takeover cannot persist past the nag window.
 @Test func testSnoozeNeverOutlivesExpiry() {
     let settings = AlertSettings()

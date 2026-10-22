@@ -52,6 +52,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var boostLevel: Double = 0.6
     // ShowPill reports whether the floating countdown appears during warnings.
     public var showPill: Bool = true
+    // HoldPlace reports whether the warning asks what the user was in the middle of.
+    public var holdPlace: Bool = true
     // UseMacCalendar reports whether events come from the calendars in macOS Calendar.
     public var useMacCalendar: Bool = true
 
@@ -78,6 +80,7 @@ public struct AlertSettings: Sendable, Codable, Equatable {
         boostVolume = try container.decodeIfPresent(Bool.self, forKey: .boostVolume) ?? defaults.boostVolume
         boostLevel = try container.decodeIfPresent(Double.self, forKey: .boostLevel) ?? defaults.boostLevel
         showPill = try container.decodeIfPresent(Bool.self, forKey: .showPill) ?? defaults.showPill
+        holdPlace = try container.decodeIfPresent(Bool.self, forKey: .holdPlace) ?? defaults.holdPlace
         useMacCalendar = try container.decodeIfPresent(Bool.self, forKey: .useMacCalendar) ?? defaults.useMacCalendar
     }
 

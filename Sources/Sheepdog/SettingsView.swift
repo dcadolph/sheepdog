@@ -72,6 +72,8 @@ struct SettingsView: View {
                     .onSubmit(applyLeads)
                     .onChange(of: leadsText) { applyLeads() }
                 Toggle("Show the floating countdown", isOn: $store.settings.showPill)
+                Toggle("Ask what I was in the middle of", isOn: $store.settings.holdPlace)
+                    .help("Tug hands the note back after the meeting.")
                 soundPicker("Warning chime", selection: $store.settings.chimeSound)
             }
             Section("Takeover") {

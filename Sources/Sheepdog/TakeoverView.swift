@@ -26,6 +26,8 @@ struct TakeoverView: View {
                 }
                 TugImage(name: "tug")
                     .frame(width: 148, height: 148)
+                closeButton
+                    .offset(x: 200, y: -110)
             }
 
             VStack(spacing: 10) {
@@ -49,7 +51,7 @@ struct TakeoverView: View {
 
             VStack(spacing: 14) {
                 Button(action: model.onJoin) {
-                    Text(meeting.link == nil ? "I'm there" : "Join now")
+                    Text(meeting.link == nil ? "I'll attend" : "Join now")
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .frame(width: 320, height: 60)
                         .background(Theme.cream, in: Capsule())
@@ -78,9 +80,52 @@ struct TakeoverView: View {
                     }
                     .buttonStyle(.plain)
                 }
+
+                placeRow
             }
         }
         .padding(56)
+    }
+
+    // placeRow offers to hold the user's place, shows the open field, or shows the held note.
+    @ViewBuilder
+    private var placeRow: some View {
+        if let note = model.heldNote {
+            Text("Tug is holding: \(note)")
+                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .foregroundStyle(Theme.bone.opacity(0.75))
+                .lineLimit(1)
+                .frame(maxWidth: 454)
+                .padding(.top, 6)
+        } else if model.editingInTakeover {
+            NoteField(model: model, focusOnAppear: true)
+                .frame(width: 454)
+                .padding(.top, 6)
+        } else if model.askPlace {
+            Button(action: model.onHoldPlace) {
+                Text("Hold my place")
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Theme.cream.opacity(0.85))
+                    .underline()
+            }
+            .buttonStyle(.plain)
+            .help("Jot down what you were in the middle of. Tug hands it back after the meeting.")
+            .padding(.top, 6)
+        }
+    }
+
+    // closeButton closes the alarm back to the countdown pill without joining, snoozing or skipping.
+    private var closeButton: some View {
+        Button(action: model.onCloseTakeover) {
+            Image(systemName: "xmark")
+                .font(.system(size: 18, weight: .bold))
+                .frame(width: 44, height: 44)
+                .background(Theme.cream.opacity(0.18), in: Circle())
+                .foregroundStyle(Theme.bone)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .help("Close this alarm. The countdown stays at the top until the meeting.")
     }
 
     // snoozeLabel describes the snooze button, including what is left.

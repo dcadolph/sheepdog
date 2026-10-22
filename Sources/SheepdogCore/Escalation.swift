@@ -13,7 +13,7 @@ public enum Stage: Int, Sendable, Comparable {
 }
 
 // Resolution is how a meeting stopped needing alerts.
-public enum Resolution: Sendable, Equatable {
+public enum Resolution: String, Sendable, Equatable, Codable {
     case joined
     case skipped
 }
@@ -28,13 +28,26 @@ public struct MeetingState: Sendable, Equatable {
     public var snoozeCount: Int = 0
     // PillHidden is set when the user closes the countdown pill without resolving the meeting.
     public var pillHidden: Bool = false
+    // Quieted is set when the user opens the takeover's note field, which stops the alarm sound.
+    public var quieted: Bool = false
+    // TakeoverClosed is set when the user closes the takeover, which leaves only the pill for the meeting.
+    public var takeoverClosed: Bool = false
 
     // init creates an untouched state.
-    public init(resolution: Resolution? = nil, snoozedUntil: Date? = nil, snoozeCount: Int = 0, pillHidden: Bool = false) {
+    public init(
+        resolution: Resolution? = nil,
+        snoozedUntil: Date? = nil,
+        snoozeCount: Int = 0,
+        pillHidden: Bool = false,
+        quieted: Bool = false,
+        takeoverClosed: Bool = false
+    ) {
         self.resolution = resolution
         self.snoozedUntil = snoozedUntil
         self.snoozeCount = snoozeCount
         self.pillHidden = pillHidden
+        self.quieted = quieted
+        self.takeoverClosed = takeoverClosed
     }
 }
 
@@ -52,7 +65,7 @@ public enum Escalation {
         if let until = state.snoozedUntil, now < until {
             return .warning
         }
-        if untilStart <= settings.takeoverLead {
+        if untilStart <= settings.takeoverLead && !state.takeoverClosed {
             return .takeover
         }
         return .warning
@@ -87,6 +100,21 @@ public enum Escalation {
         state.resolution == nil && state.snoozeCount < settings.maxSnoozes
     }
 
+    // quieted returns the state with the alarm sound stopped and the takeover left up.
+    public static func quieted(_ state: MeetingState) -> MeetingState {
+        var next = state
+        next.quieted = true
+        return next
+    }
+
+    // closedTakeover returns the state with the takeover closed for good and the pill showing instead.
+    public static func closedTakeover(_ state: MeetingState) -> MeetingState {
+        var next = state
+        next.takeoverClosed = true
+        next.pillHidden = false
+        return next
+    }
+
     // snoozed returns the state after a snooze at now, or the state unchanged when no snooze is left.
     public static func snoozed(_ state: MeetingState, meeting: Meeting, settings: AlertSettings, now: Date) -> MeetingState {
         guard canSnooze(state, settings: settings) else {
@@ -95,6 +123,7 @@ public enum Escalation {
         var next = state
         next.snoozeCount += 1
         next.pillHidden = false
+        next.quieted = false
         if now < meeting.start {
             next.snoozedUntil = min(now.addingTimeInterval(settings.snoozeBeforeStart), meeting.start)
         } else {

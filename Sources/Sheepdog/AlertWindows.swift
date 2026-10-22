@@ -9,7 +9,7 @@ final class KeyPanel: NSPanel {
     override var canBecomeMain: Bool { true }
 }
 
-// AlertWindows owns the takeover panels and the countdown pill.
+// AlertWindows owns the takeover panels, the countdown pill and the hand-back card.
 @MainActor
 final class AlertWindows {
     // model is shared by every alert view.
@@ -18,6 +18,8 @@ final class AlertWindows {
     private var takeovers: [NSPanel] = []
     // pill is the floating countdown panel.
     private var pill: NSPanel?
+    // handBack is the card that gives back a held note.
+    private var handBack: NSPanel?
     // previousApp is the app that was in front before the takeover took focus.
     private var previousApp: NSRunningApplication?
 
@@ -100,16 +102,87 @@ final class AlertWindows {
         pill?.orderOut(nil)
     }
 
-    // hideAll removes every alert window.
+    // returnKeyFromPill gives typing back to the app in front after the note field had it. The pill
+    // never activates Sheepdog, so that app is still frontmost and takes key again when the pill
+    // briefly leaves the screen.
+    func returnKeyFromPill() {
+        guard let pill, pill.isKeyWindow else {
+            return
+        }
+        pill.orderOut(nil)
+        pill.orderFrontRegardless()
+        if let front = NSWorkspace.shared.frontmostApplication, front != .current {
+            front.activate()
+        }
+    }
+
+    // showHandBack floats the hand-back card in the top right of the menu bar display, sliding it in
+    // the first time it appears. It stays on that display wherever the user is working, so it is
+    // always in the same spot.
+    func showHandBack() {
+        let appearing = handBack?.isVisible != true
+        let panel = handBack ?? makeHandBack()
+        handBack = panel
+        guard let host = panel.contentView as? NSHostingView<HandBackView>, let screen = NSScreen.screens.first else {
+            return
+        }
+        let size = host.fittingSize
+        let visible = screen.visibleFrame
+        let frame = NSRect(
+            origin: NSPoint(x: visible.maxX - size.width - 16, y: visible.maxY - size.height - 10),
+            size: size
+        )
+        guard appearing else {
+            panel.setFrame(frame, display: true)
+            return
+        }
+        panel.setFrame(frame.offsetBy(dx: 0, dy: 12), display: false)
+        panel.alphaValue = 0
+        panel.orderFrontRegardless()
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.25
+            panel.animator().setFrame(frame, display: true)
+            panel.animator().alphaValue = 1
+        }
+    }
+
+    // hideHandBack removes the hand-back card.
+    func hideHandBack() {
+        handBack?.orderOut(nil)
+    }
+
+    // hideAll removes every alert window except the hand-back card, which outlives alerts.
     func hideAll() {
         hideTakeover()
         hidePill()
     }
 
-    // makePill builds the countdown panel once.
+    // makePill builds the countdown panel once. It can take typing for the note field, but only
+    // when the field itself is clicked, so Join and the close button leave focus where it was.
     private func makePill() -> NSPanel {
-        let panel = NSPanel(
+        let panel = KeyPanel(
             contentRect: NSRect(x: 0, y: 0, width: 360, height: 40),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        panel.becomesKeyOnlyIfNeeded = true
+        panel.appearance = NSAppearance(named: .darkAqua)
+        panel.level = .statusBar
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = true
+        panel.hidesOnDeactivate = false
+        panel.isReleasedWhenClosed = false
+        panel.contentView = NSHostingView(rootView: PillView(model: model))
+        return panel
+    }
+
+    // makeHandBack builds the floating card, which never takes focus.
+    private func makeHandBack() -> NSPanel {
+        let panel = NSPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 340, height: 100),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -121,7 +194,8 @@ final class AlertWindows {
         panel.hasShadow = true
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
-        panel.contentView = NSHostingView(rootView: PillView(model: model))
+        panel.appearance = NSAppearance(named: .darkAqua)
+        panel.contentView = NSHostingView(rootView: HandBackView(model: model))
         return panel
     }
 }

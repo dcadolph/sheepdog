@@ -76,6 +76,17 @@ final class StatusItemController: NSObject, NSMenuDelegate {
                 menu.addItem(.separator())
             }
         }
+        let held = coordinator.heldPlaces
+        for place in held {
+            let note = place.note.count > 48 ? place.note.prefix(47) + "…" : Substring(place.note)
+            let entry = action("Holding: \(note)", #selector(showHeld(_:)))
+            entry.representedObject = place.id
+            entry.toolTip = "From before \(place.title). Choose to see it now."
+            menu.addItem(entry)
+        }
+        if !held.isEmpty {
+            menu.addItem(.separator())
+        }
         let upcoming = coordinator.meetings.filter { $0.end > Date() }.prefix(6)
         if upcoming.isEmpty {
             menu.addItem(withTitle: "No meetings in the next 12 hours", action: nil, keyEquivalent: "")
@@ -115,6 +126,14 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         }
         coordinator.open(meeting)
         coordinator.resolve(meeting, .joined)
+    }
+
+    // showHeld brings back the chosen held note.
+    @objc private func showHeld(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else {
+            return
+        }
+        coordinator.handBackNow(id)
     }
 
     // testAlarm triggers a fake takeover.
