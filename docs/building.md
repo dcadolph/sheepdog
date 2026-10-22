@@ -14,6 +14,18 @@ make run
 `make run` builds `.build/Sheepdog.app`, signs it for this Mac, and opens it. `make app` builds
 the app without opening it.
 
+## Release builds
+
+```sh
+make zip ARCHS="arm64 x86_64"
+```
+
+`make zip` builds a universal app for Apple silicon and Intel and zips it to
+`.build/Sheepdog.zip`. Publishing a GitHub release runs the same build and attaches the zip and
+its SHA256SUMS to the release. The release reads the direct sign-in client IDs from the
+repository secrets `SHEEPDOG_MICROSOFT_CLIENT_ID`, `SHEEPDOG_GOOGLE_CLIENT_ID` and
+`SHEEPDOG_GOOGLE_CLIENT_SECRET`, and ships without direct sign-in while they are unset.
+
 ## Direct Microsoft and Google sign-in
 
 By default Sheepdog reads calendars through macOS Calendar and needs no account of its own.

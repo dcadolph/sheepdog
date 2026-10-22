@@ -1,0 +1,31 @@
+name: release
+on:
+  release:
+    types: [published]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        run: make test
+      - name: Build universal app
+        env:
+          # Direct sign-in client IDs. While these secrets are unset the app ships without
+          # direct sign-in and reads calendars through macOS Calendar only.
+          SHEEPDOG_MICROSOFT_CLIENT_ID: ${{ secrets.SHEEPDOG_MICROSOFT_CLIENT_ID }}
+          SHEEPDOG_GOOGLE_CLIENT_ID: ${{ secrets.SHEEPDOG_GOOGLE_CLIENT_ID }}
+          SHEEPDOG_GOOGLE_CLIENT_SECRET: ${{ secrets.SHEEPDOG_GOOGLE_CLIENT_SECRET }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          make zip ARCHS="arm64 x86_64" ZIP="dist/sheepdog_${TAG}_macos_universal.zip"
+          cd dist
+          shasum -a 256 -- *.zip > SHA256SUMS
+      - name: Attach to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*

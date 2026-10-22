@@ -29,9 +29,19 @@ hands it back when the meeting ends.
 ## Requirements
 
 - macOS 14 or later
-- Xcode 16 or later, since Sheepdog is built from source for now
+- Xcode 16 or later, only to build from source
 
-## Quickstart
+## Download
+
+Grab `sheepdog_<version>_macos_universal.zip` from the
+[latest release](https://github.com/dcadolph/sheepdog/releases/latest), unzip it, and move
+`Sheepdog.app` to `/Applications`. It runs on Apple silicon and Intel Macs.
+
+The app is not notarized yet, so macOS blocks the first launch. Open it once, then go to
+**System Settings > Privacy & Security** and click **Open Anyway** next to the Sheepdog
+message. Allow calendar access when macOS asks.
+
+## Build from source
 
 ```sh
 git clone https://github.com/dcadolph/sheepdog.git
