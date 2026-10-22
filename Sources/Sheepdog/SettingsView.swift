@@ -19,6 +19,8 @@ struct SettingsView: View {
 
     // sounds lists the built-in alert sounds for the pickers.
     private let sounds = SoundPlayer.availableSounds()
+    // previewer plays a picked sound so it can be heard before choosing it.
+    @State private var previewer = SoundPlayer()
 
     // body lays out the settings form.
     var body: some View {
@@ -70,9 +72,7 @@ struct SettingsView: View {
                     .onSubmit(applyLeads)
                     .onChange(of: leadsText) { applyLeads() }
                 Toggle("Show the floating countdown", isOn: $store.settings.showPill)
-                Picker("Warning chime", selection: $store.settings.chimeSound) {
-                    ForEach(sounds, id: \.self) { Text($0) }
-                }
+                soundPicker("Warning chime", selection: $store.settings.chimeSound)
             }
             Section("Takeover") {
                 Stepper(
@@ -87,9 +87,7 @@ struct SettingsView: View {
                     in: 60...3600,
                     step: 60
                 )
-                Picker("Alarm sound", selection: $store.settings.alarmSound) {
-                    ForEach(sounds, id: \.self) { Text($0) }
-                }
+                soundPicker("Alarm sound", selection: $store.settings.alarmSound)
             }
             Section("Snooze") {
                 Stepper("Snoozes per meeting: \(store.settings.maxSnoozes)", value: $store.settings.maxSnoozes, in: 0...10)
@@ -137,6 +135,27 @@ struct SettingsView: View {
         .onAppear {
             leadsText = Self.format(store.settings.warningLeads)
             loginItem.refresh()
+        }
+    }
+
+    // soundPicker offers Tug's barks above the macOS sounds, with a button to hear the pick.
+    private func soundPicker(_ title: String, selection: Binding<String>) -> some View {
+        HStack {
+            Picker(title, selection: selection) {
+                Section("Tug") {
+                    ForEach(TugSound.allCases) { Text($0.rawValue).tag($0.rawValue) }
+                }
+                Section("macOS") {
+                    ForEach(sounds, id: \.self) { Text($0).tag($0) }
+                }
+            }
+            Button {
+                previewer.preview(sound: selection.wrappedValue, settings: store.settings)
+            } label: {
+                Image(systemName: "play.circle")
+            }
+            .buttonStyle(.borderless)
+            .help("Play this sound")
         }
     }
 

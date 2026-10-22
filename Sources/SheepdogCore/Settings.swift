@@ -40,10 +40,10 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var includeTentative: Bool = false
     // RequireAttendees reports whether events with no other attendees are skipped.
     public var requireAttendees: Bool = false
-    // AlarmSound is the name of the system sound that loops during a takeover.
-    public var alarmSound: String = "Sosumi"
-    // ChimeSound is the name of the system sound that plays at each warning.
-    public var chimeSound: String = "Glass"
+    // AlarmSound is the name of the Tug or system sound that loops during a takeover.
+    public var alarmSound: String = TugSound.barking.rawValue
+    // ChimeSound is the name of the Tug or system sound that plays at each warning.
+    public var chimeSound: String = TugSound.woof.rawValue
     // AlarmOutput is where the alarm and chimes play.
     public var alarmOutput: AlarmOutput = .both
     // BoostVolume reports whether the alarm unmutes and raises output volume while it plays.

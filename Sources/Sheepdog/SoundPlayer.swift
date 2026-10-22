@@ -55,8 +55,13 @@ final class SoundPlayer {
 
     // chime plays the warning sound once on the chosen devices.
     func chime(settings: AlertSettings) {
+        preview(sound: settings.chimeSound, settings: settings)
+    }
+
+    // preview plays any Tug or system sound once on the chosen devices, without a volume boost.
+    func preview(sound: String, settings: AlertSettings) {
         for device in targetDevices(settings.alarmOutput) {
-            guard let engine = play(sound: settings.chimeSound, on: device, loop: false) else {
+            guard let engine = play(sound: sound, on: device, loop: false) else {
                 continue
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
@@ -121,8 +126,13 @@ final class SoundPlayer {
         return engine
     }
 
-    // soundFile opens a built-in sound by name, falling back to the first available sound.
+    // soundFile opens a bundled Tug sound or a built-in sound by name, falling back to Sosumi.
     private func soundFile(named name: String) -> AVAudioFile? {
+        if let tug = TugSound(rawValue: name),
+           let url = Bundle.main.url(forResource: tug.resource, withExtension: "caf"),
+           let file = try? AVAudioFile(forReading: url) {
+            return file
+        }
         for candidate in [name, "Sosumi"] {
             for ext in ["aiff", "aif", "caf", "wav"] {
                 let url = Self.soundsDirectory.appendingPathComponent("\(candidate).\(ext)")

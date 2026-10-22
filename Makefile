@@ -8,6 +8,7 @@ SHEEPDOG_GOOGLE_CLIENT_SECRET ?=
 ICONSET := .build/AppIcon.iconset
 ICNS := .build/AppIcon.icns
 RUNTIME_ART := art/glyph-idle.png art/glyph-warning.png art/glyph-takeover.png art/tug.png art/tug-head.png
+SOUNDS := sounds/tug-woof.caf sounds/tug-barking.caf
 
 .PHONY: build test app run clean
 
@@ -32,7 +33,7 @@ app: $(ICNS)
 	rm -rf $(APP)
 	mkdir -p $(APP)/Contents/MacOS $(APP)/Contents/Resources
 	cp $(ICNS) $(APP)/Contents/Resources/AppIcon.icns
-	cp $(RUNTIME_ART) $(APP)/Contents/Resources/
+	cp $(RUNTIME_ART) $(SOUNDS) $(APP)/Contents/Resources/
 	cp .build/release/Sheepdog $(APP)/Contents/MacOS/Sheepdog
 	cp Sources/Sheepdog/Info.plist $(PLIST)
 	/usr/libexec/PlistBuddy -c "Set :SheepdogMicrosoftClientID '$(SHEEPDOG_MICROSOFT_CLIENT_ID)'" $(PLIST)
