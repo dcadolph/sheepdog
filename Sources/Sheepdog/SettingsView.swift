@@ -23,6 +23,18 @@ struct SettingsView: View {
     // body lays out the settings form.
     var body: some View {
         Form {
+            Section {
+                HStack(spacing: 14) {
+                    TugImage(name: "tug")
+                        .frame(width: 64, height: 64)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Sheepdog")
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                        Text("Tug makes sure you get to your meetings.")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
             Section("General") {
                 Toggle("Start Sheepdog at login", isOn: Binding(
                     get: { loginItem.isEnabled || loginItem.needsApproval },

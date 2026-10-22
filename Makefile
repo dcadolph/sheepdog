@@ -5,6 +5,10 @@ SHEEPDOG_MICROSOFT_CLIENT_ID ?=
 SHEEPDOG_GOOGLE_CLIENT_ID ?=
 SHEEPDOG_GOOGLE_CLIENT_SECRET ?=
 
+ICONSET := .build/AppIcon.iconset
+ICNS := .build/AppIcon.icns
+RUNTIME_ART := art/glyph-idle.png art/glyph-warning.png art/glyph-takeover.png art/tug.png art/tug-head.png
+
 .PHONY: build test app run clean
 
 build:
@@ -14,10 +18,21 @@ test:
 	swift build
 	swift test
 
-app:
+$(ICNS): art/app-icon.png
+	rm -rf $(ICONSET)
+	mkdir -p $(ICONSET)
+	for size in 16 32 128 256 512; do \
+		sips -z $$size $$size art/app-icon.png --out $(ICONSET)/icon_$${size}x$${size}.png >/dev/null; \
+		sips -z $$((size * 2)) $$((size * 2)) art/app-icon.png --out $(ICONSET)/icon_$${size}x$${size}@2x.png >/dev/null; \
+	done
+	iconutil -c icns $(ICONSET) -o $(ICNS)
+
+app: $(ICNS)
 	swift build -c release
 	rm -rf $(APP)
-	mkdir -p $(APP)/Contents/MacOS
+	mkdir -p $(APP)/Contents/MacOS $(APP)/Contents/Resources
+	cp $(ICNS) $(APP)/Contents/Resources/AppIcon.icns
+	cp $(RUNTIME_ART) $(APP)/Contents/Resources/
 	cp .build/release/Sheepdog $(APP)/Contents/MacOS/Sheepdog
 	cp Sources/Sheepdog/Info.plist $(PLIST)
 	/usr/libexec/PlistBuddy -c "Set :SheepdogMicrosoftClientID '$(SHEEPDOG_MICROSOFT_CLIENT_ID)'" $(PLIST)

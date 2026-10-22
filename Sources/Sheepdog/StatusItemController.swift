@@ -24,22 +24,38 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         self.coordinator = coordinator
         self.openSettings = openSettings
         super.init()
-        let image = NSImage(systemSymbolName: "dog.fill", accessibilityDescription: "Sheepdog")
-        image?.isTemplate = true
-        item.button?.image = image
+        item.button?.image = Self.image(for: .idle)
         item.button?.imagePosition = .imageLeading
         let menu = NSMenu()
         menu.delegate = self
         item.menu = menu
     }
 
-    // update refreshes the countdown beside the icon.
+    // shown is the stage the menu bar icon currently draws.
+    private var shown: Stage = .idle
+
+    // update refreshes the icon for the current stage and the countdown beside it.
     func update() {
+        let stage = coordinator.active?.stage ?? .idle
+        if stage != shown {
+            shown = stage
+            item.button?.image = Self.image(for: stage)
+        }
         guard let active = coordinator.active else {
             item.button?.title = ""
             return
         }
         item.button?.title = " " + Countdown.short(start: active.meeting.start, now: Date())
+    }
+
+    // image returns Tug's glyph for a stage, or the system dog symbol outside the app bundle.
+    private static func image(for stage: Stage) -> NSImage? {
+        if let glyph = Art.glyph(for: stage) {
+            return glyph
+        }
+        let symbol = NSImage(systemSymbolName: "dog.fill", accessibilityDescription: "Sheepdog")
+        symbol?.isTemplate = true
+        return symbol
     }
 
     // menuNeedsUpdate rebuilds the menu each time it opens.

@@ -11,11 +11,9 @@ struct PillView: View {
     var body: some View {
         if let meeting = model.meeting {
             HStack(spacing: 10) {
-                Image(systemName: "dog.fill")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Theme.ink)
+                TugImage(name: "tug-head")
                     .frame(width: 28, height: 28)
-                    .background(Theme.cream, in: Circle())
+                    .clipShape(Circle())
                 Text(meeting.title)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)

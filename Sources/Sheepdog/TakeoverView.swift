@@ -30,12 +30,8 @@ struct TakeoverView: View {
                     .scaleEffect(pulse ? 1.18 : 0.92)
                     .opacity(pulse ? 0 : 1)
                     .animation(.easeOut(duration: 1.1).repeatForever(autoreverses: false), value: pulse)
-                Circle()
-                    .fill(Theme.cream)
-                    .frame(width: 132, height: 132)
-                Image(systemName: "dog.fill")
-                    .font(.system(size: 64, weight: .semibold))
-                    .foregroundStyle(Theme.ink)
+                TugImage(name: "tug")
+                    .frame(width: 148, height: 148)
             }
 
             VStack(spacing: 10) {
