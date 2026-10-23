@@ -9,6 +9,19 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - name: Require the app version to match the tag
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          plist=Sources/Sheepdog/Info.plist
+          for key in CFBundleShortVersionString CFBundleVersion; do
+            got="$(/usr/libexec/PlistBuddy -c "Print :$key" "$plist")"
+            if [ "v$got" != "$TAG" ]; then
+              echo "::error::$key in $plist is $got but the tag is $TAG."
+              exit 1
+            fi
+          done
       - name: Test
         run: make test
       - name: Require signing secrets
