@@ -1,6 +1,10 @@
 APP := .build/Sheepdog.app
 DEMO_APP := .build/demo/Sheepdog.app
 SIGN_ID ?= -
+ENTITLEMENTS := Sheepdog.entitlements
+# A real identity gets a secure timestamp, which notarization requires. Ad-hoc builds skip it so local
+# and CI mirror builds never need the network.
+TIMESTAMP := $(if $(filter -,$(SIGN_ID)),,--timestamp)
 PLIST := $(APP)/Contents/Info.plist
 SHEEPDOG_MICROSOFT_CLIENT_ID ?=
 SHEEPDOG_GOOGLE_CLIENT_ID ?=
@@ -45,7 +49,7 @@ app: $(ICNS)
 	/usr/libexec/PlistBuddy -c "Set :SheepdogGoogleClientID '$(SHEEPDOG_GOOGLE_CLIENT_ID)'" $(PLIST)
 	/usr/libexec/PlistBuddy -c "Set :SheepdogGoogleClientSecret '$(SHEEPDOG_GOOGLE_CLIENT_SECRET)'" $(PLIST)
 	/usr/libexec/PlistBuddy -c "Set :SheepdogSupportURL '$(SHEEPDOG_SUPPORT_URL)'" $(PLIST)
-	codesign --force --sign "$(SIGN_ID)" $(APP)
+	codesign --force --options runtime $(TIMESTAMP) --entitlements $(ENTITLEMENTS) --sign "$(SIGN_ID)" $(APP)
 
 zip: app
 	rm -f $(ZIP)

@@ -11,6 +11,37 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test
         run: make test
+      - name: Require signing secrets
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          NOTARY_KEY_P8: ${{ secrets.NOTARY_KEY_P8 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+        run: |
+          for name in MACOS_CERT_P12 MACOS_CERT_PASSWORD NOTARY_KEY_P8 NOTARY_KEY_ID NOTARY_ISSUER_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Secret $name is not set. A release must be signed and notarized."
+              exit 1
+            fi
+          done
+      - name: Import signing certificate
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          keychain_password="$(uuidgen)"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          echo "$MACOS_CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$MACOS_CERT_PASSWORD" \
+            -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/cert.p12"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain"
+          security list-keychains -d user -s "$keychain" login.keychain-db
       - name: Build universal app
         env:
           # Direct sign-in client IDs. While these secrets are unset the app ships without
@@ -20,13 +51,47 @@ jobs:
           SHEEPDOG_GOOGLE_CLIENT_SECRET: ${{ secrets.SHEEPDOG_GOOGLE_CLIENT_SECRET }}
           # Support link for the Tug menu and settings. Unset, the app shows no support link.
           SHEEPDOG_SUPPORT_URL: ${{ vars.SHEEPDOG_SUPPORT_URL }}
+          SIGN_ID: "Developer ID Application: Douglas Adolph (U7L4P2YHWJ)"
           TAG: ${{ github.event.release.tag_name }}
         run: |
           set -euo pipefail
           mkdir -p dist
-          make zip ARCHS="arm64 x86_64" ZIP="dist/sheepdog_${TAG}_macos_universal.zip"
+          make zip ARCHS="arm64 x86_64" SIGN_ID="$SIGN_ID" ZIP="dist/sheepdog_${TAG}_macos_universal.zip"
+      - name: Notarize and staple
+        env:
+          NOTARY_KEY_P8: ${{ secrets.NOTARY_KEY_P8 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          zip="dist/sheepdog_${TAG}_macos_universal.zip"
+          key="$RUNNER_TEMP/notary.p8"
+          printf '%s' "$NOTARY_KEY_P8" > "$key"
+          xcrun notarytool submit "$zip" --key "$key" --key-id "$NOTARY_KEY_ID" \
+            --issuer "$NOTARY_ISSUER_ID" --wait --timeout 90m --output-format json > "$RUNNER_TEMP/notary.json"
+          rm -f "$key"
+          cat "$RUNNER_TEMP/notary.json"
+          test "$(jq -r .status "$RUNNER_TEMP/notary.json")" = "Accepted"
+          xcrun stapler staple .build/Sheepdog.app
+          rm -f "$zip"
+          ditto -c -k --keepParent .build/Sheepdog.app "$zip"
+      - name: Verify as a user would
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          check="$RUNNER_TEMP/verify"
+          mkdir -p "$check"
+          ditto -x -k "dist/sheepdog_${TAG}_macos_universal.zip" "$check"
+          xcrun stapler validate "$check/Sheepdog.app"
+          spctl --assess --type execute --verbose=4 "$check/Sheepdog.app"
+          codesign --verify --deep --strict --verbose=2 "$check/Sheepdog.app"
           cd dist
           shasum -a 256 -- *.zip > SHA256SUMS
+      - name: Remove signing keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
       - name: Attach to release
         uses: softprops/action-gh-release@v2
         with:
