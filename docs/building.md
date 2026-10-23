@@ -1,8 +1,8 @@
 <p align="center"><img src="../art/tug-head.png" width="96" alt="Tug"></p>
 
-<h1 align="center">Building Sheepdog</h1>
+<h1 align="center">Building sheepdog</h1>
 
-Sheepdog builds with Swift Package Manager and a Makefile. It needs macOS 14 or later and Xcode
+sheepdog builds with Swift Package Manager and a Makefile. It needs macOS 14 or later and Xcode
 16 or later.
 
 ## Build and run
@@ -28,7 +28,7 @@ repository secrets `SHEEPDOG_MICROSOFT_CLIENT_ID`, `SHEEPDOG_GOOGLE_CLIENT_ID` a
 
 ## Direct Microsoft and Google sign-in
 
-By default Sheepdog reads calendars through macOS Calendar and needs no account of its own.
+By default sheepdog reads calendars through macOS Calendar and needs no account of its own.
 Signing in to Microsoft or Google directly needs your own app registration. Pass the client IDs
 to the build:
 

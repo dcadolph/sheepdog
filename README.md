@@ -5,7 +5,7 @@
   </picture>
 </p>
 
-<h1 align="center">Sheepdog</h1>
+<h1 align="center">sheepdog</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-14%2B-black" alt="macOS 14 or later">
@@ -18,7 +18,7 @@
 <p align="center"><img src="art/demo.gif" width="720" alt="The countdown pill, then the full-screen alarm with Snooze and Join"></p>
 
 Calendar notifications are easy to dismiss without reading. When you are deep in something, a
-banner in the corner does not register, and ten minutes later you are late. Sheepdog gets louder
+banner in the corner does not register, and ten minutes later you are late. sheepdog gets louder
 as the meeting gets closer. First a chime and a small countdown, then a full-screen alarm with
 Tug barking until you join, snooze or skip. It also holds a note on what you were doing and
 hands it back when the meeting ends.
@@ -52,9 +52,9 @@ without a real meeting. Copy the app to `/Applications` to keep it.
 
 ## Docs
 
-- [Using Sheepdog](docs/using.md) covers the countdown pill, the alarm, Hold my place and every
+- [Using sheepdog](docs/using.md) covers the countdown pill, the alarm, Hold my place and every
   setting.
-- [Building Sheepdog](docs/building.md) covers direct Microsoft and Google sign-in, the tests and
+- [Building sheepdog](docs/building.md) covers direct Microsoft and Google sign-in, the tests and
   the demo renderer.
 
 ## Credits

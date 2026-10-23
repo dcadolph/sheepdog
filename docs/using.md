@@ -1,8 +1,8 @@
 <p align="center"><img src="../art/tug-head.png" width="96" alt="Tug"></p>
 
-<h1 align="center">Using Sheepdog</h1>
+<h1 align="center">Using sheepdog</h1>
 
-Sheepdog reads every calendar in macOS Calendar, including Google and Exchange, and escalates in
+sheepdog reads every calendar in macOS Calendar, including Google and Exchange, and escalates in
 three steps as each meeting gets closer. Each step is described below in the order it happens.
 
 ## The countdown pill
@@ -54,7 +54,7 @@ and paste it in, with a name such as #team. The alarm then shows **Msg team** ne
 - **Can't make it** copies "I can't make Design review." and opens the channel. The meeting
   counts as skipped, the same as **I'm skipping this one**.
 - With more than one channel, pick one first. Paste and press Return in Slack to send.
-- Sheepdog never signs in to Slack and never sends anything itself.
+- sheepdog never signs in to Slack and never sends anything itself.
 
 ## Settings and features
 
