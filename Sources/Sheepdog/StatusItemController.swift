@@ -92,14 +92,13 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             menu.addItem(withTitle: "No meetings in the next 12 hours", action: nil, keyEquivalent: "")
         }
         for meeting in upcoming {
-            let entry = action("\(timeFormatter.string(from: meeting.start))  \(meeting.title)", #selector(joinMeeting(_:)))
-            entry.representedObject = meeting.id
+            let entry = NSMenuItem(
+                title: "\(timeFormatter.string(from: meeting.start))  \(meeting.title)", action: nil, keyEquivalent: ""
+            )
             if coordinator.state(for: meeting).resolution != nil {
                 entry.state = .on
             }
-            if meeting.link == nil {
-                entry.action = nil
-            }
+            entry.submenu = meetingMenu(meeting)
             menu.addItem(entry)
         }
         menu.addItem(.separator())
@@ -108,6 +107,20 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(action("Settings…", #selector(showSettings), key: ","))
         menu.addItem(.separator())
         menu.addItem(action("Quit Sheepdog", #selector(quit), key: "q"))
+    }
+
+    // meetingMenu builds a meeting row's submenu: Join when there is a link, then Open in Calendar.
+    private func meetingMenu(_ meeting: Meeting) -> NSMenu {
+        let menu = NSMenu()
+        if meeting.link != nil {
+            let join = action("Join meeting", #selector(joinMeeting(_:)))
+            join.representedObject = meeting.id
+            menu.addItem(join)
+        }
+        let show = action("Open in Calendar", #selector(openInCalendar(_:)))
+        show.representedObject = meeting.id
+        menu.addItem(show)
+        return menu
     }
 
     // action creates a menu item that targets this controller.
@@ -126,6 +139,16 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         }
         coordinator.open(meeting)
         coordinator.resolve(meeting, .joined)
+    }
+
+    // openInCalendar shows the chosen meeting in its calendar.
+    @objc private func openInCalendar(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String,
+              let meeting = coordinator.meetings.first(where: { $0.id == id })
+        else {
+            return
+        }
+        coordinator.openInCalendar(meeting)
     }
 
     // showHeld brings back the chosen held note.

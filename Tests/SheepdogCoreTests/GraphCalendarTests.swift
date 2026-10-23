@@ -61,9 +61,10 @@ func graphClient() -> MockClient {
             attendeeCount: 3,
             url: URL(string: "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc%40thread.v2/0?context=%7b%7d"),
             location: "Microsoft Teams Meeting",
-            notes: "Join on your computer or mobile app"
+            notes: "Join on your computer or mobile app",
+            webURL: URL(string: "https://outlook.live.com/owa/?itemid=AAMkStandup&exvsurl=1&path=/calendar/item")
         ),
-        CalendarEntry( // Test 1: Declined and shown as free.
+        CalendarEntry( // Test 1: Declined and shown as free, no webLink.
             eventID: "graph:AAMkDeclined",
             title: "Budget review",
             start: utc("2026-10-22T16:00:00Z"),

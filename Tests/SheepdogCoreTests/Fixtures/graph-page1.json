@@ -21,7 +21,8 @@
       "onlineMeeting": {"joinUrl": "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc%40thread.v2/0?context=%7b%7d"},
       "onlineMeetingUrl": null,
       "location": {"displayName": "Microsoft Teams Meeting"},
-      "body": {"contentType": "text", "content": "Join on your computer or mobile app"}
+      "body": {"contentType": "text", "content": "Join on your computer or mobile app"},
+      "webLink": "https://outlook.live.com/owa/?itemid=AAMkStandup&exvsurl=1&path=/calendar/item"
     },
     {
       "id": "AAMkDeclined",

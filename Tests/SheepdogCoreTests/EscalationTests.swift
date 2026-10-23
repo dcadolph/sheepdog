@@ -291,3 +291,10 @@ func testMeetingFilter(test: FilterCase) {
     let got = Meeting(entry: entry { $0.title = "   " }, settings: AlertSettings())
     #expect(got?.title == "Untitled meeting")
 }
+
+// testMeetingWebURL checks that the event's own page travels from the entry to the meeting.
+@Test func testMeetingWebURL() {
+    let page = URL(string: "https://www.google.com/calendar/event?eid=e")
+    #expect(Meeting(entry: entry { $0.webURL = page }, settings: AlertSettings())?.webURL == page)
+    #expect(Meeting(entry: entry(), settings: AlertSettings())?.webURL == nil)
+}

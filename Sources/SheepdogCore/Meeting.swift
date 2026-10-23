@@ -12,14 +12,17 @@ public struct Meeting: Sendable, Equatable, Identifiable {
     public var end: Date
     // Link is the meeting's join link, when one was found.
     public var link: JoinLink?
+    // WebURL is the page that shows the event in its own calendar, when there is one.
+    public var webURL: URL?
 
     // init creates a meeting.
-    public init(id: String, title: String, start: Date, end: Date, link: JoinLink? = nil) {
+    public init(id: String, title: String, start: Date, end: Date, link: JoinLink? = nil, webURL: URL? = nil) {
         self.id = id
         self.title = title
         self.start = start
         self.end = end
         self.link = link
+        self.webURL = webURL
     }
 
     // init converts a calendar entry into a meeting, or returns nil when the entry should never alert.
@@ -39,7 +42,8 @@ public struct Meeting: Sendable, Equatable, Identifiable {
             title: title.isEmpty ? "Untitled meeting" : title,
             start: entry.start,
             end: entry.end,
-            link: JoinLinkFinder.find(in: entry)
+            link: JoinLinkFinder.find(in: entry),
+            webURL: entry.webURL
         )
     }
 }

@@ -33,6 +33,8 @@ public struct CalendarEntry: Sendable, Equatable {
     public var location: String?
     // Notes is the event's notes or body text.
     public var notes: String?
+    // WebURL is the page that shows the event in its own calendar.
+    public var webURL: URL?
 
     // init creates an entry. Fields not given default to an accepted, busy, timed event.
     public init(
@@ -46,7 +48,8 @@ public struct CalendarEntry: Sendable, Equatable {
         attendeeCount: Int = 1,
         url: URL? = nil,
         location: String? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        webURL: URL? = nil
     ) {
         self.eventID = eventID
         self.title = title
@@ -59,5 +62,6 @@ public struct CalendarEntry: Sendable, Equatable {
         self.url = url
         self.location = location
         self.notes = notes
+        self.webURL = webURL
     }
 }

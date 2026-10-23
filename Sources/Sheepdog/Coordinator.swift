@@ -232,6 +232,17 @@ final class Coordinator {
         }
     }
 
+    // openInCalendar shows a meeting where it lives, falling back to Calendar.app when the event has no
+    // page or its page does not open.
+    func openInCalendar(_ meeting: Meeting) {
+        if let page = meeting.webURL, NSWorkspace.shared.open(page) {
+            return
+        }
+        if let calendar = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.iCal") {
+            NSWorkspace.shared.openApplication(at: calendar, configuration: NSWorkspace.OpenConfiguration())
+        }
+    }
+
     // toggleTeamRow opens or closes the takeover's Msg team row, saving any typed note first so the
     // note field and the row are never open together.
     private func toggleTeamRow() {

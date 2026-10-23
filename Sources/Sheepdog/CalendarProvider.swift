@@ -89,8 +89,18 @@ final class CalendarProvider {
             attendeeCount: attendees.filter { !$0.isCurrentUser }.count,
             url: event.url,
             location: event.location,
-            notes: event.notes
+            notes: event.notes,
+            webURL: event.eventIdentifier.flatMap(showURL)
         )
+    }
+
+    // showURL builds the link that makes Calendar.app open an event.
+    private static func showURL(_ eventIdentifier: String) -> URL? {
+        let allowed = CharacterSet.urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))
+        guard let id = eventIdentifier.addingPercentEncoding(withAllowedCharacters: allowed) else {
+            return nil
+        }
+        return URL(string: "ical://ekevent/\(id)?method=show&options=more")
     }
 
     // status maps an EventKit participant status to the core type.

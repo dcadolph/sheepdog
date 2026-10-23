@@ -70,5 +70,6 @@ and paste it in, with a name such as #team. The alarm then shows **Msg team** ne
 | Timing     | Warning times, alarm lead, snooze lengths and snooze count are adjustable. |
 | Login      | Starts at login from Settings.                                             |
 | Menu bar   | Tug's glyph changes with the alert stage and the menu lists what is next.  |
+| Events     | Each meeting in the menu offers Join meeting and Open in Calendar.         |
 
 Use **Test the alarm** in Tug's menu to see the whole thing without a real meeting.

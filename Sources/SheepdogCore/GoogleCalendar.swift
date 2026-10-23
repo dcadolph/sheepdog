@@ -128,7 +128,8 @@ public enum GoogleCalendar {
             attendeeCount: others.count,
             url: (event.hangoutLink ?? video).flatMap(URL.init(string:)),
             location: event.location,
-            notes: event.description
+            notes: event.description,
+            webURL: event.htmlLink.flatMap(URL.init(string:))
         )
     }
 
@@ -226,6 +227,8 @@ public enum GoogleCalendar {
         let location: String?
         // Description is the event description.
         let description: String?
+        // HTMLLink is the event's page in Google Calendar.
+        let htmlLink: String?
     }
 
     // EventTime is either a dateTime with an offset or a whole date.

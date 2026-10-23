@@ -16,6 +16,7 @@
         {"email": "room@resource.calendar.google.com", "resource": true, "responseStatus": "accepted"}
       ],
       "hangoutLink": "https://meet.google.com/abc-defg-hij",
+      "htmlLink": "https://www.google.com/calendar/event?eid=bWVldDE",
       "conferenceData": {"entryPoints": [{"entryPointType": "video", "uri": "https://meet.google.com/abc-defg-hij"}]}
     },
     {

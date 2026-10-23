@@ -7,7 +7,7 @@ public enum GraphCalendar {
     // fields are the event properties requested from calendarView.
     static let fields = [
         "id", "subject", "start", "end", "isAllDay", "isCancelled", "isOrganizer", "showAs",
-        "responseStatus", "attendees", "organizer", "onlineMeeting", "onlineMeetingUrl", "location", "body",
+        "responseStatus", "attendees", "organizer", "onlineMeeting", "onlineMeetingUrl", "location", "body", "webLink",
     ]
     // prefer asks for UTC times and plain text bodies so join links can be found in the body.
     static let prefer = #"outlook.timezone="UTC", outlook.body-content-type="text""#
@@ -106,7 +106,8 @@ public enum GraphCalendar {
             attendeeCount: others.count,
             url: join.flatMap(URL.init(string:)),
             location: event.location?.displayName,
-            notes: event.body?.content
+            notes: event.body?.content,
+            webURL: event.webLink.flatMap(URL.init(string:))
         )
     }
 
@@ -187,6 +188,8 @@ public enum GraphCalendar {
         let location: Location?
         // Body is the event description.
         let body: Body?
+        // WebLink is the event's page in Outlook on the web.
+        let webLink: String?
     }
 
     // DateTimeZone is a wall time and the zone it is in.

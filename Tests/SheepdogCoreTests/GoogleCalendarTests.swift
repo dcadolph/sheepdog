@@ -69,9 +69,10 @@ func googleClient() -> MockClient {
             end: utc("2026-10-22T15:30:00Z"),
             status: .accepted,
             attendeeCount: 2,
-            url: URL(string: "https://meet.google.com/abc-defg-hij")
+            url: URL(string: "https://meet.google.com/abc-defg-hij"),
+            webURL: URL(string: "https://www.google.com/calendar/event?eid=bWVldDE")
         ),
-        CalendarEntry( // Test 1: Zoom add-on link from the video entry point, not yet answered.
+        CalendarEntry( // Test 1: Zoom add-on link from the video entry point, not yet answered, no htmlLink.
             eventID: "google:zoom1",
             title: "Customer call",
             start: utc("2026-10-22T17:00:00Z"),
