@@ -214,17 +214,21 @@ final class Coordinator {
         if napUntil != nil && !isNapping(now: now) {
             setNap(nil)
         }
-        // A nap leaves real meetings out entirely. Test the alarm still works because it is asked for.
-        let all = isNapping(now: now) ? testMeetings : meetings + testMeetings
+        // A nap leaves real meetings out entirely. Working hours leave out silent meetings and hold quiet ones to
+        // the countdown. Test the alarm still works because it is asked for.
+        let gated = isNapping(now: now)
+            ? (alerting: [Meeting](), quiet: Set<String>())
+            : settings.workingHours.gate(meetings, calendar: .current)
+        let all = gated.alerting + testMeetings
 
         let chime = all.contains { meeting in
             let state = states[meeting.id] ?? MeetingState()
-            return state.resolution == nil
+            return state.resolution == nil && !gated.quiet.contains(meeting.id)
                 && Escalation.crossedWarning(for: meeting, settings: settings, previous: lastTick, now: now)
         }
         lastTick = now
 
-        active = Escalation.mostUrgent(all, states: states, settings: settings, now: now)
+        active = Escalation.mostUrgent(all, states: states, settings: settings, now: now, quiet: gated.quiet)
         places.places = PlaceKeeper.pruned(
             PlaceKeeper.handedBack(places.places, now: now, micInUse: mic.isRunning),
             now: now,
@@ -297,7 +301,7 @@ final class Coordinator {
 
     // nap puts Tug to sleep for the chosen length, which silences every real meeting until he wakes.
     func nap(_ length: NapLength) {
-        setNap(Nap.until(length, now: Date(), calendar: .current))
+        setNap(Nap.until(length, now: Date(), calendar: .current, hours: settings.workingHours))
         tick()
     }
 

@@ -155,6 +155,30 @@ struct SettingsView: View {
                 Toggle("Skip events with no other attendees", isOn: $store.settings.requireAttendees)
             }
             Section {
+                Toggle("Only bark during working hours", isOn: $store.settings.workingHours.enabled)
+                Group {
+                    DatePicker("Start", selection: shiftMinutes(\.start), displayedComponents: .hourAndMinute)
+                    DatePicker("End", selection: shiftMinutes(\.end), displayedComponents: .hourAndMinute)
+                    LabeledContent("Days") {
+                        HStack {
+                            ForEach(Self.weekdayOrder, id: \.self) { day in
+                                Toggle(Calendar.current.veryShortWeekdaySymbols[day - 1], isOn: weekday(day))
+                                    .toggleStyle(.checkbox)
+                            }
+                        }
+                    }
+                    Picker("Outside working hours", selection: $store.settings.workingHours.outside) {
+                        ForEach(OffHours.allCases) { Text($0.label).tag($0) }
+                    }
+                }
+                .disabled(!store.settings.workingHours.enabled)
+            } header: {
+                Text("Working hours")
+            } footer: {
+                Text("A meeting that starts inside your hours alarms in full, even when it runs past the end. An end before the start is an overnight shift, which belongs to the day it starts. Test the alarm always works.")
+                    .foregroundStyle(.secondary)
+            }
+            Section {
                 Picker("Theme", selection: $store.settings.theme) {
                     ForEach(ThemeName.allCases) { theme in
                         Text(theme == AlertSettings().theme ? "\(theme.label) (default)" : theme.label).tag(theme)
@@ -179,7 +203,7 @@ struct SettingsView: View {
             } header: {
                 Text("Backup")
             } footer: {
-                Text("Saves your warnings, sounds, filters and Slack channels to a file you can import on any Mac. Sign-ins stay in your Keychain, so connect your calendars again after importing on a new Mac.")
+                Text("Saves your warnings, sounds, filters, working hours and Slack channels to a file you can import on any Mac. Sign-ins stay in your Keychain, so connect your calendars again after importing on a new Mac.")
                     .foregroundStyle(.secondary)
             }
             Section {
@@ -199,6 +223,43 @@ struct SettingsView: View {
             leadsText = Self.format(store.settings.warningLeads)
             loginItem.refresh()
         }
+    }
+
+    // weekdayOrder lists Calendar weekday numbers starting from the locale's first day of the week.
+    private static let weekdayOrder: [Int] = {
+        let first = Calendar.current.firstWeekday
+        return (0..<7).map { (first - 1 + $0) % 7 + 1 }
+    }()
+
+    // shiftMinutes binds a time picker to a working hours field held in minutes after midnight.
+    private func shiftMinutes(_ field: WritableKeyPath<WorkingHours, Int>) -> Binding<Date> {
+        Binding(
+            get: {
+                let minutes = store.settings.workingHours[keyPath: field]
+                return Calendar.current.date(bySettingHour: minutes / 60, minute: minutes % 60, second: 0, of: Date())
+                    ?? Date()
+            },
+            set: { date in
+                let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
+                store.settings.workingHours[keyPath: field] = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+            }
+        )
+    }
+
+    // weekday binds a checkbox to whether a shift can start on that Calendar weekday.
+    private func weekday(_ day: Int) -> Binding<Bool> {
+        Binding(
+            get: { store.settings.workingHours.weekdays.contains(day) },
+            set: { checked in
+                var days = Set(store.settings.workingHours.weekdays)
+                if checked {
+                    days.insert(day)
+                } else {
+                    days.remove(day)
+                }
+                store.settings.workingHours.weekdays = days.sorted()
+            }
+        )
     }
 
     // soundPicker offers Tug's barks above the macOS sounds, with a button to hear the pick.

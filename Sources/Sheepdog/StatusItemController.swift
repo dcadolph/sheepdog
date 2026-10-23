@@ -59,7 +59,9 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private func updateHover() {
         let now = Date()
         let next = coordinator.meetings.first { $0.start > now && coordinator.state(for: $0).resolution == nil }
-        let hover = Hover.status(active: coordinator.active?.meeting, next: next, napLine: napLine(), now: now)
+        let hover = Hover.status(
+            active: coordinator.active?.meeting, next: next, napLine: napLine(), offDutyLine: offDutyLine(), now: now
+        )
         if hover != shownHover {
             shownHover = hover
             item.button?.toolTip = hover
@@ -72,6 +74,28 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             return nil
         }
         return until == Nap.forever ? "Napping until you wake him" : "Napping until \(napTime(until))"
+    }
+
+    // offDutyLine says when working hours start again, or nil while Tug is on duty.
+    private func offDutyLine() -> String? {
+        let hours = coordinator.settingsStore.settings.workingHours
+        let now = Date()
+        guard hours.isOffDuty(now: now, calendar: .current) else {
+            return nil
+        }
+        guard let start = hours.nextStart(after: now, calendar: .current) else {
+            return "Off duty"
+        }
+        return "Off duty until \(shiftTime(start))"
+    }
+
+    // shiftTime renders a shift start, with the weekday when it is not today.
+    private func shiftTime(_ date: Date) -> String {
+        let time = timeFormatter.string(from: date)
+        if Calendar.current.isDateInToday(date) {
+            return time
+        }
+        return "\(date.formatted(.dateTime.weekday(.abbreviated))) \(time)"
     }
 
     // image returns Tug's glyph for a stage, or the system dog symbol outside the app bundle.
@@ -176,16 +200,26 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     // meetingRow builds one meeting's menu entry with its tooltip and actions submenu.
     private func meetingRow(_ meeting: Meeting) -> NSMenuItem {
+        let treatment = coordinator.settingsStore.settings.workingHours.treatment(for: meeting.start, calendar: .current)
+        let mark = treatment == .full ? "" : " · after hours"
         let entry = NSMenuItem(
-            title: "\(timeFormatter.string(from: meeting.start))  \(meeting.title)", action: nil, keyEquivalent: ""
+            title: "\(timeFormatter.string(from: meeting.start))  \(meeting.title)\(mark)", action: nil, keyEquivalent: ""
         )
         if coordinator.state(for: meeting).resolution != nil {
             entry.state = .on
             entry.toolTip = "Handled. Tug stays quiet for this one."
-        } else if meeting.start > Date() {
-            entry.toolTip = "Starts \(Countdown.relative(start: meeting.start, now: Date()))."
         } else {
-            entry.toolTip = "Started \(Countdown.relative(start: meeting.start, now: Date()))."
+            let verb = meeting.start > Date() ? "Starts" : "Started"
+            var tip = "\(verb) \(Countdown.relative(start: meeting.start, now: Date()))."
+            switch treatment {
+            case .silent:
+                tip += " After hours, so Tug stays quiet for this one."
+            case .quiet:
+                tip += " After hours, so Tug shows the countdown without barking."
+            case .full:
+                break
+            }
+            entry.toolTip = tip
         }
         entry.submenu = meetingMenu(meeting)
         return entry
@@ -203,16 +237,17 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             ))
             return
         }
+        let hours = coordinator.settingsStore.settings.workingHours
         let lengths: [(NapLength, String)] = [
             (.oneHour, "For 1 hour"),
             (.threeHours, "For 3 hours"),
-            (.untilMorning, Nap.morningLabel(now: Date(), calendar: .current)),
+            (.untilMorning, Nap.morningLabel(now: Date(), calendar: .current, hours: hours)),
             (.untilWoken, "Until I wake him"),
         ]
         let submenu = NSMenu()
         let now = Date()
         for (length, title) in lengths {
-            let until = Nap.until(length, now: now, calendar: .current)
+            let until = Nap.until(length, now: now, calendar: .current, hours: hours)
             let tip = until == Nap.forever ? "Tug sleeps until you choose Wake Tug." : "Tug wakes at \(napTime(until))."
             let entry = action(title, #selector(nap(_:)), tip: tip)
             entry.representedObject = length.rawValue

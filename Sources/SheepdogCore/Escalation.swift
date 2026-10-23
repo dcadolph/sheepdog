@@ -132,16 +132,21 @@ public enum Escalation {
         return next
     }
 
-    // mostUrgent returns the unresolved meeting at the loudest stage, earliest start breaking ties.
+    // mostUrgent returns the unresolved meeting at the loudest stage, earliest start breaking ties. Meetings whose
+    // ids are in quiet never pass the warning stage.
     public static func mostUrgent(
         _ meetings: [Meeting],
         states: [String: MeetingState],
         settings: AlertSettings,
-        now: Date
+        now: Date,
+        quiet: Set<String> = []
     ) -> (meeting: Meeting, stage: Stage)? {
         var best: (meeting: Meeting, stage: Stage)?
         for meeting in meetings {
-            let stage = stage(for: meeting, state: states[meeting.id] ?? MeetingState(), settings: settings, now: now)
+            var stage = stage(for: meeting, state: states[meeting.id] ?? MeetingState(), settings: settings, now: now)
+            if quiet.contains(meeting.id) {
+                stage = min(stage, .warning)
+            }
             guard stage != .idle else {
                 continue
             }

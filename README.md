@@ -61,8 +61,8 @@ without a real meeting. Copy the app to `/Applications` to keep it.
 
 ## Docs
 
-- [Using sheepdog](docs/using.md) covers the countdown pill, the alarm, Hold my place and every
-  setting.
+- [Using sheepdog](docs/using.md) covers the countdown pill, the alarm, Hold my place, working
+  hours and every setting.
 - [Building sheepdog](docs/building.md) covers direct Microsoft and Google sign-in, the tests and
   the demo renderer.
 

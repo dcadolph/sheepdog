@@ -56,6 +56,33 @@ and paste it in, with a name such as #team. The alarm then shows **Msg team** ne
 - With more than one channel, pick one first. Paste and press Return in Slack to send.
 - sheepdog never signs in to Slack and never sends anything itself.
 
+## Working hours
+
+Turn on **Only bark during working hours** in Settings to keep Tug quiet in the evening or on
+weekends. It starts at 8:00 to 18:00, Monday to Friday. Change the times and days to fit.
+
+- **Outside working hours** picks what Tug does for a meeting outside your hours. **Silent** says
+  nothing, like Nap time. **Quiet** shows the countdown pill with no sound and no alarm. **Full
+  alarm** treats every meeting the same, as if working hours were off.
+- Tug goes by when the meeting starts. With hours ending at 17:00, a 16:55 meeting alarms in full
+  even if you snooze past 17:00, and a 17:05 meeting is outside your hours from start to finish.
+- Meetings outside your hours stay in Tug's menu, marked "after hours". Hover over the glyph to
+  see when he is back, e.g. "Off duty until Mon 8:00 AM".
+- **Nap time** offers **Until work starts** instead of until morning.
+- **Test the alarm** always runs the full alarm.
+- Working hours are kept on this Mac only. Phone calendar apps alert on their own.
+
+Examples:
+
+| You want     | Start | End   | Days            |
+|--------------|-------|-------|-----------------|
+| Evenings off | 8:00  | 18:00 | Every day       |
+| Weekends off | 0:00  | 0:00  | Monday-Friday   |
+| Night shift  | 22:00 | 6:00  | Sunday-Thursday |
+
+A start and end that match cover the whole day. An end before the start is an overnight shift,
+and it belongs to the day it starts, so a Thursday 22:00 shift runs into Friday morning.
+
 ## Settings and features
 
 | Feature    | What it does                                                               |
@@ -72,6 +99,7 @@ and paste it in, with a name such as #team. The alarm then shows **Msg team** ne
 | Menu bar   | Tug's glyph changes with the alert stage and the menu lists what is next.  |
 | Events     | Each meeting in the menu offers Join meeting and Open in Calendar.         |
 | Nap time   | Silences real meetings for 1 or 3 hours, until morning, or until woken.    |
+| Hours      | Keeps Tug quiet, or down to the countdown, outside your working hours.     |
 | Hover      | The glyph says what is next, and each menu item says what it does.         |
 | Backup     | Exports settings to a file and imports them on any Mac. Sign-ins stay out. |
 | Themes     | Eleven color themes for the alarm, the countdown and the hand-back card.   |

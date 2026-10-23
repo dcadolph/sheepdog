@@ -62,6 +62,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var theme: ThemeName = .harbor
     // CheckForUpdates reports whether Sheepdog asks GitHub once a day for a newer release.
     public var checkForUpdates: Bool = true
+    // WorkingHours limits barking to shifts on chosen weekdays.
+    public var workingHours = WorkingHours()
 
     // init creates settings with the defaults.
     public init() {}
@@ -94,6 +96,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
         theme = (try? container.decodeIfPresent(ThemeName.self, forKey: .theme)) ?? defaults.theme
         checkForUpdates = try container.decodeIfPresent(Bool.self, forKey: .checkForUpdates)
             ?? defaults.checkForUpdates
+        workingHours = try container.decodeIfPresent(WorkingHours.self, forKey: .workingHours)
+            ?? defaults.workingHours
     }
 
     // validSlackChannels are the channels whose links parse.

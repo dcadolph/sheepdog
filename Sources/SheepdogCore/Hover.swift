@@ -5,8 +5,10 @@ public enum Hover {
     // titleLimit is the longest meeting title shown before it is cut short.
     static let titleLimit = 48
 
-    // status says what Tug is doing: the meeting he is alerting for, else the nap and the next meeting.
-    public static func status(active: Meeting?, next: Meeting?, napLine: String?, now: Date) -> String {
+    // status says what Tug is doing: the meeting he is alerting for, else the nap, working hours and the next meeting.
+    public static func status(
+        active: Meeting?, next: Meeting?, napLine: String?, offDutyLine: String? = nil, now: Date
+    ) -> String {
         if let active {
             let delta = active.start.timeIntervalSince(now)
             let verb = delta > -60 && delta <= 0 ? "is starting" : delta > 0 ? "starts" : "started"
@@ -15,6 +17,9 @@ public enum Hover {
         var lines: [String] = []
         if let napLine {
             lines.append(napLine)
+        }
+        if let offDutyLine {
+            lines.append(offDutyLine)
         }
         if let next {
             lines.append("Next: \(title(next)) \(Countdown.relative(start: next.start, now: now))")
