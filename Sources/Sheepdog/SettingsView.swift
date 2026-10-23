@@ -83,7 +83,10 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
             Section("Warnings") {
-                TextField("Warn at (minutes before, comma separated)", text: $leadsText)
+                TextField(text: $leadsText, prompt: Text("10, 5")) {
+                    Text("Warn at")
+                    Text("Minutes before the meeting, separated by commas.")
+                }
                     .onSubmit(applyLeads)
                     .onChange(of: leadsText) { applyLeads() }
                 Toggle("Show the floating countdown", isOn: $store.settings.showPill)
