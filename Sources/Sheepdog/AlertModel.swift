@@ -35,6 +35,9 @@ final class AlertModel {
     var messagingTeam = false
     // teamChannel is the index of the channel picked in the Msg team row.
     var teamChannel = 0
+    // drawsStill reports that the views are being drawn to an image, where AppKit-backed text
+    // fields render as placeholders, so the note field draws its text directly.
+    var drawsStill = false
 
     // onJoin is called when the user chooses Join.
     var onJoin: () -> Void = {}

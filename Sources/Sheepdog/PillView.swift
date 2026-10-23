@@ -86,6 +86,15 @@ struct NoteField: View {
 
     // body draws the field with a placeholder readable on the dark pill.
     var body: some View {
+        if model.drawsStill {
+            still
+        } else {
+            field
+        }
+    }
+
+    // field is the live text field.
+    private var field: some View {
         TextField(
             "",
             text: $model.draft,
@@ -105,5 +114,21 @@ struct NoteField: View {
                 focused = true
             }
         }
+    }
+
+    // still draws the field's text and caret the way the live field shows them, for rendered images.
+    private var still: some View {
+        HStack(spacing: 1) {
+            Text(model.draft)
+                .foregroundStyle(.white)
+            Rectangle()
+                .fill(.white)
+                .frame(width: 1, height: 14)
+            Spacer(minLength: 0)
+        }
+        .font(.system(size: 12, weight: .medium, design: .rounded))
+        .padding(.horizontal, 10)
+        .frame(height: 24)
+        .background(Theme.cream.opacity(0.1), in: Capsule())
     }
 }

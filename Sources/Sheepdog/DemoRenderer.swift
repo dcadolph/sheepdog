@@ -32,31 +32,55 @@ enum DemoRenderer {
         let cursor: (from: CGPoint, to: CGPoint)
         // clickAt is the fraction of the beat when the cursor clicks, if it does.
         let clickAt: Double?
+        // offersLinks shows the takeover's Hold my place and Msg team links.
+        var offersLinks = false
+        // typing shows the takeover's note field filling with the note over the beat.
+        var typing = false
+        // holding shows the held note on the pill and the takeover.
+        var holding = false
+        // handBack shows the hand-back card after the meeting.
+        var handBack = false
     }
 
     // rest is where the cursor sits while the user works.
     static let rest = CGPoint(x: 560, y: 520)
     // snoozeButton is the center of the takeover's Snooze button.
-    static let snoozeButton = CGPoint(x: 603, y: 674)
-    // joinButton is the center of the takeover's Join button.
-    static let joinButton = CGPoint(x: 720, y: 608)
+    static let snoozeButton = CGPoint(x: 603, y: 658)
+    // holdLink is the center of the takeover's Hold my place link.
+    static let holdLink = CGPoint(x: 674, y: 709)
+    // pillJoin is the center of the pill's Join button while it shows the held note.
+    static let pillJoin = CGPoint(x: 814, y: 54)
+    // note is the place Tug holds in the demo.
+    static let note = "Retry tests for the upload queue"
+    // channel is the made-up Slack channel that makes Msg team show.
+    static let channel = SlackChannel(name: "#design", link: "https://example.slack.com/archives/C0000000000")
 
-    // beats is the demo: warning pill, takeover, snooze, takeover at the start, join.
+    // beats is the demo, following what the app does: warning pill, takeover, snooze back to the
+    // pill, takeover at the start, hold my place with a typed note, which closes the takeover to the
+    // pill, join from the pill, and the note handed back after the meeting.
     static let beats: [Beat] = [
         Beat(duration: 3, stage: .warning, untilStart: 125, snoozesLeft: 2, snoozeLength: 60,
              cursor: (rest, rest), clickAt: nil),
         Beat(duration: 2, stage: .takeover, untilStart: 60, snoozesLeft: 2, snoozeLength: 60,
-             cursor: (rest, rest), clickAt: nil),
+             cursor: (rest, rest), clickAt: nil, offersLinks: true),
         Beat(duration: 1.5, stage: .takeover, untilStart: 58, snoozesLeft: 2, snoozeLength: 60,
-             cursor: (rest, snoozeButton), clickAt: 0.85),
+             cursor: (rest, snoozeButton), clickAt: 0.85, offersLinks: true),
         Beat(duration: 2.5, stage: .warning, untilStart: 56, snoozesLeft: 1, snoozeLength: 60,
              cursor: (snoozeButton, rest), clickAt: nil),
-        Beat(duration: 2, stage: .takeover, untilStart: 0, snoozesLeft: 1, snoozeLength: 30,
-             cursor: (rest, rest), clickAt: nil),
+        Beat(duration: 1.5, stage: .takeover, untilStart: 0, snoozesLeft: 1, snoozeLength: 30,
+             cursor: (rest, rest), clickAt: nil, offersLinks: true),
         Beat(duration: 1.5, stage: .takeover, untilStart: -2, snoozesLeft: 1, snoozeLength: 30,
-             cursor: (rest, joinButton), clickAt: 0.85),
-        Beat(duration: 1.5, stage: .idle, untilStart: -4, snoozesLeft: 1, snoozeLength: 30,
-             cursor: (joinButton, joinButton), clickAt: nil),
+             cursor: (rest, holdLink), clickAt: 0.85, offersLinks: true),
+        Beat(duration: 3, stage: .takeover, untilStart: -4, snoozesLeft: 1, snoozeLength: 30,
+             cursor: (holdLink, rest), clickAt: nil, offersLinks: true, typing: true),
+        Beat(duration: 1.5, stage: .warning, untilStart: -7, snoozesLeft: 1, snoozeLength: 30,
+             cursor: (rest, rest), clickAt: nil, holding: true),
+        Beat(duration: 1.5, stage: .warning, untilStart: -9, snoozesLeft: 1, snoozeLength: 30,
+             cursor: (rest, pillJoin), clickAt: 0.85, holding: true),
+        Beat(duration: 1, stage: .idle, untilStart: -11, snoozesLeft: 1, snoozeLength: 30,
+             cursor: (pillJoin, pillJoin), clickAt: nil),
+        Beat(duration: 3, stage: .idle, untilStart: -1800, snoozesLeft: 1, snoozeLength: 30,
+             cursor: (pillJoin, rest), clickAt: nil, handBack: true),
     ]
 
     // run writes numbered PNG frames into dir and returns a process exit code.
@@ -70,6 +94,7 @@ enum DemoRenderer {
         }
         let base = Date(timeIntervalSinceReferenceDate: 0)
         let model = AlertModel()
+        model.drawsStill = true
         var index = 0
         for beat in beats {
             let count = Int((beat.duration * fps).rounded())
@@ -86,9 +111,20 @@ enum DemoRenderer {
                 model.now = base.addingTimeInterval(Double(frame) / fps)
                 model.snoozesLeft = beat.snoozesLeft
                 model.snoozeLength = beat.snoozeLength
+                model.askPlace = beat.offersLinks && !beat.holding
+                model.editingInTakeover = beat.typing
+                model.draft = beat.typing ? String(note.prefix(Int(Double(note.count) * min(progress / 0.75, 1)))) : ""
+                model.slackChannels = beat.offersLinks ? [channel] : []
+                model.heldNote = beat.holding ? note : nil
+                model.handBack = beat.handBack
+                    ? HeldPlace(id: "demo", title: "Design review", note: note, savedAt: base, meetingEnd: base)
+                    : nil
+                model.handBackCount = beat.handBack ? 1 : 0
                 let cursor = mix(beat.cursor.from, beat.cursor.to, ease(min(progress / (beat.clickAt ?? 1), 1)))
                 let pressed = beat.clickAt.map { progress >= $0 && progress < $0 + 0.12 } ?? false
-                let scene = DemoScene(model: model, stage: beat.stage, cursor: cursor, pressed: pressed)
+                let scene = DemoScene(
+                    model: model, stage: beat.stage, cursor: cursor, pressed: pressed, handBack: beat.handBack
+                )
                     .frame(width: size.width, height: size.height)
                 let renderer = ImageRenderer(content: scene)
                 renderer.scale = 1
@@ -129,7 +165,6 @@ enum DemoRenderer {
             end: base.addingTimeInterval(1840),
             link: JoinLinkFinder.find(in: "https://zoom.us/j/5551234567")
         )
-        let note = "Retry tests for the upload queue"
 
         let takeover = AlertModel()
         takeover.meeting = meeting

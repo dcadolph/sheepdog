@@ -15,7 +15,7 @@
 
 <p align="center"><strong>The meeting alarm that barks.</strong></p>
 
-<p align="center"><img src="art/demo.gif" width="720" alt="The countdown pill, then the full-screen alarm with Snooze and Join"></p>
+<p align="center"><img src="art/demo.gif" width="720" alt="The countdown pill, the full-screen alarm with a snooze, Hold my place with a typed note, Join from the pill, and the note handed back after the meeting"></p>
 
 Calendar notifications are easy to dismiss without reading. When you are deep in something, a
 banner in the corner does not register, and ten minutes later you are late. sheepdog gets louder
