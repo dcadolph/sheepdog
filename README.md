@@ -43,6 +43,10 @@ The app is not notarized yet, so macOS blocks the first launch. Open it once, th
 **System Settings > Privacy & Security** and click **Open Anyway** next to the Sheepdog
 message. Allow calendar access when macOS asks.
 
+Once a day Sheepdog asks GitHub for the latest release. When a newer one exists, the menu shows
+a line that opens its release page. Nothing installs by itself, and the request sends no version
+or identifier. Turn it off in settings with **Check for updates**.
+
 ## Build from source
 
 ```sh

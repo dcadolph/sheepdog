@@ -88,6 +88,14 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         let settings = coordinator.settingsStore.settings
+        if let update = coordinator.availableUpdate {
+            let version = update.tag.hasPrefix("v") ? String(update.tag.dropFirst()) : update.tag
+            menu.addItem(action(
+                "Sheepdog \(version) is available", #selector(openUpdate),
+                tip: "Opens the release page on GitHub. Nothing installs by itself."
+            ))
+            menu.addItem(.separator())
+        }
         if settings.useMacCalendar && coordinator.calendar.access != .granted {
             menu.addItem(action(
                 "Allow calendar access…", #selector(openPrivacy),
@@ -294,6 +302,13 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     // wake ends Tug's nap.
     @objc private func wake() {
         coordinator.wake()
+    }
+
+    // openUpdate opens the newer release's page in the browser.
+    @objc private func openUpdate() {
+        if let update = coordinator.availableUpdate {
+            NSWorkspace.shared.open(update.page)
+        }
     }
 
     // openSupport opens the treat link in the browser.

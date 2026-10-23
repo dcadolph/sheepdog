@@ -37,3 +37,11 @@ public enum BackupError: Error, Sendable, Equatable {
     // newerVersion means the file was written by a newer Sheepdog, with the file's version.
     case newerVersion(Int)
 }
+
+// UpdateError is a failure to learn whether a newer release exists.
+public enum UpdateError: Error, Sendable, Equatable {
+    // server means GitHub returned a status other than success, e.g. a rate limit.
+    case server(status: Int)
+    // decode means the response body was not a release.
+    case decode
+}

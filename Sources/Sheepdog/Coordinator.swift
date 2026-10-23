@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import os
 
 import SheepdogCore
 
@@ -50,8 +51,36 @@ final class Coordinator {
     private(set) var napUntil: Date? = UserDefaults.standard.object(forKey: Coordinator.napKey) as? Date
     // napKey is the user defaults key holding the nap's end.
     private static let napKey = "napUntil"
+    // log records update check failures.
+    private let log = Logger(subsystem: "com.dcadolph.sheepdog", category: "updates")
+    // launched is when the app started, so the first update check waits out the login.
+    private let launched = Date()
+    // checkingUpdate reports an update check in flight.
+    private var checkingUpdate = false
+    // updateCheckedKey is the user defaults key holding when the last update check ran.
+    private static let updateCheckedKey = "updateCheckedAt"
+    // updateTagKey is the user defaults key holding the newest release tag the last check found.
+    private static let updateTagKey = "updateLatestTag"
+    // updatePageKey is the user defaults key holding that release's page.
+    private static let updatePageKey = "updateLatestPage"
+    // runningVersion is this build's version, or nil outside the app bundle.
+    private static let runningVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
+        as? String).flatMap(ReleaseVersion.init)
     // slackBundleID identifies the Slack desktop app.
     private static let slackBundleID = "com.tinyspeck.slackmacgap"
+
+    // availableUpdate is the newer release the last check found, or nil when there is none or checks are off.
+    var availableUpdate: ReleaseInfo? {
+        let defaults = UserDefaults.standard
+        guard settings.checkForUpdates, let current = Self.runningVersion,
+            let tag = defaults.string(forKey: Self.updateTagKey), let version = ReleaseVersion(tag), version > current,
+            let page = defaults.string(forKey: Self.updatePageKey).flatMap(URL.init(string:)),
+            page.scheme == "https", page.host == "github.com"
+        else {
+            return nil
+        }
+        return ReleaseInfo(tag: tag, page: page)
+    }
 
     // settings is a shortcut to the live settings.
     private var settings: AlertSettings { settingsStore.settings }
@@ -91,6 +120,42 @@ final class Coordinator {
         }
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
+    }
+
+    // checkForUpdateIfDue asks GitHub for the latest release when a check is due. The time is recorded before
+    // the request, so a failure waits for the next day instead of retrying every tick.
+    private func checkForUpdateIfDue(now: Date) {
+        let defaults = UserDefaults.standard
+        guard settings.checkForUpdates, !checkingUpdate, let current = Self.runningVersion,
+            UpdateSchedule.isDue(
+                lastChecked: defaults.object(forKey: Self.updateCheckedKey) as? Date, launched: launched, now: now
+            )
+        else {
+            return
+        }
+        defaults.set(now, forKey: Self.updateCheckedKey)
+        checkingUpdate = true
+        Task { [weak self] in
+            let checker = UpdateChecker(client: URLSessionClient(), current: current)
+            do {
+                let found = try await checker.check()
+                self?.finishUpdateCheck(found)
+            } catch {
+                self?.finishUpdateCheck(nil, failure: error)
+            }
+        }
+    }
+
+    // finishUpdateCheck keeps the release a check found, or clears it when there is none.
+    private func finishUpdateCheck(_ found: ReleaseInfo?, failure: Error? = nil) {
+        checkingUpdate = false
+        if let failure {
+            log.info("update check failed: \(String(describing: failure), privacy: .public)")
+            return
+        }
+        let defaults = UserDefaults.standard
+        defaults.set(found?.tag, forKey: Self.updateTagKey)
+        defaults.set(found?.page.absoluteString, forKey: Self.updatePageKey)
     }
 
     // requestCalendarAccessIfNeeded asks for macOS Calendar access once, when that source is on.
@@ -140,6 +205,7 @@ final class Coordinator {
         let now = Date()
         Theme.palette = settings.theme.palette
         accounts.refreshIfDue(now: now)
+        checkForUpdateIfDue(now: now)
         if now.timeIntervalSince(lastRefresh) >= 60 {
             refresh()
             return

@@ -50,6 +50,8 @@ struct SettingsView: View {
                 }
             }
             Section("General") {
+                Toggle("Check for updates", isOn: $store.settings.checkForUpdates)
+                    .help("Once a day Sheepdog asks GitHub for the latest release. It sends no version or identifier.")
                 Toggle("Start Sheepdog at login", isOn: Binding(
                     get: { loginItem.isEnabled || loginItem.needsApproval },
                     set: { loginItem.setEnabled($0) }
