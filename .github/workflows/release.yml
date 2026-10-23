@@ -131,13 +131,11 @@ jobs:
               strategy :github_latest
             end
 
-            depends_on macos: ">= :sonoma"
+            depends_on macos: :sonoma
 
             app "Sheepdog.app"
 
-            zap trash: [
-              "~/Library/Preferences/com.dcadolph.sheepdog.plist",
-            ]
+            zap trash: "~/Library/Preferences/com.dcadolph.sheepdog.plist"
           end
           EOF
           cd tap
