@@ -23,6 +23,11 @@ as the meeting gets closer. First a chime and a small countdown, then a full-scr
 Tug barking until you join, snooze or skip. It also holds a note on what you were doing and
 hands it back when the meeting ends.
 
+sheepdog is free and will stay free. If I ever stop maintaining it, I'll archive it, and the code
+stays open.
+If it has earned its spot in your menu bar, you can
+[buy Tug a treat](https://github.com/sponsors/dcadolph) through GitHub Sponsors.
+
 ## Requirements
 
 - macOS 14 or later

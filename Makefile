@@ -5,6 +5,7 @@ PLIST := $(APP)/Contents/Info.plist
 SHEEPDOG_MICROSOFT_CLIENT_ID ?=
 SHEEPDOG_GOOGLE_CLIENT_ID ?=
 SHEEPDOG_GOOGLE_CLIENT_SECRET ?=
+SHEEPDOG_SUPPORT_URL ?=
 ARCHS ?=
 ARCH_FLAGS := $(foreach arch,$(ARCHS),--arch $(arch))
 ZIP ?= .build/Sheepdog.zip
@@ -43,6 +44,7 @@ app: $(ICNS)
 	/usr/libexec/PlistBuddy -c "Set :SheepdogMicrosoftClientID '$(SHEEPDOG_MICROSOFT_CLIENT_ID)'" $(PLIST)
 	/usr/libexec/PlistBuddy -c "Set :SheepdogGoogleClientID '$(SHEEPDOG_GOOGLE_CLIENT_ID)'" $(PLIST)
 	/usr/libexec/PlistBuddy -c "Set :SheepdogGoogleClientSecret '$(SHEEPDOG_GOOGLE_CLIENT_SECRET)'" $(PLIST)
+	/usr/libexec/PlistBuddy -c "Set :SheepdogSupportURL '$(SHEEPDOG_SUPPORT_URL)'" $(PLIST)
 	codesign --force --sign "$(SIGN_ID)" $(APP)
 
 zip: app

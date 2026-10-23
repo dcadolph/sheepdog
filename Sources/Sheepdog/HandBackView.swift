@@ -17,11 +17,11 @@ struct HandBackView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Before \(place.title) you were:")
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Theme.cream)
+                        .foregroundStyle(Theme.accentText)
                         .lineLimit(1)
                     Text(place.note)
                         .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.text)
                         .fixedSize(horizontal: false, vertical: true)
                         .textSelection(.enabled)
                     HStack(spacing: 8) {
@@ -31,8 +31,8 @@ struct HandBackView: View {
                                 .font(.system(size: 12, weight: .bold, design: .rounded))
                                 .padding(.horizontal, 12)
                                 .frame(height: 24)
-                                .background(Theme.cream.opacity(0.15), in: Capsule())
-                                .foregroundStyle(Theme.bone)
+                                .background(Theme.accent.opacity(0.15), in: Capsule())
+                                .foregroundStyle(Theme.text)
                         }
                         .buttonStyle(.plain)
                         Button(action: model.onDoneHandBack) {
@@ -41,8 +41,8 @@ struct HandBackView: View {
                                 .font(.system(size: 12, weight: .bold, design: .rounded))
                                 .padding(.horizontal, 14)
                                 .frame(height: 24)
-                                .background(Theme.cream, in: Capsule())
-                                .foregroundStyle(Theme.ink)
+                                .background(Theme.accent, in: Capsule())
+                                .foregroundStyle(Theme.onAccent)
                         }
                         .buttonStyle(.plain)
                         Spacer()
@@ -50,12 +50,12 @@ struct HandBackView: View {
                             Text("+\(model.handBackCount - 1) more")
                                 .fixedSize()
                                 .font(.system(size: 11, weight: .medium, design: .rounded).monospacedDigit())
-                                .foregroundStyle(Theme.bone.opacity(0.6))
+                                .foregroundStyle(Theme.muted)
                             Button(action: model.onClearHandBacks) {
                                 Text("Clear all")
                                     .fixedSize()
                                     .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                    .foregroundStyle(Theme.bone.opacity(0.8))
+                                    .foregroundStyle(Theme.muted)
                                     .underline()
                             }
                             .buttonStyle(.plain)
@@ -66,8 +66,8 @@ struct HandBackView: View {
             }
             .padding(14)
             .frame(width: 360)
-            .background(Theme.ink, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.cream.opacity(0.25), lineWidth: 1))
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.accent.opacity(0.25), lineWidth: 1))
         }
     }
 }

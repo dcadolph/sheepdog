@@ -1,13 +1,34 @@
 import SwiftUI
 
-// Theme holds the colors shared by every Sheepdog surface.
+import SheepdogCore
+
+// Theme holds the colors of the current theme for every alert surface.
+@MainActor
 enum Theme {
-    // ink is the near-black background.
-    static let ink = Color(red: 0.06, green: 0.063, blue: 0.071)
-    // cream is the warm primary accent, matching Tug's coat.
-    static let cream = Color(red: 0.953, green: 0.89, blue: 0.722)
-    // bone is the softer secondary text color.
-    static let bone = Color(red: 0.93, green: 0.9, blue: 0.84)
-    // late is the color for a meeting that has already started.
-    static let late = Color(red: 1.0, green: 0.45, blue: 0.38)
+    // palette is the current theme's colors. The coordinator sets it whenever settings change.
+    static var palette = ThemeName.harbor.palette
+
+    // background is behind the takeover.
+    static var background: Color { Color(palette.background) }
+    // surface is behind the pill and the hand-back card.
+    static var surface: Color { Color(palette.surface) }
+    // text is the main text color.
+    static var text: Color { Color(palette.text) }
+    // muted is the color for hints and secondary lines.
+    static var muted: Color { Color(palette.muted) }
+    // accent fills the main button and draws the ring.
+    static var accent: Color { Color(palette.accent) }
+    // onAccent is the label color on an accent fill.
+    static var onAccent: Color { Color(palette.onAccent) }
+    // accentText is the accent when it is readable as small text, else the text color.
+    static var accentText: Color { Color(palette.accentText) }
+    // late marks a meeting that has already started.
+    static var late: Color { Color(palette.late) }
+}
+
+extension Color {
+    // init converts a core RGB color.
+    init(_ rgb: RGB) {
+        self.init(red: rgb.red, green: rgb.green, blue: rgb.blue)
+    }
 }

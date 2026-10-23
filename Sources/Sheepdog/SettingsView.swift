@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 import SheepdogCore
 
@@ -16,6 +17,8 @@ struct SettingsView: View {
     let onTestAlarm: () -> Void
     // leadsText is the editable warning leads, in minutes, separated by commas.
     @State private var leadsText = ""
+    // backupError is the last export or import failure, shown under the backup buttons.
+    @State private var backupError: String?
 
     // sounds lists the built-in alert sounds for the pickers.
     private let sounds = SoundPlayer.availableSounds()
@@ -34,6 +37,15 @@ struct SettingsView: View {
                             .font(.system(size: 20, weight: .bold, design: .rounded))
                         Text("Tug makes sure you get to your meetings.")
                             .foregroundStyle(.secondary)
+                        HStack(spacing: 16) {
+                            if let support = Support.url {
+                                Link("Buy Tug a treat…", destination: support)
+                                    .help(Support.treatTip)
+                            }
+                            Link("Contribute on GitHub…", destination: Support.repo)
+                                .help(Support.contributeTip)
+                        }
+                        .font(.callout)
                     }
                 }
             }
@@ -69,8 +81,9 @@ struct SettingsView: View {
             }
             Section {
                 ForEach($store.settings.slackChannels) { $channel in
+                    let id = channel.id
                     SlackChannelRow(channel: $channel) {
-                        store.settings.slackChannels.removeAll { $0.id == channel.id }
+                        store.settings.slackChannels.removeAll { $0.id == id }
                     }
                 }
                 Button("Add channel") {
@@ -140,6 +153,34 @@ struct SettingsView: View {
                 Toggle("Skip events with no other attendees", isOn: $store.settings.requireAttendees)
             }
             Section {
+                Picker("Theme", selection: $store.settings.theme) {
+                    ForEach(ThemeName.allCases) { theme in
+                        Text(theme == AlertSettings().theme ? "\(theme.label) (default)" : theme.label).tag(theme)
+                    }
+                }
+            } header: {
+                Text("Look")
+            } footer: {
+                Text("Colors the alarm, the countdown and the hold-my-place card. Use Test the alarm to see it.")
+                    .foregroundStyle(.secondary)
+            }
+            Section {
+                HStack {
+                    Button("Export settings…", action: exportSettings)
+                    Button("Import settings…", action: importSettings)
+                }
+                if let backupError {
+                    Text(backupError)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            } header: {
+                Text("Backup")
+            } footer: {
+                Text("Saves your warnings, sounds, filters and Slack channels to a file you can import on any Mac. Sign-ins stay in your Keychain, so connect your calendars again after importing on a new Mac.")
+                    .foregroundStyle(.secondary)
+            }
+            Section {
                 HStack {
                     Button("Test the alarm", action: onTestAlarm)
                     Spacer()
@@ -176,6 +217,44 @@ struct SettingsView: View {
             }
             .buttonStyle(.borderless)
             .help("Play this sound")
+        }
+    }
+
+    // exportSettings saves the current settings to a file the user picks.
+    private func exportSettings() {
+        backupError = nil
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = SettingsBackup.fileName
+        panel.allowedContentTypes = [.json]
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+        do {
+            try SettingsBackup.encode(store.settings, exported: Date()).write(to: url, options: .atomic)
+        } catch {
+            backupError = "Couldn't save the file: \(error.localizedDescription)"
+        }
+    }
+
+    // importSettings replaces every setting with the ones in a file the user picks.
+    private func importSettings() {
+        backupError = nil
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+        do {
+            store.settings = try SettingsBackup.decode(Data(contentsOf: url))
+            leadsText = Self.format(store.settings.warningLeads)
+            onSourcesChanged()
+        } catch BackupError.notSheepdog(let app) {
+            backupError = "That file is a backup from \(app), not Sheepdog."
+        } catch BackupError.newerVersion {
+            backupError = "That file is from a newer Sheepdog. Update Sheepdog, then import it."
+        } catch {
+            backupError = "That file isn't a Sheepdog settings backup."
         }
     }
 

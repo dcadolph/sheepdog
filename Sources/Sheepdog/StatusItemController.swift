@@ -33,19 +33,45 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     // shown is the stage the menu bar icon currently draws.
     private var shown: Stage = .idle
+    // shownNap reports whether the menu bar icon currently draws the napping glyph.
+    private var shownNap = false
+    // shownHover is the hover text currently set on the menu bar icon.
+    private var shownHover = ""
 
     // update refreshes the icon for the current stage and the countdown beside it.
     func update() {
         let stage = coordinator.active?.stage ?? .idle
-        if stage != shown {
+        let napping = coordinator.isNapping() && stage == .idle
+        if stage != shown || napping != shownNap {
             shown = stage
-            item.button?.image = Self.image(for: stage)
+            shownNap = napping
+            item.button?.image = napping ? (Art.napGlyph() ?? Self.image(for: stage)) : Self.image(for: stage)
         }
+        updateHover()
         guard let active = coordinator.active else {
             item.button?.title = ""
             return
         }
         item.button?.title = " " + Countdown.short(start: active.meeting.start, now: Date())
+    }
+
+    // updateHover sets the icon's hover text, only when it changes so a showing tooltip is not reset each second.
+    private func updateHover() {
+        let now = Date()
+        let next = coordinator.meetings.first { $0.start > now && coordinator.state(for: $0).resolution == nil }
+        let hover = Hover.status(active: coordinator.active?.meeting, next: next, napLine: napLine(), now: now)
+        if hover != shownHover {
+            shownHover = hover
+            item.button?.toolTip = hover
+        }
+    }
+
+    // napLine says when Tug wakes, or nil while he is awake.
+    private func napLine() -> String? {
+        guard coordinator.isNapping(), let until = coordinator.napUntil else {
+            return nil
+        }
+        return until == Nap.forever ? "Napping until you wake him" : "Napping until \(napTime(until))"
     }
 
     // image returns Tug's glyph for a stage, or the system dog symbol outside the app bundle.
@@ -63,16 +89,25 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.removeAllItems()
         let settings = coordinator.settingsStore.settings
         if settings.useMacCalendar && coordinator.calendar.access != .granted {
-            menu.addItem(action("Allow calendar access…", #selector(openPrivacy)))
+            menu.addItem(action(
+                "Allow calendar access…", #selector(openPrivacy),
+                tip: "Opens System Settings so Tug can read your Mac calendars."
+            ))
             menu.addItem(.separator())
         }
         if !settings.useMacCalendar && !coordinator.accounts.hasAccounts {
-            menu.addItem(action("Connect a calendar…", #selector(showSettings)))
+            menu.addItem(action(
+                "Connect a calendar…", #selector(showSettings),
+                tip: "Opens settings to connect a calendar for Tug to watch."
+            ))
             menu.addItem(.separator())
         }
         for kind in AccountKind.allCases {
             if case .needsSignIn = coordinator.accounts.states[kind] {
-                menu.addItem(action("Sign in to \(kind.label) again…", #selector(showSettings)))
+                menu.addItem(action(
+                    "Sign in to \(kind.label) again…", #selector(showSettings),
+                    tip: "Tug lost access to your \(kind.label) calendar. Opens settings to sign in again."
+                ))
                 menu.addItem(.separator())
             }
         }
@@ -87,46 +122,135 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         if !held.isEmpty {
             menu.addItem(.separator())
         }
-        let upcoming = coordinator.meetings.filter { $0.end > Date() }.prefix(6)
+        let upcoming = coordinator.meetings.filter { $0.end > Date() }
         if upcoming.isEmpty {
             menu.addItem(withTitle: "No meetings in the next 12 hours", action: nil, keyEquivalent: "")
         }
-        for meeting in upcoming {
-            let entry = NSMenuItem(
-                title: "\(timeFormatter.string(from: meeting.start))  \(meeting.title)", action: nil, keyEquivalent: ""
-            )
-            if coordinator.state(for: meeting).resolution != nil {
-                entry.state = .on
+        for meeting in upcoming.prefix(Self.visibleMeetings) {
+            menu.addItem(meetingRow(meeting))
+        }
+        if upcoming.count > Self.visibleMeetings {
+            let more = NSMenu()
+            for meeting in upcoming.dropFirst(Self.visibleMeetings) {
+                more.addItem(meetingRow(meeting))
             }
-            entry.submenu = meetingMenu(meeting)
+            let entry = NSMenuItem(title: "More meetings", action: nil, keyEquivalent: "")
+            entry.toolTip = "\(upcoming.count - Self.visibleMeetings) more in the next 12 hours."
+            entry.submenu = more
             menu.addItem(entry)
         }
         menu.addItem(.separator())
-        menu.addItem(action("Test the alarm", #selector(testAlarm)))
-        menu.addItem(action("Refresh calendars", #selector(refresh)))
-        menu.addItem(action("Settings…", #selector(showSettings), key: ","))
+        addNapItems(to: menu)
         menu.addItem(.separator())
-        menu.addItem(action("Quit Sheepdog", #selector(quit), key: "q"))
+        menu.addItem(action(
+            "Test the alarm", #selector(testAlarm),
+            tip: "Runs a pretend meeting through the full alarm so you can see and hear what Tug does."
+        ))
+        menu.addItem(action(
+            "Refresh calendars", #selector(refresh), tip: "Refreshes the connection to every calendar Tug is watching."
+        ))
+        menu.addItem(action(
+            "Settings…", #selector(showSettings), key: ",",
+            tip: "Choose which calendars Tug watches, when he barks and how loud."
+        ))
+        menu.addItem(.separator())
+        if Support.url != nil {
+            menu.addItem(action("Buy Tug a treat…", #selector(openSupport), tip: Support.treatTip))
+        }
+        menu.addItem(action(
+            "Quit Sheepdog", #selector(quit), key: "q",
+            tip: "Tug stops watching your calendars until you open Sheepdog again."
+        ))
+    }
+
+    // visibleMeetings is how many meetings the menu lists before the rest move under More meetings.
+    private static let visibleMeetings = 4
+
+    // meetingRow builds one meeting's menu entry with its tooltip and actions submenu.
+    private func meetingRow(_ meeting: Meeting) -> NSMenuItem {
+        let entry = NSMenuItem(
+            title: "\(timeFormatter.string(from: meeting.start))  \(meeting.title)", action: nil, keyEquivalent: ""
+        )
+        if coordinator.state(for: meeting).resolution != nil {
+            entry.state = .on
+            entry.toolTip = "Handled. Tug stays quiet for this one."
+        } else if meeting.start > Date() {
+            entry.toolTip = "Starts \(Countdown.relative(start: meeting.start, now: Date()))."
+        } else {
+            entry.toolTip = "Started \(Countdown.relative(start: meeting.start, now: Date()))."
+        }
+        entry.submenu = meetingMenu(meeting)
+        return entry
+    }
+
+    // addNapItems adds Nap time and its lengths while Tug is awake, or the nap's end and Wake Tug while he sleeps.
+    private func addNapItems(to menu: NSMenu) {
+        if let line = napLine() {
+            let entry = NSMenuItem(title: line, action: nil, keyEquivalent: "")
+            entry.toolTip = "Tug stays quiet for real meetings until then. Test the alarm still works."
+            menu.addItem(entry)
+            menu.addItem(action(
+                "Wake Tug", #selector(wake),
+                tip: "Ends the nap. A meeting already in its alert window alerts right away."
+            ))
+            return
+        }
+        let lengths: [(NapLength, String)] = [
+            (.oneHour, "For 1 hour"),
+            (.threeHours, "For 3 hours"),
+            (.untilMorning, Nap.morningLabel(now: Date(), calendar: .current)),
+            (.untilWoken, "Until I wake him"),
+        ]
+        let submenu = NSMenu()
+        let now = Date()
+        for (length, title) in lengths {
+            let until = Nap.until(length, now: now, calendar: .current)
+            let tip = until == Nap.forever ? "Tug sleeps until you choose Wake Tug." : "Tug wakes at \(napTime(until))."
+            let entry = action(title, #selector(nap(_:)), tip: tip)
+            entry.representedObject = length.rawValue
+            submenu.addItem(entry)
+        }
+        let entry = NSMenuItem(title: "Nap time", action: nil, keyEquivalent: "")
+        entry.toolTip = "Put Tug down for a nap. He stays quiet for real meetings until he wakes."
+        entry.submenu = submenu
+        menu.addItem(entry)
+    }
+
+    // napTime renders a nap's end, with the day when it is not today.
+    private func napTime(_ date: Date) -> String {
+        let time = timeFormatter.string(from: date)
+        if Calendar.current.isDateInToday(date) {
+            return time
+        }
+        if Calendar.current.isDateInTomorrow(date) {
+            return "\(time) tomorrow"
+        }
+        return date.formatted(date: .abbreviated, time: .shortened)
     }
 
     // meetingMenu builds a meeting row's submenu: Join when there is a link, then Open in Calendar.
     private func meetingMenu(_ meeting: Meeting) -> NSMenu {
         let menu = NSMenu()
         if meeting.link != nil {
-            let join = action("Join meeting", #selector(joinMeeting(_:)))
+            let join = action(
+                "Join meeting", #selector(joinMeeting(_:)), tip: "Opens the meeting link and tells Tug you joined."
+            )
             join.representedObject = meeting.id
             menu.addItem(join)
         }
-        let show = action("Open in Calendar", #selector(openInCalendar(_:)))
+        let show = action(
+            "Open in Calendar", #selector(openInCalendar(_:)), tip: "Shows this meeting in the calendar it came from."
+        )
         show.representedObject = meeting.id
         menu.addItem(show)
         return menu
     }
 
-    // action creates a menu item that targets this controller.
-    private func action(_ title: String, _ selector: Selector, key: String = "") -> NSMenuItem {
+    // action creates a menu item that targets this controller, with tip as its hover text.
+    private func action(_ title: String, _ selector: Selector, key: String = "", tip: String? = nil) -> NSMenuItem {
         let entry = NSMenuItem(title: title, action: selector, keyEquivalent: key)
         entry.target = self
+        entry.toolTip = tip
         return entry
     }
 
@@ -157,6 +281,26 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             return
         }
         coordinator.handBackNow(id)
+    }
+
+    // nap puts Tug to sleep for the chosen length.
+    @objc private func nap(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String, let length = NapLength(rawValue: raw) else {
+            return
+        }
+        coordinator.nap(length)
+    }
+
+    // wake ends Tug's nap.
+    @objc private func wake() {
+        coordinator.wake()
+    }
+
+    // openSupport opens the treat link in the browser.
+    @objc private func openSupport() {
+        if let url = Support.url {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     // testAlarm triggers a fake takeover.

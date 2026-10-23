@@ -15,7 +15,7 @@ struct PillView: View {
                 if let note = model.heldNote {
                     Text("Tug is holding: \(note)")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(Theme.bone.opacity(0.8))
+                        .foregroundStyle(Theme.muted)
                         .lineLimit(1)
                         .frame(maxWidth: 320, alignment: .leading)
                         .padding(.leading, 38)
@@ -29,8 +29,8 @@ struct PillView: View {
             .padding(.leading, 6)
             .padding(.trailing, 12)
             .frame(minHeight: 40)
-            .background(Theme.ink.opacity(0.92), in: RoundedRectangle(cornerRadius: 20))
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.cream.opacity(0.25), lineWidth: 1))
+            .background(Theme.surface.opacity(0.92), in: RoundedRectangle(cornerRadius: 20))
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.accent.opacity(0.25), lineWidth: 1))
             .fixedSize()
         }
     }
@@ -43,20 +43,20 @@ struct PillView: View {
                 .clipShape(Circle())
             Text(meeting.title)
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.text)
                 .lineLimit(1)
                 .frame(maxWidth: 220, alignment: .leading)
             Text(Countdown.clock(meeting.start.timeIntervalSince(model.now)))
                 .font(.system(size: 15, weight: .bold, design: .rounded).monospacedDigit())
-                .foregroundStyle(model.hasStarted ? Theme.late : Theme.cream)
+                .foregroundStyle(model.hasStarted ? Theme.late : Theme.accentText)
             if meeting.link != nil {
                 Button(action: model.onJoin) {
                     Text("Join")
                         .font(.system(size: 12, weight: .bold, design: .rounded))
                         .padding(.horizontal, 12)
                         .frame(height: 24)
-                        .background(Theme.cream, in: Capsule())
-                        .foregroundStyle(Theme.ink)
+                        .background(Theme.accent, in: Capsule())
+                        .foregroundStyle(Theme.onAccent)
                 }
                 .buttonStyle(.plain)
             }
@@ -64,8 +64,8 @@ struct PillView: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 10, weight: .bold))
                     .frame(width: 20, height: 20)
-                    .background(Theme.cream.opacity(0.15), in: Circle())
-                    .foregroundStyle(Theme.bone)
+                    .background(Theme.accent.opacity(0.15), in: Circle())
+                    .foregroundStyle(Theme.text)
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
@@ -98,14 +98,14 @@ struct NoteField: View {
         TextField(
             "",
             text: $model.draft,
-            prompt: Text("What were you in the middle of?").foregroundStyle(Theme.bone.opacity(0.45))
+            prompt: Text("What were you in the middle of?").foregroundStyle(Theme.muted)
         )
         .textFieldStyle(.plain)
         .font(.system(size: 12, weight: .medium, design: .rounded))
-        .foregroundStyle(.white)
+        .foregroundStyle(Theme.text)
         .padding(.horizontal, 10)
         .frame(height: 24)
-        .background(Theme.cream.opacity(0.1), in: Capsule())
+        .background(Theme.accent.opacity(0.1), in: Capsule())
         .focused($focused)
         .onSubmit(model.onSaveNote)
         .onExitCommand(perform: model.onCancelNote)
@@ -120,15 +120,15 @@ struct NoteField: View {
     private var still: some View {
         HStack(spacing: 1) {
             Text(model.draft)
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.text)
             Rectangle()
-                .fill(.white)
+                .fill(Theme.text)
                 .frame(width: 1, height: 14)
             Spacer(minLength: 0)
         }
         .font(.system(size: 12, weight: .medium, design: .rounded))
         .padding(.horizontal, 10)
         .frame(height: 24)
-        .background(Theme.cream.opacity(0.1), in: Capsule())
+        .background(Theme.accent.opacity(0.1), in: Capsule())
     }
 }

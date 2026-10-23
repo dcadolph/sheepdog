@@ -42,6 +42,28 @@ enum Art {
         image.accessibilityDescription = "Sheepdog"
         return image
     }
+
+    // napGlyph returns the idle glyph with a small zzz above Tug's head, so a nap shows in the menu bar.
+    static func napGlyph() -> NSImage? {
+        guard let dog = glyph(for: .idle),
+              let zzz = NSImage(systemSymbolName: "zzz", accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: 8, weight: .bold))
+        else {
+            return nil
+        }
+        let size = NSSize(width: dog.size.width + zzz.size.width - 2, height: dog.size.height)
+        let image = NSImage(size: size, flipped: false) { _ in
+            dog.draw(in: NSRect(origin: .zero, size: dog.size))
+            zzz.draw(in: NSRect(
+                x: size.width - zzz.size.width, y: size.height - zzz.size.height,
+                width: zzz.size.width, height: zzz.size.height
+            ))
+            return true
+        }
+        image.isTemplate = true
+        image.accessibilityDescription = "Sheepdog, napping"
+        return image
+    }
 }
 
 // TugImage shows a bundled drawing of Tug, falling back to the system dog symbol.
@@ -60,7 +82,7 @@ struct TugImage: View {
             Image(systemName: "dog.fill")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .foregroundStyle(Theme.ink)
+                .foregroundStyle(.primary)
         }
     }
 }

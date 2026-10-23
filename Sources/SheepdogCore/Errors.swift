@@ -27,3 +27,13 @@ public enum RemoteError: Error, Sendable, Equatable {
     // tooManyPages means paging did not end within the page limit.
     case tooManyPages
 }
+
+// BackupError is a failure to read a settings backup file.
+public enum BackupError: Error, Sendable, Equatable {
+    // unreadable means the file is not a settings backup in any form this app understands.
+    case unreadable
+    // notSheepdog means the file is a backup from another app.
+    case notSheepdog(String)
+    // newerVersion means the file was written by a newer Sheepdog, with the file's version.
+    case newerVersion(Int)
+}

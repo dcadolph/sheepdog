@@ -18,6 +18,8 @@ jobs:
           SHEEPDOG_MICROSOFT_CLIENT_ID: ${{ secrets.SHEEPDOG_MICROSOFT_CLIENT_ID }}
           SHEEPDOG_GOOGLE_CLIENT_ID: ${{ secrets.SHEEPDOG_GOOGLE_CLIENT_ID }}
           SHEEPDOG_GOOGLE_CLIENT_SECRET: ${{ secrets.SHEEPDOG_GOOGLE_CLIENT_SECRET }}
+          # Support link for the Tug menu and settings. Unset, the app shows no support link.
+          SHEEPDOG_SUPPORT_URL: ${{ vars.SHEEPDOG_SUPPORT_URL }}
           TAG: ${{ github.event.release.tag_name }}
         run: |
           set -euo pipefail

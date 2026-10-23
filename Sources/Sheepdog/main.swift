@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // applicationDidFinishLaunching builds the menu bar item and starts the loop.
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.mainMenu = Self.makeMainMenu()
         loginItem.configureOnFirstLaunch()
         let coordinator = Coordinator(settingsStore: settingsStore, accounts: accounts)
         let statusItem = StatusItemController(coordinator: coordinator) { [weak self] in
@@ -49,6 +50,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate()
         settingsWindow?.center()
         settingsWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    // makeMainMenu builds the main menu that supplies the edit and close shortcuts. An accessory app
+    // never shows a menu bar, but AppKit still routes key equivalents like Cmd+V through it.
+    private static func makeMainMenu() -> NSMenu {
+        let edit = NSMenu(title: "Edit")
+        edit.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        edit.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "Z")
+        edit.addItem(.separator())
+        edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        let window = NSMenu(title: "Window")
+        window.addItem(withTitle: "Close", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        let menu = NSMenu()
+        for submenu in [NSMenu(title: "Sheepdog"), edit, window] {
+            let item = NSMenuItem(title: submenu.title, action: nil, keyEquivalent: "")
+            item.submenu = submenu
+            menu.addItem(item)
+        }
+        return menu
     }
 }
 

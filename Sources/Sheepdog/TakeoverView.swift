@@ -10,7 +10,7 @@ struct TakeoverView: View {
     // body lays out the card over a dimmed backdrop.
     var body: some View {
         ZStack {
-            Theme.ink.opacity(0.88).ignoresSafeArea()
+            Theme.background.opacity(0.88).ignoresSafeArea()
             if let meeting = model.meeting {
                 card(meeting)
             }
@@ -35,19 +35,19 @@ struct TakeoverView: View {
                 Text("TUG SAYS IT'S TIME")
                     .font(.system(size: 15, weight: .heavy, design: .rounded))
                     .tracking(3)
-                    .foregroundStyle(Theme.cream)
+                    .foregroundStyle(Theme.accentText)
                 Text(meeting.title)
                     .font(.system(size: 44, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.text)
                     .multilineTextAlignment(.center)
                     .lineLimit(3)
                     .frame(maxWidth: 900)
                 Text(Countdown.phrase(start: meeting.start, now: model.now))
                     .font(.system(size: 28, weight: .semibold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(model.hasStarted ? Theme.late : Theme.bone)
+                    .foregroundStyle(model.hasStarted ? Theme.late : Theme.text)
                 Text(linkCaption(meeting))
                     .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(Theme.bone.opacity(0.7))
+                    .foregroundStyle(Theme.muted)
             }
 
             VStack(spacing: 14) {
@@ -55,8 +55,8 @@ struct TakeoverView: View {
                     Text(meeting.link == nil ? "I'll attend" : "Join now")
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .frame(width: 320, height: 60)
-                        .background(Theme.cream, in: Capsule())
-                        .foregroundStyle(Theme.ink)
+                        .background(Theme.accent, in: Capsule())
+                        .foregroundStyle(Theme.onAccent)
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut(.defaultAction)
@@ -66,8 +66,8 @@ struct TakeoverView: View {
                         Text(snoozeLabel)
                             .font(.system(size: 16, weight: .semibold, design: .rounded))
                             .frame(width: 220, height: 44)
-                            .background(Theme.bone.opacity(model.snoozesLeft > 0 ? 0.16 : 0.06), in: Capsule())
-                            .foregroundStyle(Theme.bone.opacity(model.snoozesLeft > 0 ? 1 : 0.4))
+                            .background(Theme.text.opacity(model.snoozesLeft > 0 ? 0.16 : 0.06), in: Capsule())
+                            .foregroundStyle(Theme.text.opacity(model.snoozesLeft > 0 ? 1 : 0.4))
                     }
                     .buttonStyle(.plain)
                     .disabled(model.snoozesLeft == 0)
@@ -76,8 +76,8 @@ struct TakeoverView: View {
                         Text("I'm skipping this one")
                             .font(.system(size: 16, weight: .semibold, design: .rounded))
                             .frame(width: 220, height: 44)
-                            .overlay(Capsule().stroke(Theme.bone.opacity(0.3), lineWidth: 1.5))
-                            .foregroundStyle(Theme.bone.opacity(0.85))
+                            .overlay(Capsule().stroke(Theme.text.opacity(0.3), lineWidth: 1.5))
+                            .foregroundStyle(Theme.muted)
                     }
                     .buttonStyle(.plain)
                 }
@@ -98,7 +98,7 @@ struct TakeoverView: View {
         } else if let note = model.heldNote {
             Text("Tug is holding: \(note)")
                 .font(.system(size: 15, weight: .medium, design: .rounded))
-                .foregroundStyle(Theme.bone.opacity(0.75))
+                .foregroundStyle(Theme.muted)
                 .lineLimit(1)
                 .frame(maxWidth: 454)
                 .padding(.top, 6)
@@ -115,7 +115,7 @@ struct TakeoverView: View {
                     Button(action: model.onHoldPlace) {
                         Text("Hold my place")
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .foregroundStyle(Theme.cream.opacity(0.85))
+                            .foregroundStyle(Theme.accentText)
                             .underline()
                     }
                     .buttonStyle(.plain)
@@ -134,7 +134,7 @@ struct TakeoverView: View {
         Button(action: model.onMsgTeam) {
             Text("Msg team")
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundStyle(Theme.cream.opacity(0.85))
+                .foregroundStyle(Theme.accentText)
                 .underline()
         }
         .buttonStyle(.plain)
@@ -156,8 +156,8 @@ struct TakeoverView: View {
                                 .lineLimit(1)
                                 .padding(.horizontal, 12)
                                 .frame(height: 28)
-                                .background(Theme.cream.opacity(picked ? 0.9 : 0.12), in: Capsule())
-                                .foregroundStyle(picked ? Theme.ink : Theme.bone)
+                                .background(Theme.accent.opacity(picked ? 0.9 : 0.12), in: Capsule())
+                                .foregroundStyle(picked ? Theme.onAccent : Theme.text)
                         }
                         .buttonStyle(.plain)
                     }
@@ -171,8 +171,8 @@ struct TakeoverView: View {
                     Text("Running late")
                         .font(.system(size: 16, weight: .semibold, design: .rounded))
                         .frame(width: 220, height: 44)
-                        .background(Theme.bone.opacity(0.16), in: Capsule())
-                        .foregroundStyle(Theme.bone)
+                        .background(Theme.text.opacity(0.16), in: Capsule())
+                        .foregroundStyle(Theme.text)
                 }
                 .buttonStyle(.plain)
 
@@ -182,17 +182,17 @@ struct TakeoverView: View {
                     Text("Can't make it")
                         .font(.system(size: 16, weight: .semibold, design: .rounded))
                         .frame(width: 220, height: 44)
-                        .overlay(Capsule().stroke(Theme.bone.opacity(0.3), lineWidth: 1.5))
-                        .foregroundStyle(Theme.bone.opacity(0.85))
+                        .overlay(Capsule().stroke(Theme.text.opacity(0.3), lineWidth: 1.5))
+                        .foregroundStyle(Theme.muted)
                 }
                 .buttonStyle(.plain)
             }
             HStack(spacing: 6) {
                 Text("Copies the message and opens Slack. Paste to send.")
-                    .foregroundStyle(Theme.bone.opacity(0.6))
+                    .foregroundStyle(Theme.muted)
                 Button(action: model.onMsgTeam) {
                     Text("Cancel")
-                        .foregroundStyle(Theme.cream.opacity(0.85))
+                        .foregroundStyle(Theme.accentText)
                         .underline()
                 }
                 .buttonStyle(.plain)
@@ -207,8 +207,8 @@ struct TakeoverView: View {
             Image(systemName: "xmark")
                 .font(.system(size: 18, weight: .bold))
                 .frame(width: 44, height: 44)
-                .background(Theme.cream.opacity(0.18), in: Circle())
-                .foregroundStyle(Theme.bone)
+                .background(Theme.accent.opacity(0.18), in: Circle())
+                .foregroundStyle(Theme.text)
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
@@ -245,10 +245,10 @@ struct CountdownRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Theme.cream.opacity(0.15), lineWidth: 8)
+                .stroke(Theme.accent.opacity(0.15), lineWidth: 8)
             Circle()
                 .trim(from: 0, to: late ? 1 : fraction)
-                .stroke(late ? Theme.late : Theme.cream, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                .stroke(late ? Theme.late : Theme.accent, style: StrokeStyle(lineWidth: 8, lineCap: .round))
                 .rotationEffect(.degrees(-90))
         }
         .animation(late ? nil : .linear(duration: 1), value: fraction)

@@ -58,6 +58,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var useMacCalendar: Bool = true
     // SlackChannels are the channels the alarm's Msg team button can open.
     public var slackChannels: [SlackChannel] = []
+    // Theme colors the takeover, the pill, and the hand-back card.
+    public var theme: ThemeName = .harbor
 
     // init creates settings with the defaults.
     public init() {}
@@ -86,6 +88,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
         useMacCalendar = try container.decodeIfPresent(Bool.self, forKey: .useMacCalendar) ?? defaults.useMacCalendar
         slackChannels = try container.decodeIfPresent([SlackChannel].self, forKey: .slackChannels)
             ?? defaults.slackChannels
+        // An unknown theme, e.g. one from a newer build, falls back instead of failing every setting.
+        theme = (try? container.decodeIfPresent(ThemeName.self, forKey: .theme)) ?? defaults.theme
     }
 
     // validSlackChannels are the channels whose links parse.

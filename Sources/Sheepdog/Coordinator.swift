@@ -45,6 +45,13 @@ final class Coordinator {
     private var timer: Timer?
     // active is the meeting currently being alerted for, if any.
     private(set) var active: (meeting: Meeting, stage: Stage)?
+    // napUntil is when Tug wakes from a nap, or nil while he is awake. It is kept in user defaults so a
+    // nap survives a restart.
+    private(set) var napUntil: Date? = UserDefaults.standard.object(forKey: Coordinator.napKey) as? Date
+    // napKey is the user defaults key holding the nap's end.
+    private static let napKey = "napUntil"
+    // slackBundleID identifies the Slack desktop app.
+    private static let slackBundleID = "com.tinyspeck.slackmacgap"
 
     // settings is a shortcut to the live settings.
     private var settings: AlertSettings { settingsStore.settings }
@@ -131,13 +138,18 @@ final class Coordinator {
     // tick advances the alert state once.
     private func tick() {
         let now = Date()
+        Theme.palette = settings.theme.palette
         accounts.refreshIfDue(now: now)
         if now.timeIntervalSince(lastRefresh) >= 60 {
             refresh()
             return
         }
         testMeetings.removeAll { Escalation.isExpired($0, settings: settings, now: now) || states[$0.id]?.resolution != nil }
-        let all = meetings + testMeetings
+        if napUntil != nil && !isNapping(now: now) {
+            setNap(nil)
+        }
+        // A nap leaves real meetings out entirely. Test the alarm still works because it is asked for.
+        let all = isNapping(now: now) ? testMeetings : meetings + testMeetings
 
         let chime = all.contains { meeting in
             let state = states[meeting.id] ?? MeetingState()
@@ -212,6 +224,33 @@ final class Coordinator {
         }
     }
 
+    // isNapping reports whether Tug is asleep at now.
+    func isNapping(now: Date = Date()) -> Bool {
+        Nap.isNapping(until: napUntil, now: now)
+    }
+
+    // nap puts Tug to sleep for the chosen length, which silences every real meeting until he wakes.
+    func nap(_ length: NapLength) {
+        setNap(Nap.until(length, now: Date(), calendar: .current))
+        tick()
+    }
+
+    // wake ends a nap. Meetings still in their alert window alert at once.
+    func wake() {
+        setNap(nil)
+        tick()
+    }
+
+    // setNap stores the nap's end, or clears it.
+    private func setNap(_ until: Date?) {
+        napUntil = until
+        if let until {
+            UserDefaults.standard.set(until, forKey: Self.napKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: Self.napKey)
+        }
+    }
+
     // join opens the active meeting's link and resolves it as joined.
     func join() {
         guard let meeting = active?.meeting else {
@@ -265,15 +304,27 @@ final class Coordinator {
         NSPasteboard.general.setString(message.text(title: meeting.title), forType: .string)
         model.messagingTeam = false
         windows.forgetPreviousApp()
-        if !NSWorkspace.shared.open(link.native) {
-            NSWorkspace.shared.open(link.web)
-        }
+        openInSlack(link)
         switch message {
         case .runningLate:
             closeTakeover()
         case .cantMake:
             resolveActive(.skipped)
         }
+    }
+
+    // openInSlack opens the channel in the Slack app. A Copy link carries no team id, so there is no
+    // slack:// form, but the Slack app opens the web link itself when handed it directly. The
+    // browser is the fallback when Slack is not installed.
+    private func openInSlack(_ link: SlackLink) {
+        if link.native != link.web, NSWorkspace.shared.open(link.native) {
+            return
+        }
+        guard let slack = NSWorkspace.shared.urlForApplication(withBundleIdentifier: Self.slackBundleID) else {
+            NSWorkspace.shared.open(link.web)
+            return
+        }
+        NSWorkspace.shared.open([link.web], withApplicationAt: slack, configuration: NSWorkspace.OpenConfiguration())
     }
 
     // snooze applies one snooze to the active meeting.
