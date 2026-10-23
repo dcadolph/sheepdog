@@ -148,7 +148,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520)
+        .frame(width: 520, height: 680)
         .onAppear {
             leadsText = Self.format(store.settings.warningLeads)
             loginItem.refresh()
