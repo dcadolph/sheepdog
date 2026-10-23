@@ -62,6 +62,8 @@ final class Coordinator {
         model.onSaveNote = { [weak self] in self?.saveNote() }
         model.onHoldPlace = { [weak self] in self?.holdPlace() }
         model.onCancelNote = { [weak self] in self?.cancelNote() }
+        model.onMsgTeam = { [weak self] in self?.toggleTeamRow() }
+        model.onSendTeamMessage = { [weak self] in self?.sendTeamMessage($0) }
         model.onCopyHandBack = { [weak self] in self?.copyHandBack() }
         model.onDoneHandBack = { [weak self] in self?.doneHandBack() }
         model.onClearHandBacks = { [weak self] in self?.clearHandBacks() }
@@ -160,6 +162,13 @@ final class Coordinator {
         model.now = now
         followDraft(to: active?.meeting)
         model.askPlace = settings.holdPlace
+        model.slackChannels = settings.validSlackChannels
+        if model.teamChannel >= model.slackChannels.count {
+            model.teamChannel = 0
+        }
+        if model.slackChannels.isEmpty {
+            model.messagingTeam = false
+        }
         model.heldNote = active.flatMap { active in places.places.first { $0.id == active.meeting.id }?.note }
         guard let active else {
             sounds.stopAlarm()
@@ -187,6 +196,7 @@ final class Coordinator {
         case .warning:
             sounds.stopAlarm()
             model.editingInTakeover = false
+            model.messagingTeam = false
             windows.hideTakeover()
             if Escalation.showsPill(state, settings: settings) {
                 windows.showPill()
@@ -219,6 +229,39 @@ final class Coordinator {
         windows.forgetPreviousApp()
         if !NSWorkspace.shared.open(link.native) {
             NSWorkspace.shared.open(link.web)
+        }
+    }
+
+    // toggleTeamRow opens or closes the takeover's Msg team row, saving any typed note first so the
+    // note field and the row are never open together.
+    private func toggleTeamRow() {
+        if !model.messagingTeam {
+            commitDraft()
+        }
+        model.messagingTeam.toggle()
+    }
+
+    // sendTeamMessage copies a ready-made line for the active meeting, opens the picked Slack channel
+    // and gets the alarm off the screen so the user can paste. Running late keeps the countdown, and
+    // can't make it skips the meeting.
+    private func sendTeamMessage(_ message: TeamMessage) {
+        let channels = settings.validSlackChannels
+        guard let meeting = active?.meeting, !channels.isEmpty,
+              let link = channels[min(model.teamChannel, channels.count - 1)].channelLink else {
+            return
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(message.text(title: meeting.title), forType: .string)
+        model.messagingTeam = false
+        windows.forgetPreviousApp()
+        if !NSWorkspace.shared.open(link.native) {
+            NSWorkspace.shared.open(link.web)
+        }
+        switch message {
+        case .runningLate:
+            closeTakeover()
+        case .cantMake:
+            resolveActive(.skipped)
         }
     }
 
@@ -313,6 +356,7 @@ final class Coordinator {
         }
         commitDraft()
         draftMeeting = meeting
+        model.messagingTeam = false
     }
 
     // commitDraft saves the typed note, if any, for the meeting it was typed for and clears the field.

@@ -43,12 +43,26 @@ top right corner of your main display hands the note back.
 - More than one note stacks newest first, like macOS notifications, with **Clear all**.
 - Notes nobody picked up are cleared at 4 a.m.
 
+## Msg team
+
+Add your team's Slack channels in Settings, under Slack. Use **Copy link** on a channel in Slack
+and paste it in, with a name such as #team. The alarm then shows **Msg team** next to
+**Hold my place**.
+
+- **Running late** copies "Running a few minutes late to Design review." and opens the channel.
+  The alarm drops to the countdown pill, so the meeting is still tracked.
+- **Can't make it** copies "I can't make Design review." and opens the channel. The meeting
+  counts as skipped, the same as **I'm skipping this one**.
+- With more than one channel, pick one first. Paste and press Return in Slack to send.
+- Sheepdog never signs in to Slack and never sends anything itself.
+
 ## Settings and features
 
 | Feature    | What it does                                                               |
 |------------|----------------------------------------------------------------------------|
 | Calendars  | Reads every calendar in macOS Calendar, including Google and Exchange.     |
 | Join links | Finds Teams, Zoom, Google Meet, Webex and Slack links in the event.        |
+| Msg team   | Copies a running late or can't make it line and opens your Slack channel.  |
 | Volume     | Unmutes and raises the volume while the alarm plays, then puts it back.    |
 | Speakers   | Plays through headphones, built-in speakers, or both at once.              |
 | Sounds     | Tug's bark and woof, or any macOS system sound.                            |

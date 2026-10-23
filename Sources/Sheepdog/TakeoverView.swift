@@ -88,30 +88,116 @@ struct TakeoverView: View {
         .padding(56)
     }
 
-    // placeRow offers to hold the user's place, shows the open field, or shows the held note.
+    // placeRow offers to hold the user's place and to message the team, shows the open note field or
+    // Msg team row, or shows the held note.
     @ViewBuilder
     private var placeRow: some View {
-        if let note = model.heldNote {
+        if model.messagingTeam {
+            teamRow
+                .padding(.top, 6)
+        } else if let note = model.heldNote {
             Text("Tug is holding: \(note)")
                 .font(.system(size: 15, weight: .medium, design: .rounded))
                 .foregroundStyle(Theme.bone.opacity(0.75))
                 .lineLimit(1)
                 .frame(maxWidth: 454)
                 .padding(.top, 6)
+            if !model.slackChannels.isEmpty {
+                msgTeamButton
+            }
         } else if model.editingInTakeover {
             NoteField(model: model, focusOnAppear: true)
                 .frame(width: 454)
                 .padding(.top, 6)
-        } else if model.askPlace {
-            Button(action: model.onHoldPlace) {
-                Text("Hold my place")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Theme.cream.opacity(0.85))
-                    .underline()
+        } else if model.askPlace || !model.slackChannels.isEmpty {
+            HStack(spacing: 28) {
+                if model.askPlace {
+                    Button(action: model.onHoldPlace) {
+                        Text("Hold my place")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(Theme.cream.opacity(0.85))
+                            .underline()
+                    }
+                    .buttonStyle(.plain)
+                    .help("Jot down what you were in the middle of. Tug hands it back after the meeting.")
+                }
+                if !model.slackChannels.isEmpty {
+                    msgTeamButton
+                }
             }
-            .buttonStyle(.plain)
-            .help("Jot down what you were in the middle of. Tug hands it back after the meeting.")
             .padding(.top, 6)
+        }
+    }
+
+    // msgTeamButton opens the row that messages the team in Slack.
+    private var msgTeamButton: some View {
+        Button(action: model.onMsgTeam) {
+            Text("Msg team")
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(Theme.cream.opacity(0.85))
+                .underline()
+        }
+        .buttonStyle(.plain)
+        .help("Copy a message about this meeting and open your team's Slack channel.")
+    }
+
+    // teamRow picks a channel when there are several, then a message to paste into it.
+    private var teamRow: some View {
+        VStack(spacing: 12) {
+            if model.slackChannels.count > 1 {
+                HStack(spacing: 8) {
+                    ForEach(Array(model.slackChannels.enumerated()), id: \.element.id) { index, channel in
+                        let picked = index == model.teamChannel
+                        Button {
+                            model.teamChannel = index
+                        } label: {
+                            Text(channel.label)
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .lineLimit(1)
+                                .padding(.horizontal, 12)
+                                .frame(height: 28)
+                                .background(Theme.cream.opacity(picked ? 0.9 : 0.12), in: Capsule())
+                                .foregroundStyle(picked ? Theme.ink : Theme.bone)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .frame(maxWidth: 454)
+            }
+            HStack(spacing: 14) {
+                Button {
+                    model.onSendTeamMessage(.runningLate)
+                } label: {
+                    Text("Running late")
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .frame(width: 220, height: 44)
+                        .background(Theme.bone.opacity(0.16), in: Capsule())
+                        .foregroundStyle(Theme.bone)
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    model.onSendTeamMessage(.cantMake)
+                } label: {
+                    Text("Can't make it")
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .frame(width: 220, height: 44)
+                        .overlay(Capsule().stroke(Theme.bone.opacity(0.3), lineWidth: 1.5))
+                        .foregroundStyle(Theme.bone.opacity(0.85))
+                }
+                .buttonStyle(.plain)
+            }
+            HStack(spacing: 6) {
+                Text("Copies the message and opens Slack. Paste to send.")
+                    .foregroundStyle(Theme.bone.opacity(0.6))
+                Button(action: model.onMsgTeam) {
+                    Text("Cancel")
+                        .foregroundStyle(Theme.cream.opacity(0.85))
+                        .underline()
+                }
+                .buttonStyle(.plain)
+            }
+            .font(.system(size: 13, weight: .medium, design: .rounded))
         }
     }
 

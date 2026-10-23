@@ -56,6 +56,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var holdPlace: Bool = true
     // UseMacCalendar reports whether events come from the calendars in macOS Calendar.
     public var useMacCalendar: Bool = true
+    // SlackChannels are the channels the alarm's Msg team button can open.
+    public var slackChannels: [SlackChannel] = []
 
     // init creates settings with the defaults.
     public init() {}
@@ -82,6 +84,13 @@ public struct AlertSettings: Sendable, Codable, Equatable {
         showPill = try container.decodeIfPresent(Bool.self, forKey: .showPill) ?? defaults.showPill
         holdPlace = try container.decodeIfPresent(Bool.self, forKey: .holdPlace) ?? defaults.holdPlace
         useMacCalendar = try container.decodeIfPresent(Bool.self, forKey: .useMacCalendar) ?? defaults.useMacCalendar
+        slackChannels = try container.decodeIfPresent([SlackChannel].self, forKey: .slackChannels)
+            ?? defaults.slackChannels
+    }
+
+    // validSlackChannels are the channels whose links parse.
+    public var validSlackChannels: [SlackChannel] {
+        slackChannels.filter { $0.channelLink != nil }
     }
 
     // earliestLead is the largest lead time, when the first alert for a meeting can appear.

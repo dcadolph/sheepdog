@@ -67,6 +67,21 @@ struct SettingsView: View {
                 Text("Sign-in happens in your browser. Sheepdog only reads your calendars, and keeps the sign-in in your Keychain.")
                     .foregroundStyle(.secondary)
             }
+            Section {
+                ForEach($store.settings.slackChannels) { $channel in
+                    SlackChannelRow(channel: $channel) {
+                        store.settings.slackChannels.removeAll { $0.id == channel.id }
+                    }
+                }
+                Button("Add channel") {
+                    store.settings.slackChannels.append(SlackChannel(name: "", link: ""))
+                }
+            } header: {
+                Text("Slack")
+            } footer: {
+                Text("Msg team on the alarm copies a short message to your clipboard and opens the channel, so you can paste it. Use Copy link on a channel in Slack.")
+                    .foregroundStyle(.secondary)
+            }
             Section("Warnings") {
                 TextField("Warn at (minutes before, comma separated)", text: $leadsText)
                     .onSubmit(applyLeads)
@@ -177,6 +192,36 @@ struct SettingsView: View {
             let minutes = lead / 60
             return minutes == minutes.rounded() ? String(Int(minutes)) : String(minutes)
         }.joined(separator: ", ")
+    }
+}
+
+// SlackChannelRow edits one Slack channel and flags a link that is not a channel link.
+struct SlackChannelRow: View {
+    // channel is the row being edited.
+    @Binding var channel: SlackChannel
+    // onRemove deletes the row.
+    let onRemove: () -> Void
+
+    // body lays out the name and link fields with a remove button.
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                TextField("Name", text: $channel.name, prompt: Text("#team"))
+                    .frame(width: 120)
+                TextField("Link", text: $channel.link, prompt: Text("https://yourteam.slack.com/archives/C0123ABCD"))
+                Button(action: onRemove) {
+                    Image(systemName: "minus.circle")
+                }
+                .buttonStyle(.borderless)
+                .help("Remove this channel")
+            }
+            .labelsHidden()
+            if !channel.link.isEmpty && channel.channelLink == nil {
+                Text("That isn't a Slack channel link. Use Copy link on the channel in Slack.")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+        }
     }
 }
 

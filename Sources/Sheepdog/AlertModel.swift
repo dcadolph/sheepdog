@@ -29,6 +29,12 @@ final class AlertModel {
     var handBack: HeldPlace?
     // handBackCount is how many notes are waiting to be acknowledged.
     var handBackCount = 0
+    // slackChannels are the channels Msg team can open. Msg team shows only when there is one.
+    var slackChannels: [SlackChannel] = []
+    // messagingTeam reports whether the takeover's Msg team row is open.
+    var messagingTeam = false
+    // teamChannel is the index of the channel picked in the Msg team row.
+    var teamChannel = 0
 
     // onJoin is called when the user chooses Join.
     var onJoin: () -> Void = {}
@@ -44,6 +50,10 @@ final class AlertModel {
     var onSaveNote: () -> Void = {}
     // onHoldPlace is called when the user opens the takeover's note field.
     var onHoldPlace: () -> Void = {}
+    // onMsgTeam is called when the user opens or closes the Msg team row.
+    var onMsgTeam: () -> Void = {}
+    // onSendTeamMessage is called when the user picks a message to send to the team.
+    var onSendTeamMessage: (TeamMessage) -> Void = { _ in }
     // onCancelNote is called when the user presses Escape in a note field.
     var onCancelNote: () -> Void = {}
     // onCopyHandBack is called when the user copies the handed back note.
