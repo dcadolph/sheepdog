@@ -96,3 +96,72 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
+  tap:
+    needs: build
+    runs-on: ubuntu-24.04
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+      TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Write the cask into the tap
+        run: |
+          set -euo pipefail
+          if [ -z "${TAP_TOKEN:-}" ]; then
+            echo "::error::HOMEBREW_TAP_TOKEN is not set on this repository"
+            exit 1
+          fi
+          VER="${TAG#v}"
+          zip="sheepdog_${TAG}_macos_universal.zip"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$zip"
+          sha="$(sha256sum "$zip" | cut -d' ' -f1)"
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/dcadolph/homebrew-tap.git" tap
+          cat > tap/Casks/sheepdog.rb <<EOF
+          cask "sheepdog" do
+            version "${VER}"
+            sha256 "${sha}"
+
+            url "https://github.com/dcadolph/sheepdog/releases/download/v#{version}/sheepdog_v#{version}_macos_universal.zip"
+            name "Sheepdog"
+            desc "Meeting alarm that barks"
+            homepage "https://github.com/dcadolph/sheepdog"
+
+            livecheck do
+              url :url
+              strategy :github_latest
+            end
+
+            depends_on macos: ">= :sonoma"
+
+            app "Sheepdog.app"
+
+            zap trash: [
+              "~/Library/Preferences/com.dcadolph.sheepdog.plist",
+            ]
+          end
+          EOF
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/sheepdog.rb
+          # A re-run of a tag that already shipped writes the same cask and has nothing to push.
+          if git diff --cached --quiet; then
+            echo "the cask already holds ${VER}; nothing to bump"
+            exit 0
+          fi
+          git commit -m "Update sheepdog to ${VER}"
+          git push
+
+  verify:
+    needs: tap
+    runs-on: macos-15
+    steps:
+      - name: Install from the tap and check it as a user would
+        run: |
+          set -euo pipefail
+          brew tap dcadolph/tap
+          brew install --cask dcadolph/tap/sheepdog
+          spctl --assess --type execute --verbose=4 /Applications/Sheepdog.app
+          xcrun stapler validate /Applications/Sheepdog.app
+          brew audit --cask --strict --online dcadolph/tap/sheepdog
+          brew uninstall --cask sheepdog
