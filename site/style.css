@@ -191,7 +191,7 @@ p b { color: var(--text); font-weight: 600; }
 
 .get .txt { grid-column: 1 / -1; }
 .get h2 { margin: 16px 0 22px; }
-.get .getit { margin-top: 36px; }
+.get .getit { margin-top: 36px; grid-template-columns: 1fr 1fr; }
 footer { border-top: 1px solid var(--line); padding: 36px 0 60px; font-size: 14px; color: var(--muted); }
 footer .w { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 footer a { color: var(--muted); } footer a:hover { color: var(--accent); }
@@ -215,7 +215,7 @@ footer a { color: var(--muted); } footer a:hover { color: var(--accent); }
   .three, .lists { grid-template-columns: 1fr; }
   .lists { display: grid; }
   .top nav a:not(.keep) { display: none; }
-  .getit, .hero .getit { display: grid; grid-template-columns: 1fr; }
+  .getit, .hero .getit, .get .getit { display: grid; grid-template-columns: 1fr; }
   .cmd { justify-content: space-between; font-size: 12px; }
   .tiles { display: grid; }
 }
