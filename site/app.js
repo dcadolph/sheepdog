@@ -4,16 +4,17 @@
   // Themes mirror Sources/SheepdogCore/Palette.swift: bg, surface, text, muted, accent, late.
   var themes = [
     ["Harbor", "#0f1012", "#0f1012", "#ffffff", "#aaa59b", "#f3e3b8", "#ff7361"],
-    ["Dragonsgale", "#0d0a08", "#1a1310", "#f4e6d8", "#b89c86", "#ff7a1a", "#ff7361"],
-    ["Greek Fire", "#120805", "#24100a", "#ffe9c2", "#c99a6b", "#ffb000", "#ff7361"],
-    ["Phosphor", "#050a05", "#0b160b", "#b8ffb0", "#5fae5a", "#33ff33", "#ff7361"],
-    ["Redcoat", "#0e0c0c", "#1c1919", "#f4f1ee", "#a9a3a0", "#d6282f", "#ff7361"],
-    ["Hussar", "#1a0608", "#2b0c10", "#f3e3c0", "#c2a272", "#d4a63a", "#ff7361"],
+    ["Dragonfire", "#0d0a08", "#1a1310", "#f4e6d8", "#b89c86", "#ff7a1a", "#ff7361"],
+    ["Wildfire", "#120805", "#24100a", "#ffe9c2", "#c99a6b", "#ffb000", "#ff7361"],
+    ["Neo", "#050a05", "#0b160b", "#b8ffb0", "#5fae5a", "#33ff33", "#ff7361"],
+    ["Rose", "#0e0c0c", "#1c1919", "#f4f1ee", "#a9a3a0", "#d6282f", "#ff7361"],
+    ["Lannister", "#1a0608", "#2b0c10", "#f3e3c0", "#c2a272", "#d4a63a", "#ff7361"],
     ["Tyrian", "#140816", "#231027", "#f0e2f5", "#b597bf", "#b04cc8", "#ff7361"],
-    ["Ultramarine", "#060b1f", "#0e1736", "#e3e9ff", "#8e9cc9", "#4f78ff", "#ff7361"],
+    ["Dunder", "#060b1f", "#0e1736", "#e3e9ff", "#8e9cc9", "#4f78ff", "#ff7361"],
     ["Verdigris", "#0a1614", "#12241f", "#dff3ec", "#86b3a5", "#43b39a", "#ff7361"],
     ["Arrakis", "#0c0c0d", "#18181a", "#f5f5f2", "#a8a8a3", "#c07a44", "#ff7361"],
-    ["Bletchley", "#ece4cf", "#f6f0dd", "#1a1a17", "#5c5748", "#7a2e12", "#9c1c14"]
+    ["Baby Blue", "#0a1218", "#13212a", "#eaf6fc", "#8fa9b8", "#89cff0", "#ff7361"],
+    ["Concierge", "#ece4cf", "#f6f0dd", "#1a1a17", "#5c5748", "#7a2e12", "#9c1c14"]
   ];
 
   function lum(hex) {
@@ -33,6 +34,36 @@
     return contrast("#ffffff", accent) >= contrast("#000000", accent) ? "#ffffff" : "#000000";
   }
 
+  // Tug's collar is the only blue in the drawings. It takes the theme's accent, keeping its shading.
+  var tugImages = [];
+  Array.prototype.forEach.call(document.querySelectorAll('img[src="/assets/tug.png"], img[src="/assets/tug-head.png"]'), function (img) {
+    var src = new Image();
+    src.onload = function () { tugImages.push({ img: img, src: src }); recolor(currentAccent); };
+    src.src = img.getAttribute("src");
+  });
+  var currentAccent = null;
+  function recolor(accent) {
+    if (!accent) return;
+    if (accent === "orig") { tugImages.forEach(function (o) { o.img.src = o.src.src; }); return; }
+    var ar = parseInt(accent.substr(1, 2), 16), ag = parseInt(accent.substr(3, 2), 16), ab = parseInt(accent.substr(5, 2), 16);
+    tugImages.forEach(function (o) {
+      var c = document.createElement("canvas");
+      c.width = o.src.naturalWidth; c.height = o.src.naturalHeight;
+      var x = c.getContext("2d");
+      x.drawImage(o.src, 0, 0);
+      try {
+        var d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+        for (var i = 0; i < p.length; i += 4) {
+          if (p[i + 3] < 204 || p[i + 2] <= p[i] + 30 || p[i + 2] < p[i + 1]) continue;
+          var k = (0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2]) / 127;
+          p[i] = Math.min(255, ar * k); p[i + 1] = Math.min(255, ag * k); p[i + 2] = Math.min(255, ab * k);
+        }
+        x.putImageData(d, 0, 0);
+        o.img.src = c.toDataURL();
+      } catch (e) {}
+    });
+  }
+
   var root = document.documentElement;
   function apply(t) {
     var s = root.style;
@@ -46,11 +77,13 @@
     s.colorScheme = lum(t[1]) > 0.4 ? "light" : "dark";
     s.setProperty("--glyph-invert", lum(t[1]) > 0.4 ? "0" : "1");
     s.setProperty("--rule", "color-mix(in srgb, " + t[3] + " 22%, transparent)");
+    currentAccent = t[0] === "Harbor" ? "orig" : t[5];
+    recolor(currentAccent);
     try { localStorage.setItem("theme", t[0]); } catch (e) {}
   }
 
   var tiles = document.getElementById("tiles");
-  var order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  var order = themes.map(function (_, i) { return i; });
   var buttons = [];
   order.forEach(function (idx) {
     var t = themes[idx];

@@ -23,6 +23,50 @@ enum Art {
         return image
     }
 
+    // collarBase is the average luminance of the drawn collar, used to keep its shading when recolored.
+    private static let collarBase = 127.0
+
+    // tinted returns a bundled drawing with the blue collar recolored to the accent.
+    static func tinted(_ name: String, accent: RGB) -> NSImage? {
+        let key = "\(name)#\(accent.red),\(accent.green),\(accent.blue)"
+        if let cached = cache[key] {
+            return cached
+        }
+        guard let source = image(name),
+              let cg = source.cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let ctx = CGContext(
+                  data: nil, width: cg.width, height: cg.height, bitsPerComponent: 8,
+                  bytesPerRow: cg.width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              ),
+              let data = ctx.data
+        else {
+            return nil
+        }
+        ctx.draw(cg, in: CGRect(x: 0, y: 0, width: cg.width, height: cg.height))
+        let bytes = data.bindMemory(to: UInt8.self, capacity: cg.width * cg.height * 4)
+        for i in stride(from: 0, to: cg.width * cg.height * 4, by: 4) {
+            let a = Double(bytes[i + 3]) / 255
+            if a < 0.8 {
+                continue
+            }
+            let r = Double(bytes[i]) / a, g = Double(bytes[i + 1]) / a, b = Double(bytes[i + 2]) / a
+            if b <= r + 30 || b < g {
+                continue
+            }
+            let scale = (0.299 * r + 0.587 * g + 0.114 * b) / collarBase
+            bytes[i] = UInt8(min(255, accent.red * 255 * scale) * a)
+            bytes[i + 1] = UInt8(min(255, accent.green * 255 * scale) * a)
+            bytes[i + 2] = UInt8(min(255, accent.blue * 255 * scale) * a)
+        }
+        guard let out = ctx.makeImage() else {
+            return nil
+        }
+        let image = NSImage(cgImage: out, size: source.size)
+        cache[key] = image
+        return image
+    }
+
     // glyph returns the menu bar template for a stage, sized for the menu bar.
     static func glyph(for stage: Stage) -> NSImage? {
         let name: String
@@ -71,9 +115,11 @@ struct TugImage: View {
     // name is the drawing's file name without the extension.
     let name: String
 
-    // body draws the image scaled to fit its frame.
+    // body draws the image scaled to fit its frame, with the collar in the theme's accent.
     var body: some View {
-        if let image = Art.image(name) {
+        let accent = Theme.palette.accent
+        let themed = accent == ThemeName.harbor.palette.accent ? Art.image(name) : Art.tinted(name, accent: accent)
+        if let image = themed {
             Image(nsImage: image)
                 .resizable()
                 .interpolation(.high)
