@@ -27,6 +27,19 @@ as the meeting gets closer. First a chime and a small countdown, then a full-scr
 Tug barking until you join, snooze or skip. It also holds a note on what you were doing and
 hands it back when the meeting ends.
 
+## Hold my place
+
+<p align="center"><img src="art/handback.png" width="440" alt="The hand-back card: Before Design review you were: Retry tests for the upload queue, with Copy, Done, and Clear all"></p>
+
+A calendar alert tells you where to be. It does not remember what you were doing when it went
+off, and that is the part that costs you ten minutes after the call. When the warning chime
+sounds, type one line about what you were in the middle of, right in the countdown pill. The
+note never takes keyboard focus on its own, so it cannot swallow the sentence you are typing
+somewhere else. When the meeting ends, a card in the top right corner hands the note back with
+**Copy** and **Done**. If you are still on the call, it waits for your mic to go quiet first.
+
+Notes stay on your Mac, and unclaimed ones are cleared at 4 a.m.
+
 sheepdog is free and will stay free. If I ever stop maintaining it, I'll archive it, and the code
 stays open.
 
@@ -43,6 +56,22 @@ Grab `sheepdog_<version>_macos_universal.zip` from the
 
 The app is signed and notarized, so it opens like any other Mac app. Allow calendar access
 when macOS asks. Homebrew users can run `brew install --cask dcadolph/tap/sheepdog` instead.
+
+### Verify the download
+
+Every release is signed with a Developer ID certificate and notarized by Apple, and the
+notarization ticket is stapled to the app. Each release also lists a SHA-256 hash for each zip in
+`SHA256SUMS`. To check a download, run these from the folder that holds the files:
+
+```sh
+shasum -a 256 -c SHA256SUMS --ignore-missing
+unzip sheepdog_macos_universal.zip
+spctl -a -vv Sheepdog.app
+codesign -dv Sheepdog.app 2>&1 | grep TeamIdentifier
+```
+
+`spctl` should print `accepted` with `source=Notarized Developer ID`, and the team identifier
+should be `U7L4P2YHWJ`.
 
 Once a day Sheepdog asks GitHub for the latest release. When a newer one exists, the menu shows
 a line that opens its release page. Nothing installs by itself, and the request sends no version
