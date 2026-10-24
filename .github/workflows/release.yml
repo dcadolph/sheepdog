@@ -180,6 +180,9 @@ jobs:
     runs-on: macos-15
     steps:
       - name: Install from the tap and check it as a user would
+        env:
+          # The online audit calls the GitHub API, which rate limits shared runners without a token.
+          HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           brew tap dcadolph/tap
