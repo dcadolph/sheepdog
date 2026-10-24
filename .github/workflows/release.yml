@@ -101,6 +101,8 @@ jobs:
           spctl --assess --type execute --verbose=4 "$check/Sheepdog.app"
           codesign --verify --deep --strict --verbose=2 "$check/Sheepdog.app"
           cd dist
+          # A fixed name lets releases/latest/download/sheepdog_macos_universal.zip always work.
+          cp -- "sheepdog_${TAG}_macos_universal.zip" sheepdog_macos_universal.zip
           shasum -a 256 -- *.zip > SHA256SUMS
       - name: Remove signing keychain
         if: always()
