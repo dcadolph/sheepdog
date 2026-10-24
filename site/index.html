@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sheepdog: the meeting alarm that barks</title>
+<meta name="description" content="A free macOS menu bar meeting alarm. Tug, the border collie, gets louder as your meeting gets closer.">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="/assets/favicon.png">
+<meta property="og:title" content="sheepdog">
+<meta property="og:description" content="The meeting alarm that barks. Free for macOS.">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="w">
+    <a class="brand" href="/"><img src="/assets/favicon.png" alt="" width="30" height="30">sheepdog</a>
+    <nav>
+      <a href="#more">What else</a>
+      <a href="#themes">Themes</a>
+      <a href="/privacy/">Privacy</a>
+      <a class="keep" href="https://github.com/dcadolph/sheepdog">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="w">
+    <p class="small">Free for macOS 14 and later</p>
+    <h1>The meeting alarm<br>that <em>barks.</em></h1>
+    <div class="sub grid">
+      <p class="lede">Tug is a border collie who lives in your menu bar. He chimes early, counts
+        down at the top of your screen, and takes the whole display when it is time. <b>He stops
+        the moment you join.</b></p>
+      <div class="cta">
+        <div class="getit">
+          <a class="btn" id="dl" href="https://github.com/dcadolph/sheepdog/releases/latest">Download for Mac</a>
+          <div class="cmd"><span>brew install --cask dcadolph/tap/sheepdog</span><button data-copy="brew install --cask dcadolph/tap/sheepdog">Copy</button></div>
+        </div>
+        <p class="fine" id="ver">Signed and notarized. Open source under Apache 2.0.</p>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="screen" id="screen" data-stage="idle" aria-label="Animated demo: the alarm gets louder as the meeting gets closer">
+        <div class="menubar"><span class="glyph"><img src="/assets/glyph-idle.png" alt="" width="315" height="256"></span><span id="mclock">9:55 AM</span></div>
+        <div class="fakewin"><i></i><i></i><i></i><s style="top:20%;width:46%"></s><s style="top:28%;width:62%"></s><s style="top:36%;width:38%"></s><s style="top:44%;width:55%"></s><s style="top:52%;width:30%"></s></div>
+
+        <div class="pill"><img src="/assets/tug-head.png" alt="" width="256" height="256"><span>Team standup</span><span class="t" id="pt">2:05</span><span class="j">Join</span><span class="x">&#10005;</span></div>
+
+        <div class="take" id="take">
+          <div class="ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="tr" cx="50" cy="50" r="48"/><circle class="pg" id="pg" cx="50" cy="50" r="48" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/></svg><img src="/assets/tug.png" alt="" width="704" height="704"></div>
+          <div class="says">Tug says it's time</div>
+          <div class="ttl">Team standup</div>
+          <div class="cd" id="tcd">Starts in 0:40</div>
+          <div class="via">Opens in Zoom</div>
+          <div class="join">Join now</div>
+          <div class="alt"><span>Snooze 1 min (2 left)</span><span>I'm skipping this one</span></div>
+          <div class="hold">Hold my place</div>
+        </div>
+
+        <div class="joined"><b>Team standup</b><span>Joined. Tug is quiet.</span></div>
+      </div>
+      <div class="rail" id="rail">
+        <button type="button" data-go="chime"><b>T-5:00</b>A chime, early enough to finish a thought</button>
+        <button type="button" data-go="pill"><b>T-2:00</b>A countdown pill with a Join button</button>
+        <button type="button" data-go="take"><b>T-0:40</b>Tug takes the whole screen</button>
+        <button type="button" data-go="join"><b>T-0:00</b>You join and he stops</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band lift feat" id="more">
+  <div class="w grid">
+    <div class="txt">
+      <p class="small">Hold my place</p>
+      <h2>A note to the person you are about to stop being.</h2>
+      <p>Type what you were in the middle of before you jump in. When the meeting ends, Tug hands
+        it back. Notes stay on your Mac and clear themselves at 4 a.m. after they are returned.</p>
+    </div>
+    <div class="vis">
+      <div class="mock note">
+        <div class="k">Before Team standup you were:</div>
+        <div class="v">Retry tests for the upload queue</div>
+        <div class="row"><span class="chip">Copy</span><span class="chip on">Done</span><span class="more">+2 more <u>Clear all</u></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="w grid">
+    <div class="head" style="grid-column:1 / span 8">
+      <p class="small">He knows when you are off</p>
+      <h2 style="margin-top:16px">Quiet when you want quiet.</h2>
+    </div>
+    <div class="three">
+      <div class="mock"><h3>Working hours</h3>
+        <div class="days"><i class="on">M</i><i class="on">T</i><i class="on">W</i><i class="on">T</i><i class="on">F</i><i>S</i><i>S</i></div>
+        <div class="hrs">8:00 to 18:00</div>
+        <p>Overnight shifts work too. Outside your hours Tug stays silent, goes quiet, or barks anyway.</p></div>
+      <div class="mock"><h3>Nap</h3>
+        <div class="naps"><span>1 hour <em>Zzz</em></span><span>3 hours <em>Zzz</em></span><span>Until work starts <em>Zzz</em></span></div>
+        <p>The menu bar glyph shows he is asleep, so you never forget.</p></div>
+      <div class="mock"><h3>Running late</h3>
+        <div class="slack"><div class="ch"># standup</div><div class="msg">Running a few minutes late to Team standup.</div></div>
+        <p>One click copies the message and opens the Slack channel for the meeting.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band lift themes" id="themes">
+  <div class="w grid">
+    <div class="head">
+      <p class="small">Eleven themes</p>
+      <h2>Dress him however you like.</h2>
+      <p>Every theme is a color set checked for contrast. Pick one and this whole page changes,
+        including the alarm above. The app uses the same names.</p>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </div>
+</section>
+
+<section class="band get" id="install">
+  <div class="w grid">
+    <div class="txt">
+      <p class="small">Get Tug</p>
+      <h2>It only reads. It never writes.</h2>
+      <p>sheepdog reads the calendars already in macOS Calendar and can sign in to Microsoft
+        directly. No server, no account, no analytics. It never creates, changes or deletes an
+        event. <a href="/privacy/" style="color:var(--accent)">Read the privacy policy.</a></p>
+      <div class="getit">
+        <a class="btn" id="dl2" href="https://github.com/dcadolph/sheepdog/releases/latest">Download for Mac</a>
+        <div class="cmd"><span>brew upgrade --cask sheepdog</span><button data-copy="brew upgrade --cask sheepdog">Copy</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="w">
+    <span>sheepdog is free and open source under the Apache 2.0 license.</span>
+    <span><a href="https://github.com/dcadolph/sheepdog">Source</a> &nbsp;&middot;&nbsp; <a href="https://github.com/dcadolph/sheepdog/issues">Issues</a> &nbsp;&middot;&nbsp; <a href="/privacy/">Privacy</a></span>
+  </div>
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>

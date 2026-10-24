@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sheepdog privacy policy</title>
+<meta name="description" content="What sheepdog reads, what it keeps on your Mac, and what it never sends anywhere.">
+<link rel="icon" href="/assets/favicon.png">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top"><div class="w"><a class="brand" href="/"><img src="/assets/favicon.png" alt="" width="30" height="30">sheepdog</a><nav><a class="keep" href="/">Home</a></nav></div></header>
+<main class="doc">
+<p class="small">Privacy policy</p>
+<h1>What sheepdog reads, and where it goes.</h1>
+<p class="eff">Effective date: October 22, 2026.</p>
+<p>sheepdog is a macOS menu bar meeting alarm. It runs entirely on your Mac. It has no server, no account with its developer, no analytics and no tracking. Nothing it reads is sent to its developer or to anyone else.</p>
+<h2>What sheepdog reads</h2>
+<p><b>macOS Calendar.</b> With your permission, sheepdog reads upcoming events from the calendars macOS Calendar already knows about. This happens on your Mac through the system calendar store.</p>
+<p><b>Microsoft, if you sign in.</b> sheepdog asks for these Microsoft Graph permissions:</p>
+<ul><li><code>User.Read</code>, to show which account is signed in.</li><li><code>Calendars.Read</code>, to read your upcoming events.</li><li><code>offline_access</code>, to stay signed in without asking again.</li></ul>
+<p><b>Google, if you sign in.</b> sheepdog asks for the <code>calendar.readonly</code> scope, to read your calendars and upcoming events.</p>
+<p>From each event sheepdog reads the title, start and end times, whether it is all day, canceled or marked free, your response, the organizer and attendees, the location, the online meeting link, the description and the link that opens the event in its calendar. It reads the description and location only to find the link that joins the meeting. From Google it also reads your calendar list, to find the calendars that are yours.</p>
+<p>sheepdog only reads. It never creates, changes or deletes an event.</p>
+<h2>Where it goes</h2>
+<p>sheepdog talks directly to Microsoft and Google from your Mac to sign you in and read your calendars. That data goes nowhere else. sheepdog does not sell, share or transfer it, does not use it for advertising, and does not use it to train any model.</p>
+<h2>What stays on your Mac</h2>
+<ul><li><b>Sign-in.</b> The account's email address and the token that keeps you signed in are stored in your macOS login Keychain.</li><li><b>Settings.</b> Your alert timing, sound, Slack channel links and other choices are stored in the app's preferences on your Mac.</li><li><b>Hold my place notes.</b> A note you write before a meeting is stored with the meeting's title and time on your Mac. It is deleted when you clear it, or at 4 a.m. after it is handed back.</li><li><b>Errors.</b> When a sign-in or calendar read fails, sheepdog writes the service name and the error to the macOS system log on your Mac.</li></ul>
+<p>Events themselves are held in memory while sheepdog runs and are not written to disk.</p>
+<h2>Removing access</h2>
+<p>Click <b>Disconnect</b> next to an account in sheepdog's settings to delete its sign-in from your Keychain. You can also revoke sheepdog's access at any time from your <a href="https://account.live.com/consent/Manage">Microsoft account</a> or your <a href="https://myaccount.google.com/permissions">Google account</a>. Deleting the app and its preferences removes everything else.</p>
+<h2>Google user data</h2>
+<p>sheepdog's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+<h2>Changes and contact</h2>
+<p>If this policy changes, the new version will be posted on this page with a new effective date. Questions go to <a href="https://github.com/dcadolph/sheepdog/issues">GitHub issues</a>.</p>
+</main>
+<footer class="ink"><div class="w"><span>sheepdog is free and open source under the Apache 2.0 license.</span><span><a href="https://github.com/dcadolph/sheepdog">Source</a></span></div></footer>
+<script>try{var t=localStorage.getItem("theme");}catch(e){}</script>
+</body>
+</html>
