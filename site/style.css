@@ -54,6 +54,7 @@ p b { color: var(--text); font-weight: 600; }
 .getit .btn, .getit .cmd { width: 100%; }
 .cmd { justify-content: space-between; }
 .fine { margin-top: 18px; font-size: 14px; }
+.fine.trust { margin-top: 6px; }
 
 /* Hero */
 .hero { padding: clamp(28px, 4vw, 56px) 0 clamp(72px, 9vw, 130px); }
