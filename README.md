@@ -8,6 +8,10 @@
 <h1 align="center">sheepdog</h1>
 
 <p align="center">
+  <a href="https://macsheepdog.com"><img src="https://img.shields.io/badge/macsheepdog.com-Download_for_Mac-3d7ea6?style=for-the-badge&logo=apple&logoColor=white" alt="macsheepdog.com: Download for Mac"></a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/macOS-14%2B-black" alt="macOS 14 or later">
   <img src="https://img.shields.io/badge/Swift-6-orange" alt="Swift 6">
   <img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="Apache 2.0 license">
