@@ -37,9 +37,8 @@ Grab `sheepdog_<version>_macos_universal.zip` from the
 [latest release](https://github.com/dcadolph/sheepdog/releases/latest), unzip it, and move
 `Sheepdog.app` to `/Applications`. It runs on Apple silicon and Intel Macs.
 
-The app is not notarized yet, so macOS blocks the first launch. Open it once, then go to
-**System Settings > Privacy & Security** and click **Open Anyway** next to the Sheepdog
-message. Allow calendar access when macOS asks.
+The app is signed and notarized, so it opens like any other Mac app. Allow calendar access
+when macOS asks. Homebrew users can run `brew install --cask dcadolph/tap/sheepdog` instead.
 
 Once a day Sheepdog asks GitHub for the latest release. When a newer one exists, the menu shows
 a line that opens its release page. Nothing installs by itself, and the request sends no version
