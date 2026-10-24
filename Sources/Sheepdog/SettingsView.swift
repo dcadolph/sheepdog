@@ -37,15 +37,9 @@ struct SettingsView: View {
                             .font(.system(size: 20, weight: .bold, design: .rounded))
                         Text("Tug makes sure you get to your meetings.")
                             .foregroundStyle(.secondary)
-                        HStack(spacing: 16) {
-                            if let support = Support.url {
-                                Link("Buy Tug a treat…", destination: support)
-                                    .help(Support.treatTip)
-                            }
-                            Link("Contribute on GitHub…", destination: Support.repo)
-                                .help(Support.contributeTip)
-                        }
-                        .font(.callout)
+                        Link("Contribute on GitHub…", destination: Support.repo)
+                            .help(Support.contributeTip)
+                            .font(.callout)
                     }
                 }
             }
