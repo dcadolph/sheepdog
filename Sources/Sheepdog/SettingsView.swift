@@ -25,8 +25,41 @@ struct SettingsView: View {
     // previewer plays a picked sound so it can be heard before choosing it.
     @State private var previewer = SoundPlayer()
 
-    // body lays out the settings form.
+    // body lays out the settings tabs above the buttons every tab shares.
     var body: some View {
+        VStack(spacing: 0) {
+            TabView {
+                generalTab
+                    .tabItem { Label("General", systemImage: "gearshape") }
+                calendarsTab
+                    .tabItem { Label("Calendars", systemImage: "calendar") }
+                alertsTab
+                    .tabItem { Label("Alerts", systemImage: "bell") }
+                soundTab
+                    .tabItem { Label("Sound", systemImage: "speaker.wave.2") }
+                hoursTab
+                    .tabItem { Label("Hours", systemImage: "clock") }
+            }
+            .padding([.top, .horizontal])
+            HStack {
+                Button("Test the alarm", action: onTestAlarm)
+                Spacer()
+                Button("Restore defaults") {
+                    store.reset()
+                    leadsText = Self.format(store.settings.warningLeads)
+                }
+            }
+            .padding()
+        }
+        .frame(width: 560, height: 600)
+        .onAppear {
+            leadsText = Self.format(store.settings.warningLeads)
+            loginItem.refresh()
+        }
+    }
+
+    // generalTab holds the app header, login and update options, the theme and the backup buttons.
+    private var generalTab: some View {
         Form {
             Section {
                 HStack(spacing: 14) {
@@ -64,115 +97,6 @@ struct SettingsView: View {
                 }
             }
             Section {
-                Toggle("Use calendars from macOS Calendar", isOn: $store.settings.useMacCalendar)
-                    .onChange(of: store.settings.useMacCalendar) { onSourcesChanged() }
-                ForEach(AccountKind.allCases) { kind in
-                    AccountRow(kind: kind, accounts: accounts)
-                }
-            } header: {
-                Text("Calendars")
-            } footer: {
-                Text("Sign-in happens in your browser. Sheepdog only reads your calendars, and keeps the sign-in in your Keychain.")
-                    .foregroundStyle(.secondary)
-            }
-            Section {
-                ForEach($store.settings.slackChannels) { $channel in
-                    let id = channel.id
-                    SlackChannelRow(channel: $channel) {
-                        store.settings.slackChannels.removeAll { $0.id == id }
-                    }
-                }
-                Button("Add channel") {
-                    store.settings.slackChannels.append(SlackChannel(name: "", link: ""))
-                }
-            } header: {
-                Text("Slack")
-            } footer: {
-                Text("Let them know on the alarm copies a short message to your clipboard and opens the channel, so you can paste it. Use Copy link on a channel in Slack.")
-                    .foregroundStyle(.secondary)
-            }
-            Section("Warnings") {
-                TextField(text: $leadsText, prompt: Text("10, 5")) {
-                    Text("Warn at")
-                    Text("Minutes before the meeting, separated by commas.")
-                }
-                    .onSubmit(applyLeads)
-                    .onChange(of: leadsText) { applyLeads() }
-                Toggle("Show the floating countdown", isOn: $store.settings.showPill)
-                Toggle("Ask what I was in the middle of", isOn: $store.settings.holdPlace)
-                    .help("Tug hands the note back after the meeting.")
-                soundPicker("Warning chime", selection: $store.settings.chimeSound)
-            }
-            Section("Takeover") {
-                Stepper(
-                    "Full-screen alarm \(Int(store.settings.takeoverLead)) sec before start",
-                    value: $store.settings.takeoverLead,
-                    in: 0...600,
-                    step: 15
-                )
-                Stepper(
-                    "Keep at you for \(Int(store.settings.nagWindow / 60)) min after start",
-                    value: $store.settings.nagWindow,
-                    in: 60...3600,
-                    step: 60
-                )
-                soundPicker("Alarm sound", selection: $store.settings.alarmSound)
-            }
-            Section("Snooze") {
-                Stepper("Snoozes per meeting: \(store.settings.maxSnoozes)", value: $store.settings.maxSnoozes, in: 0...10)
-                Stepper(
-                    "Before start: \(Int(store.settings.snoozeBeforeStart)) sec",
-                    value: $store.settings.snoozeBeforeStart,
-                    in: 15...300,
-                    step: 15
-                )
-                Stepper(
-                    "After start: \(Int(store.settings.snoozeAfterStart)) sec",
-                    value: $store.settings.snoozeAfterStart,
-                    in: 15...300,
-                    step: 15
-                )
-            }
-            Section("Sound output") {
-                Picker("Play alerts on", selection: $store.settings.alarmOutput) {
-                    ForEach(AlarmOutput.allCases) { Text($0.label).tag($0) }
-                }
-                Toggle("Unmute and raise volume during the alarm", isOn: $store.settings.boostVolume)
-                if store.settings.boostVolume {
-                    Slider(value: $store.settings.boostLevel, in: 0.2...1) {
-                        Text("At least \(Int(store.settings.boostLevel * 100))%")
-                    }
-                }
-            }
-            Section("Which events alert") {
-                Toggle("Include tentative meetings", isOn: $store.settings.includeTentative)
-                Toggle("Skip events with no other attendees", isOn: $store.settings.requireAttendees)
-            }
-            Section {
-                Toggle("Only bark during working hours", isOn: $store.settings.workingHours.enabled)
-                Group {
-                    DatePicker("Start", selection: shiftMinutes(\.start), displayedComponents: .hourAndMinute)
-                    DatePicker("End", selection: shiftMinutes(\.end), displayedComponents: .hourAndMinute)
-                    LabeledContent("Days") {
-                        HStack {
-                            ForEach(Self.weekdayOrder, id: \.self) { day in
-                                Toggle(Calendar.current.veryShortWeekdaySymbols[day - 1], isOn: weekday(day))
-                                    .toggleStyle(.checkbox)
-                            }
-                        }
-                    }
-                    Picker("Outside working hours", selection: $store.settings.workingHours.outside) {
-                        ForEach(OffHours.allCases) { Text($0.label).tag($0) }
-                    }
-                }
-                .disabled(!store.settings.workingHours.enabled)
-            } header: {
-                Text("Working hours")
-            } footer: {
-                Text("A meeting that starts inside your hours alarms in full, even when it runs past the end. An end before the start is an overnight shift, which belongs to the day it starts. Test the alarm always works.")
-                    .foregroundStyle(.secondary)
-            }
-            Section {
                 Picker("Theme", selection: $store.settings.theme) {
                     ForEach(ThemeName.allCases) { theme in
                         Text(theme == AlertSettings().theme ? "\(theme.label) (default)" : theme.label).tag(theme)
@@ -200,23 +124,145 @@ struct SettingsView: View {
                 Text("Saves your warnings, sounds, filters, working hours and Slack channels to a file you can import on any Mac. Sign-ins stay in your Keychain, so connect your calendars again after importing on a new Mac.")
                     .foregroundStyle(.secondary)
             }
+        }
+        .formStyle(.grouped)
+    }
+
+    // calendarsTab holds the calendar sources, the Slack channels and which events alert.
+    private var calendarsTab: some View {
+        Form {
             Section {
-                HStack {
-                    Button("Test the alarm", action: onTestAlarm)
-                    Spacer()
-                    Button("Restore defaults") {
-                        store.reset()
-                        leadsText = Self.format(store.settings.warningLeads)
+                Toggle("Use calendars from macOS Calendar", isOn: $store.settings.useMacCalendar)
+                    .onChange(of: store.settings.useMacCalendar) { onSourcesChanged() }
+                ForEach(AccountKind.allCases) { kind in
+                    AccountRow(kind: kind, accounts: accounts)
+                }
+            } header: {
+                Text("Calendars")
+            } footer: {
+                Text("Sign-in happens in your browser. Sheepdog only reads your calendars, and keeps the sign-in in your Keychain.")
+                    .foregroundStyle(.secondary)
+            }
+            Section {
+                ForEach($store.settings.slackChannels) { $channel in
+                    let id = channel.id
+                    SlackChannelRow(channel: $channel) {
+                        store.settings.slackChannels.removeAll { $0.id == id }
+                    }
+                }
+                Button("Add channel") {
+                    store.settings.slackChannels.append(SlackChannel(name: "", link: ""))
+                }
+            } header: {
+                Text("Slack")
+            } footer: {
+                Text("Let them know on the alarm copies a short message to your clipboard and opens the channel, so you can paste it. Use Copy link on a channel in Slack.")
+                    .foregroundStyle(.secondary)
+            }
+            Section("Which events alert") {
+                Toggle("Include tentative meetings", isOn: $store.settings.includeTentative)
+                Toggle("Skip events with no other attendees", isOn: $store.settings.requireAttendees)
+            }
+        }
+        .formStyle(.grouped)
+    }
+
+    // alertsTab holds the warnings, the takeover and snooze limits.
+    private var alertsTab: some View {
+        Form {
+            Section("Warnings") {
+                TextField(text: $leadsText, prompt: Text("10, 5")) {
+                    Text("Warn at")
+                    Text("Minutes before the meeting, separated by commas.")
+                }
+                    .onSubmit(applyLeads)
+                    .onChange(of: leadsText) { applyLeads() }
+                Toggle("Show the floating countdown", isOn: $store.settings.showPill)
+                Toggle("Ask what I was in the middle of", isOn: $store.settings.holdPlace)
+                    .help("Tug hands the note back after the meeting.")
+            }
+            Section("Takeover") {
+                Stepper(
+                    "Full-screen alarm \(Int(store.settings.takeoverLead)) sec before start",
+                    value: $store.settings.takeoverLead,
+                    in: 0...600,
+                    step: 15
+                )
+                Stepper(
+                    "Keep at you for \(Int(store.settings.nagWindow / 60)) min after start",
+                    value: $store.settings.nagWindow,
+                    in: 60...3600,
+                    step: 60
+                )
+            }
+            Section("Snooze") {
+                Stepper("Snoozes per meeting: \(store.settings.maxSnoozes)", value: $store.settings.maxSnoozes, in: 0...10)
+                Stepper(
+                    "Before start: \(Int(store.settings.snoozeBeforeStart)) sec",
+                    value: $store.settings.snoozeBeforeStart,
+                    in: 15...300,
+                    step: 15
+                )
+                Stepper(
+                    "After start: \(Int(store.settings.snoozeAfterStart)) sec",
+                    value: $store.settings.snoozeAfterStart,
+                    in: 15...300,
+                    step: 15
+                )
+            }
+        }
+        .formStyle(.grouped)
+    }
+
+    // soundTab holds the warning and alarm sounds and where they play.
+    private var soundTab: some View {
+        Form {
+            Section("Sound output") {
+                soundPicker("Warning chime", selection: $store.settings.chimeSound)
+                soundPicker("Alarm sound", selection: $store.settings.alarmSound)
+                Picker("Play alerts on", selection: $store.settings.alarmOutput) {
+                    ForEach(AlarmOutput.allCases) { Text($0.label).tag($0) }
+                }
+                Toggle("Unmute and raise volume during the alarm", isOn: $store.settings.boostVolume)
+                if store.settings.boostVolume {
+                    Slider(value: $store.settings.boostLevel, in: 0.2...1) {
+                        Text("At least \(Int(store.settings.boostLevel * 100))%")
                     }
                 }
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 680)
-        .onAppear {
-            leadsText = Self.format(store.settings.warningLeads)
-            loginItem.refresh()
+    }
+
+    // hoursTab holds the working hours.
+    private var hoursTab: some View {
+        Form {
+            Section {
+                Toggle("Only bark during working hours", isOn: $store.settings.workingHours.enabled)
+                Group {
+                    DatePicker("Start", selection: shiftMinutes(\.start), displayedComponents: .hourAndMinute)
+                    DatePicker("End", selection: shiftMinutes(\.end), displayedComponents: .hourAndMinute)
+                    LabeledContent("Days") {
+                        HStack {
+                            ForEach(Self.weekdayOrder, id: \.self) { day in
+                                Toggle(Calendar.current.veryShortWeekdaySymbols[day - 1], isOn: weekday(day))
+                                    .toggleStyle(.checkbox)
+                            }
+                        }
+                    }
+                    Picker("Outside working hours", selection: $store.settings.workingHours.outside) {
+                        ForEach(OffHours.allCases) { Text($0.label).tag($0) }
+                    }
+                }
+                .disabled(!store.settings.workingHours.enabled)
+            } header: {
+                Text("Working hours")
+            } footer: {
+                Text("A meeting that starts inside your hours alarms in full, even when it runs past the end. An end before the start is an overnight shift, which belongs to the day it starts. Test the alarm always works.")
+                    .foregroundStyle(.secondary)
+            }
         }
+        .formStyle(.grouped)
     }
 
     // weekdayOrder lists Calendar weekday numbers starting from the locale's first day of the week.
