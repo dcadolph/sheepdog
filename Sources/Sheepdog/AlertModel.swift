@@ -29,11 +29,12 @@ final class AlertModel {
     var handBack: HeldPlace?
     // handBackCount is how many notes are waiting to be acknowledged.
     var handBackCount = 0
-    // slackChannels are the channels Msg team can open. Msg team shows only when there is one.
+    // slackChannels are the channels the Let them know button can open. The button shows only when
+    // there is one.
     var slackChannels: [SlackChannel] = []
-    // messagingTeam reports whether the takeover's Msg team row is open.
+    // messagingTeam reports whether the takeover's Let them know row is open.
     var messagingTeam = false
-    // teamChannel is the index of the channel picked in the Msg team row.
+    // teamChannel is the index of the channel picked in the Let them know row.
     var teamChannel = 0
     // drawsStill reports that the views are being drawn to an image, where AppKit-backed text
     // fields render as placeholders, so the note field draws its text directly.
@@ -53,7 +54,7 @@ final class AlertModel {
     var onSaveNote: () -> Void = {}
     // onHoldPlace is called when the user opens the takeover's note field.
     var onHoldPlace: () -> Void = {}
-    // onMsgTeam is called when the user opens or closes the Msg team row.
+    // onMsgTeam is called when the user opens or closes the Let them know row.
     var onMsgTeam: () -> Void = {}
     // onSendTeamMessage is called when the user picks a message to send to the team.
     var onSendTeamMessage: (TeamMessage) -> Void = { _ in }

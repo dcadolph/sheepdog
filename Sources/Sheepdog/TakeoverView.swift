@@ -89,7 +89,7 @@ struct TakeoverView: View {
     }
 
     // placeRow offers to hold the user's place and to message the team, shows the open note field or
-    // Msg team row, or shows the held note.
+    // Let them know row, or shows the held note.
     @ViewBuilder
     private var placeRow: some View {
         if model.messagingTeam {
@@ -132,7 +132,7 @@ struct TakeoverView: View {
     // msgTeamButton opens the row that messages the team in Slack.
     private var msgTeamButton: some View {
         Button(action: model.onMsgTeam) {
-            Text("Msg team")
+            Text("Let them know")
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                 .foregroundStyle(Theme.accentText)
                 .underline()

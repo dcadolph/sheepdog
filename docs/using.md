@@ -43,10 +43,10 @@ top right corner of your main display hands the note back.
 - More than one note stacks newest first, like macOS notifications, with **Clear all**.
 - Notes nobody picked up are cleared at 4 a.m.
 
-## Msg team
+## Let them know
 
 Add your team's Slack channels in Settings, under Slack. Use **Copy link** on a channel in Slack
-and paste it in, with a name such as #team. The alarm then shows **Msg team** next to
+and paste it in, with a name such as #team. The alarm then shows **Let them know** next to
 **Hold my place**.
 
 - **Running late** copies "Running a few minutes late to Design review." and opens the channel.
@@ -85,23 +85,23 @@ and it belongs to the day it starts, so a Thursday 22:00 shift runs into Friday 
 
 ## Settings and features
 
-| Feature    | What it does                                                               |
-|------------|----------------------------------------------------------------------------|
-| Calendars  | Reads every calendar in macOS Calendar, including Google and Exchange.     |
-| Join links | Finds Teams, Zoom, Google Meet, Webex and Slack links in the event.        |
-| Msg team   | Copies a running late or can't make it line and opens your Slack channel.  |
-| Volume     | Unmutes and raises the volume while the alarm plays, then puts it back.    |
-| Speakers   | Plays through headphones, built-in speakers, or both at once.              |
-| Sounds     | Tug's bark and woof, or any macOS system sound.                            |
-| Filters    | Skips tentative events by default, and solo events if you turn that on.    |
-| Timing     | Warning times, alarm lead, snooze lengths and snooze count are adjustable. |
-| Login      | Starts at login from Settings.                                             |
-| Menu bar   | Tug's glyph changes with the alert stage and the menu lists what is next.  |
-| Events     | Each meeting in the menu offers Join meeting and Open in Calendar.         |
-| Nap time   | Silences real meetings for 1 or 3 hours, until morning, or until woken.    |
-| Hours      | Keeps Tug quiet, or down to the countdown, outside your working hours.     |
-| Hover      | The glyph says what is next, and each menu item says what it does.         |
-| Backup     | Exports settings to a file and imports them on any Mac. Sign-ins stay out. |
-| Themes     | Eleven color themes for the alarm, the countdown and the hand-back card.   |
+| Feature       | What it does                                                               |
+|---------------|----------------------------------------------------------------------------|
+| Calendars     | Reads every calendar in macOS Calendar, including Google and Exchange.     |
+| Join links    | Finds Teams, Zoom, Google Meet, Webex and Slack links in the event.        |
+| Let them know | Copies a running late or can't make it line and opens your Slack channel.  |
+| Volume        | Unmutes and raises the volume while the alarm plays, then puts it back.    |
+| Speakers      | Plays through headphones, built-in speakers, or both at once.              |
+| Sounds        | Tug's bark and woof, or any macOS system sound.                            |
+| Filters       | Skips tentative events by default, and solo events if you turn that on.    |
+| Timing        | Warning times, alarm lead, snooze lengths and snooze count are adjustable. |
+| Login         | Starts at login from Settings.                                             |
+| Menu bar      | Tug's glyph changes with the alert stage and the menu lists what is next.  |
+| Events        | Each meeting in the menu offers Join meeting and Open in Calendar.         |
+| Nap time      | Silences real meetings for 1 or 3 hours, until morning, or until woken.    |
+| Hours         | Keeps Tug quiet, or down to the countdown, outside your working hours.     |
+| Hover         | The glyph says what is next, and each menu item says what it does.         |
+| Backup        | Exports settings to a file and imports them on any Mac. Sign-ins stay out. |
+| Themes        | Eleven color themes for the alarm, the countdown and the hand-back card.   |
 
 Use **Test the alarm** in Tug's menu to see the whole thing without a real meeting.

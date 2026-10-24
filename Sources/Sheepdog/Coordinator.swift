@@ -352,8 +352,8 @@ final class Coordinator {
         }
     }
 
-    // toggleTeamRow opens or closes the takeover's Msg team row, saving any typed note first so the
-    // note field and the row are never open together.
+    // toggleTeamRow opens or closes the takeover's Let them know row, saving any typed note
+    // first so the note field and the row are never open together.
     private func toggleTeamRow() {
         if !model.messagingTeam {
             commitDraft()

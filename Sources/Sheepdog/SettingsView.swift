@@ -94,7 +94,7 @@ struct SettingsView: View {
             } header: {
                 Text("Slack")
             } footer: {
-                Text("Msg team on the alarm copies a short message to your clipboard and opens the channel, so you can paste it. Use Copy link on a channel in Slack.")
+                Text("Let them know on the alarm copies a short message to your clipboard and opens the channel, so you can paste it. Use Copy link on a channel in Slack.")
                     .foregroundStyle(.secondary)
             }
             Section("Warnings") {

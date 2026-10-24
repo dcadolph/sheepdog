@@ -32,7 +32,7 @@ enum DemoRenderer {
         let cursor: (from: CGPoint, to: CGPoint)
         // clickAt is the fraction of the beat when the cursor clicks, if it does.
         let clickAt: Double?
-        // offersLinks shows the takeover's Hold my place and Msg team links.
+        // offersLinks shows the takeover's Hold my place and Let them know links.
         var offersLinks = false
         // typing shows the takeover's note field filling with the note over the beat.
         var typing = false
@@ -52,7 +52,7 @@ enum DemoRenderer {
     static let pillJoin = CGPoint(x: 814, y: 54)
     // note is the place Tug holds in the demo.
     static let note = "Retry tests for the upload queue"
-    // channel is the made-up Slack channel that makes Msg team show.
+    // channel is the made-up Slack channel that makes Let them know show.
     static let channel = SlackChannel(name: "#design", link: "https://example.slack.com/archives/C0000000000")
 
     // beats is the demo, following what the app does: warning pill, takeover, snooze back to the

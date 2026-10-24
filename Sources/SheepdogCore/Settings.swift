@@ -56,7 +56,7 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var holdPlace: Bool = true
     // UseMacCalendar reports whether events come from the calendars in macOS Calendar.
     public var useMacCalendar: Bool = true
-    // SlackChannels are the channels the alarm's Msg team button can open.
+    // SlackChannels are the channels the alarm's Let them know button can open.
     public var slackChannels: [SlackChannel] = []
     // Theme colors the takeover, the pill, and the hand-back card.
     public var theme: ThemeName = .harbor
