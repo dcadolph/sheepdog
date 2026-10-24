@@ -25,8 +25,6 @@ hands it back when the meeting ends.
 
 sheepdog is free and will stay free. If I ever stop maintaining it, I'll archive it, and the code
 stays open.
-If it has earned its spot in your menu bar, you can
-[buy Tug a treat](https://github.com/sponsors/dcadolph) through GitHub Sponsors.
 
 ## Requirements
 
