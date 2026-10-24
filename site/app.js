@@ -137,13 +137,10 @@
     });
   });
 
-  // Point both download buttons at the newest zip.
+  // Show the newest version. The download links use the fixed-name asset on the latest release.
   fetch("https://api.github.com/repos/dcadolph/sheepdog/releases/latest")
     .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
     .then(function (rel) {
-      var asset = (rel.assets || []).filter(function (a) { return /macos_universal\.zip$/.test(a.name); })[0];
-      if (!asset) return;
-      ["dl", "dl2"].forEach(function (id) { document.getElementById(id).href = asset.browser_download_url; });
       document.getElementById("ver").textContent =
         rel.tag_name + ". Signed and notarized. Open source under Apache 2.0.";
     })
