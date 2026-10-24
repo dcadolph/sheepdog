@@ -17,9 +17,7 @@
   <div class="w">
     <a class="brand" href="/"><img src="/assets/favicon.png" alt="" width="30" height="30">sheepdog</a>
     <nav>
-      <a href="#more">What else</a>
-      <a href="#themes">Themes</a>
-      <a href="/privacy/">Privacy</a>
+      <a class="keep" href="/privacy/">Privacy</a>
       <a class="keep" href="https://github.com/dcadolph/sheepdog">GitHub</a>
     </nav>
   </div>
@@ -73,11 +71,38 @@
   </div>
 </section>
 
-<section class="band lift feat" id="more">
+<section class="band lift compat" id="works">
+  <div class="w grid">
+    <div class="head">
+      <p class="small">Works with what you already use</p>
+      <h2>Your calendars. Your meeting apps.</h2>
+      <p>sheepdog reads every calendar macOS Calendar knows about, and signs in to Microsoft
+        directly for the ones it does not show. When it is time, <b>Join</b> opens the link it
+        found in the invite, straight into the Zoom or Teams app.</p>
+    </div>
+    <div class="lists">
+      <div class="lst"><p class="small">Calendars</p><ul>
+        <li><b>Microsoft 365 and Outlook</b><span>Direct sign-in</span></li>
+        <li><b>Microsoft Exchange</b><span>Through macOS Calendar</span></li>
+        <li><b>Google Calendar</b><span>Through macOS Calendar</span></li>
+        <li><b>iCloud</b><span>Through macOS Calendar</span></li>
+      </ul></div>
+      <div class="lst"><p class="small">Meeting links</p><ul>
+        <li><b>Microsoft Teams</b><span>Opens the app</span></li>
+        <li><b>Zoom</b><span>Opens the app</span></li>
+        <li><b>Google Meet</b><span>Opens in your browser</span></li>
+        <li><b>Webex</b><span>Opens the link</span></li>
+        <li><b>Slack huddles</b><span>Opens the link</span></li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="band feat" id="more">
   <div class="w grid">
     <div class="txt">
       <p class="small">Hold my place</p>
-      <h2>A note to the person you are about to stop being.</h2>
+      <h2>Pick up right where you left off.</h2>
       <p>Type what you were in the middle of before you jump in. When the meeting ends, Tug hands
         it back. Notes stay on your Mac and clear themselves at 4 a.m. after they are returned.</p>
     </div>
@@ -91,7 +116,7 @@
   </div>
 </section>
 
-<section class="band">
+<section class="band lift">
   <div class="w grid">
     <div class="head" style="grid-column:1 / span 8">
       <p class="small">He knows when you are off</p>
@@ -112,11 +137,11 @@
   </div>
 </section>
 
-<section class="band lift themes" id="themes">
+<section class="band themes slim" id="themes">
   <div class="w grid">
     <div class="head">
-      <p class="small">Eleven themes</p>
-      <h2>Dress him however you like.</h2>
+      <p class="small">Themes</p>
+      <h2>Eleven ways to dress him.</h2>
       <p>Every theme is a color set checked for contrast. Pick one and this whole page changes,
         including the alarm above. The app uses the same names.</p>
     </div>
@@ -124,7 +149,7 @@
   </div>
 </section>
 
-<section class="band get" id="install">
+<section class="band lift get" id="install">
   <div class="w grid">
     <div class="txt">
       <p class="small">Get Tug</p>
@@ -134,7 +159,7 @@
         event. <a href="/privacy/" style="color:var(--accent)">Read the privacy policy.</a></p>
       <div class="getit">
         <a class="btn" id="dl2" href="https://github.com/dcadolph/sheepdog/releases/latest">Download for Mac</a>
-        <div class="cmd"><span>brew upgrade --cask sheepdog</span><button data-copy="brew upgrade --cask sheepdog">Copy</button></div>
+        <div class="cmd"><span>brew install --cask dcadolph/tap/sheepdog</span><button data-copy="brew install --cask dcadolph/tap/sheepdog">Copy</button></div>
       </div>
     </div>
   </div>
@@ -143,8 +168,8 @@
 
 <footer>
   <div class="w">
-    <span>sheepdog is free and open source under the Apache 2.0 license.</span>
     <span><a href="https://github.com/dcadolph/sheepdog">Source</a> &nbsp;&middot;&nbsp; <a href="https://github.com/dcadolph/sheepdog/issues">Issues</a> &nbsp;&middot;&nbsp; <a href="/privacy/">Privacy</a></span>
+    <span>sheepdog is free and open source under the Apache 2.0 license.</span>
   </div>
 </footer>
 

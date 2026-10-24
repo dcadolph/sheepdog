@@ -44,6 +44,7 @@
     s.setProperty("--late", t[6]);
     s.setProperty("--on", onAccent(t[1], t[5]));
     s.colorScheme = lum(t[1]) > 0.4 ? "light" : "dark";
+    s.setProperty("--glyph-invert", lum(t[1]) > 0.4 ? "0" : "1");
     s.setProperty("--rule", "color-mix(in srgb, " + t[3] + " 22%, transparent)");
     try { localStorage.setItem("theme", t[0]); } catch (e) {}
   }
