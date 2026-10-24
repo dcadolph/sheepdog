@@ -83,16 +83,17 @@ public struct Palette: Sendable, Equatable {
 // ThemeName is a color theme shared by name with moorings.
 public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     case harbor
-    case dragonsgale
-    case greekFire
-    case phosphor
-    case redcoat
-    case hussar
+    case dragonfire
+    case wildfire
+    case neo
+    case rose
+    case lannister
     case tyrian
-    case ultramarine
+    case dunder
     case verdigris
     case arrakis
-    case bletchley
+    case babyBlue
+    case concierge
 
     // id identifies the theme in pickers.
     public var id: String { rawValue }
@@ -101,16 +102,17 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     public var label: String {
         switch self {
         case .harbor: return "Harbor"
-        case .dragonsgale: return "Dragonsgale"
-        case .greekFire: return "Greek Fire"
-        case .phosphor: return "Phosphor"
-        case .redcoat: return "Redcoat"
-        case .hussar: return "Hussar"
+        case .dragonfire: return "Dragonfire"
+        case .wildfire: return "Wildfire"
+        case .neo: return "Neo"
+        case .rose: return "Rose"
+        case .lannister: return "Lannister"
         case .tyrian: return "Tyrian"
-        case .ultramarine: return "Ultramarine"
+        case .dunder: return "Dunder"
         case .verdigris: return "Verdigris"
         case .arrakis: return "Arrakis"
-        case .bletchley: return "Bletchley"
+        case .babyBlue: return "Baby Blue"
+        case .concierge: return "Concierge"
         }
     }
 
@@ -118,16 +120,17 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     public var palette: Palette {
         switch self {
         case .harbor: return Self.make("#0f1012", "#0f1012", "#ffffff", "#aaa59b", "#f3e3b8", "#ff7361")
-        case .dragonsgale: return Self.make("#0d0a08", "#1a1310", "#f4e6d8", "#b89c86", "#ff7a1a", "#ff7361")
-        case .greekFire: return Self.make("#120805", "#24100a", "#ffe9c2", "#c99a6b", "#ffb000", "#ff7361")
-        case .phosphor: return Self.make("#050a05", "#0b160b", "#b8ffb0", "#5fae5a", "#33ff33", "#ff7361")
-        case .redcoat: return Self.make("#0e0c0c", "#1c1919", "#f4f1ee", "#a9a3a0", "#d6282f", "#ff7361")
-        case .hussar: return Self.make("#1a0608", "#2b0c10", "#f3e3c0", "#c2a272", "#d4a63a", "#ff7361")
+        case .dragonfire: return Self.make("#0d0a08", "#1a1310", "#f4e6d8", "#b89c86", "#ff7a1a", "#ff7361")
+        case .wildfire: return Self.make("#120805", "#24100a", "#ffe9c2", "#c99a6b", "#ffb000", "#ff7361")
+        case .neo: return Self.make("#050a05", "#0b160b", "#b8ffb0", "#5fae5a", "#33ff33", "#ff7361")
+        case .rose: return Self.make("#0e0c0c", "#1c1919", "#f4f1ee", "#a9a3a0", "#d6282f", "#ff7361")
+        case .lannister: return Self.make("#1a0608", "#2b0c10", "#f3e3c0", "#c2a272", "#d4a63a", "#ff7361")
         case .tyrian: return Self.make("#140816", "#231027", "#f0e2f5", "#b597bf", "#b04cc8", "#ff7361")
-        case .ultramarine: return Self.make("#060b1f", "#0e1736", "#e3e9ff", "#8e9cc9", "#4f78ff", "#ff7361")
+        case .dunder: return Self.make("#060b1f", "#0e1736", "#e3e9ff", "#8e9cc9", "#4f78ff", "#ff7361")
         case .verdigris: return Self.make("#0a1614", "#12241f", "#dff3ec", "#86b3a5", "#43b39a", "#ff7361")
         case .arrakis: return Self.make("#0c0c0d", "#18181a", "#f5f5f2", "#a8a8a3", "#c07a44", "#ff7361")
-        case .bletchley: return Self.make("#ece4cf", "#f6f0dd", "#1a1a17", "#5c5748", "#7a2e12", "#9c1c14")
+        case .babyBlue: return Self.make("#0a1218", "#13212a", "#eaf6fc", "#8fa9b8", "#89cff0", "#ff7361")
+        case .concierge: return Self.make("#ece4cf", "#f6f0dd", "#1a1a17", "#5c5748", "#7a2e12", "#9c1c14")
         }
     }
 

@@ -22,10 +22,10 @@ func testPaletteContrast(theme: ThemeName) {
 
 // testPaletteFallbacks checks the label and accent text fallbacks on the themes that need them.
 @Test func testPaletteFallbacks() {
-    #expect(ThemeName.redcoat.palette.onAccent == .white)
+    #expect(ThemeName.rose.palette.onAccent == .white)
     #expect(ThemeName.tyrian.palette.onAccent == .black)
     #expect(ThemeName.harbor.palette.onAccent == ThemeName.harbor.palette.background)
-    #expect(ThemeName.redcoat.palette.accentText == ThemeName.redcoat.palette.text)
+    #expect(ThemeName.rose.palette.accentText == ThemeName.rose.palette.text)
     #expect(ThemeName.harbor.palette.accentText == ThemeName.harbor.palette.accent)
 }
 

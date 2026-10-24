@@ -102,6 +102,6 @@ and it belongs to the day it starts, so a Thursday 22:00 shift runs into Friday 
 | Hours         | Keeps Tug quiet, or down to the countdown, outside your working hours.     |
 | Hover         | The glyph says what is next, and each menu item says what it does.         |
 | Backup        | Exports settings to a file and imports them on any Mac. Sign-ins stay out. |
-| Themes        | Eleven color themes for the alarm, the countdown and the hand-back card.   |
+| Themes        | Twelve color themes for the alarm, the countdown and the hand-back card.   |
 
 Use **Test the alarm** in Tug's menu to see the whole thing without a real meeting.
