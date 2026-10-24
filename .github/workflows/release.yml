@@ -86,7 +86,12 @@ jobs:
           rm -f "$key"
           cat "$RUNNER_TEMP/notary.json"
           test "$(jq -r .status "$RUNNER_TEMP/notary.json")" = "Accepted"
-          xcrun stapler staple .build/Sheepdog.app
+          # Apple's ticket service drops connections now and then, so retry before failing.
+          for try in 1 2 3; do
+            xcrun stapler staple .build/Sheepdog.app && break
+            test "$try" -lt 3
+            sleep 20
+          done
           rm -f "$zip"
           ditto -c -k --keepParent .build/Sheepdog.app "$zip"
       - name: Verify as a user would
@@ -97,7 +102,12 @@ jobs:
           check="$RUNNER_TEMP/verify"
           mkdir -p "$check"
           ditto -x -k "dist/sheepdog_${TAG}_macos_universal.zip" "$check"
-          xcrun stapler validate "$check/Sheepdog.app"
+          # Apple's ticket service drops connections now and then, so retry before failing.
+          for try in 1 2 3; do
+            xcrun stapler validate "$check/Sheepdog.app" && break
+            test "$try" -lt 3
+            sleep 20
+          done
           spctl --assess --type execute --verbose=4 "$check/Sheepdog.app"
           codesign --verify --deep --strict --verbose=2 "$check/Sheepdog.app"
           cd dist
@@ -175,6 +185,11 @@ jobs:
           brew tap dcadolph/tap
           brew install --cask dcadolph/tap/sheepdog
           spctl --assess --type execute --verbose=4 /Applications/Sheepdog.app
-          xcrun stapler validate /Applications/Sheepdog.app
+          # Apple's ticket service drops connections now and then, so retry before failing.
+          for try in 1 2 3; do
+            xcrun stapler validate /Applications/Sheepdog.app && break
+            test "$try" -lt 3
+            sleep 20
+          done
           brew audit --cask --strict --online dcadolph/tap/sheepdog
           brew uninstall --cask sheepdog
