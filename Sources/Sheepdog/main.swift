@@ -19,6 +19,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // applicationDidFinishLaunching builds the menu bar item and starts the loop.
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if handOffToRunningCopy() {
+            return
+        }
         NSApp.mainMenu = Self.makeMainMenu()
         loginItem.configureOnFirstLaunch()
         let coordinator = Coordinator(settingsStore: settingsStore, accounts: accounts)
@@ -29,6 +32,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.coordinator = coordinator
         self.statusItem = statusItem
         coordinator.start()
+    }
+
+    // applicationShouldHandleReopen opens the settings window when Sheepdog is opened again while it
+    // runs, so a second open from Applications shows it is already there.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        showSettings()
+        return false
+    }
+
+    // handOffToRunningCopy reopens a Sheepdog that is already running from another path and quits this
+    // one, so a second copy never puts a second Tug in the menu bar. It reports whether it handed off.
+    private func handOffToRunningCopy() -> Bool {
+        let me = NSRunningApplication.current
+        guard let bundle = Bundle.main.bundleIdentifier,
+              let other = NSRunningApplication.runningApplications(withBundleIdentifier: bundle)
+                  .first(where: { $0.processIdentifier != me.processIdentifier }),
+              let url = other.bundleURL else {
+            return false
+        }
+        NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration()) { _, _ in
+            DispatchQueue.main.async { NSApp.terminate(nil) }
+        }
+        return true
     }
 
     // showSettings opens the settings window and brings it forward.
