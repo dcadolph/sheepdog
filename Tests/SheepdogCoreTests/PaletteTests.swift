@@ -48,9 +48,9 @@ func testPaletteContrast(theme: ThemeName) {
 @Test func testThemeSetting() throws {
     #expect(AlertSettings().theme == .harbor)
     var settings = AlertSettings()
-    settings.theme = .arrakis
+    settings.theme = .copper
     let data = try JSONEncoder().encode(settings)
-    #expect(try JSONDecoder().decode(AlertSettings.self, from: data).theme == .arrakis)
+    #expect(try JSONDecoder().decode(AlertSettings.self, from: data).theme == .copper)
     let unknown = #"{"theme":"plaid","maxSnoozes":4}"#
     let got = try JSONDecoder().decode(AlertSettings.self, from: Data(unknown.utf8))
     #expect(got.theme == .harbor)
