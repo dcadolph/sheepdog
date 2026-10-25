@@ -50,9 +50,12 @@ stays open.
 
 ## Download
 
-Grab `sheepdog_<version>_macos_universal.zip` from the
-[latest release](https://github.com/dcadolph/sheepdog/releases/latest), unzip it, and move
-`Sheepdog.app` to `/Applications`. It runs on Apple silicon and Intel Macs.
+Download `sheepdog_vX.Y.Z_macos_universal.dmg` from the
+[latest release](https://github.com/dcadolph/sheepdog/releases/latest), open it, and
+double-click Sheepdog. After one okay it copies itself into Applications, starts from there,
+ejects the disk image, and moves it to the Trash. Dragging Sheepdog onto Applications works too,
+and then it asks once before trashing the disk image. The zip is still attached for scripts and
+Homebrew. It runs on Apple silicon and Intel Macs.
 
 The app is signed and notarized, so it opens like any other Mac app. Allow calendar access
 when macOS asks. Homebrew users can run `brew install --cask dcadolph/tap/sheepdog` instead.
@@ -60,11 +63,14 @@ when macOS asks. Homebrew users can run `brew install --cask dcadolph/tap/sheepd
 ### Verify the download
 
 Every release is signed with a Developer ID certificate and notarized by Apple, and the
-notarization ticket is stapled to the app. Each release also lists a SHA-256 hash for each zip in
-`SHA256SUMS`. To check a download, run these from the folder that holds the files:
+notarization ticket is stapled to the app. Each release also lists a SHA-256 hash for each zip
+and disk image in `SHA256SUMS`, and each one carries a GitHub build provenance attestation. To
+check a download, run these from the folder that holds the files:
 
 ```sh
 shasum -a 256 -c SHA256SUMS --ignore-missing
+gh attestation verify sheepdog_macos_universal.dmg --repo dcadolph/sheepdog
+gh attestation verify sheepdog_macos_universal.zip --repo dcadolph/sheepdog
 unzip sheepdog_macos_universal.zip
 spctl -a -vv Sheepdog.app
 codesign -dv Sheepdog.app 2>&1 | grep TeamIdentifier
