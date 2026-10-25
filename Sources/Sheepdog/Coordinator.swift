@@ -63,6 +63,17 @@ final class Coordinator {
     private static let updateTagKey = "updateLatestTag"
     // updatePageKey is the user defaults key holding that release's page.
     private static let updatePageKey = "updateLatestPage"
+    // nudgeKey is the user defaults key holding the update card's schedule.
+    private static let nudgeKey = "updateNudge"
+    // nudge is when the update card last showed and whether its version was skipped. It is not part
+    // of the settings backup.
+    private var nudge: UpdateNudge = UserDefaults.standard.data(forKey: Coordinator.nudgeKey)
+        .flatMap { try? JSONDecoder().decode(UpdateNudge.self, from: $0) } ?? UpdateNudge()
+    // updateCardOpen reports that the update card was shown and not yet answered. A blocked card hides
+    // and comes back when the way is clear.
+    private var updateCardOpen = false
+    // fromHomebrew reports that Homebrew manages this install.
+    private static let fromHomebrew = Install.homebrew { FileManager.default.fileExists(atPath: $0) }
     // runningVersion is this build's version, or nil outside the app bundle.
     private static let runningVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
         as? String).flatMap(ReleaseVersion.init)
@@ -103,6 +114,10 @@ final class Coordinator {
         model.onCopyHandBack = { [weak self] in self?.copyHandBack() }
         model.onDoneHandBack = { [weak self] in self?.doneHandBack() }
         model.onClearHandBacks = { [weak self] in self?.clearHandBacks() }
+        model.onOpenUpdate = { [weak self] in self?.openUpdate() }
+        model.onRemindUpdate = { [weak self] in self?.closeUpdateCard() }
+        model.onSkipUpdate = { [weak self] in self?.skipUpdate() }
+        model.updateFromHomebrew = Self.fromHomebrew
         calendar.onChange = { [weak self] in self?.refresh() }
         accounts.onChange = { [weak self] in self?.refresh() }
         mic.onStart = { [weak self] in self?.micStarted() }
@@ -236,6 +251,7 @@ final class Coordinator {
         )
         render(now: now, chime: chime)
         renderHandBack()
+        renderUpdateCard(now: now)
         onTick?()
     }
 
@@ -589,5 +605,77 @@ final class Coordinator {
         places.places = PlaceKeeper.cleared(places.places)
         focusPlaceID = nil
         tick()
+    }
+
+    // renderUpdateCard shows the update card when it is due, and keeps an open card hidden while a
+    // countdown, the takeover, a call, off hours or the hand-back card is in the way.
+    private func renderUpdateCard(now: Date) {
+        guard let update = availableUpdate else {
+            updateCardOpen = false
+            model.updateVersion = nil
+            windows.hideUpdate()
+            return
+        }
+        let before = nudge
+        nudge.see(update.tag, now: now)
+        let alerting = active.map { $0.stage != .idle } ?? false
+        let blocked = alerting || windows.isShowingTakeover || mic.isRunning || model.handBack != nil
+            || settings.workingHours.isOffDuty(now: now, calendar: .current)
+        if !updateCardOpen && nudge.due(now: now, blocked: blocked) {
+            nudge.shown(now: now)
+            updateCardOpen = true
+        }
+        if nudge != before {
+            saveNudge()
+        }
+        let version = update.tag.hasPrefix("v") ? String(update.tag.dropFirst()) : update.tag
+        model.updateVersion = updateCardOpen ? version : nil
+        if updateCardOpen && !blocked {
+            windows.showUpdate()
+        } else {
+            windows.hideUpdate()
+        }
+    }
+
+    // openUpdate opens the release page, or for a Homebrew install copies the upgrade command and
+    // closes the card a moment later so the user sees it worked.
+    private func openUpdate() {
+        guard let update = availableUpdate else {
+            closeUpdateCard()
+            return
+        }
+        guard Self.fromHomebrew else {
+            NSWorkspace.shared.open(update.page)
+            closeUpdateCard()
+            return
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(Install.brewCommand, forType: .string)
+        model.updateCopied = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            self?.closeUpdateCard()
+        }
+    }
+
+    // skipUpdate stops the card for this version. The next version starts fresh.
+    private func skipUpdate() {
+        nudge.skip()
+        saveNudge()
+        closeUpdateCard()
+    }
+
+    // closeUpdateCard puts the card away until its next reminder is due.
+    private func closeUpdateCard() {
+        updateCardOpen = false
+        model.updateCopied = false
+        model.updateVersion = nil
+        windows.hideUpdate()
+    }
+
+    // saveNudge keeps the update card's schedule across restarts.
+    private func saveNudge() {
+        if let data = try? JSONEncoder().encode(nudge) {
+            UserDefaults.standard.set(data, forKey: Self.nudgeKey)
+        }
     }
 }

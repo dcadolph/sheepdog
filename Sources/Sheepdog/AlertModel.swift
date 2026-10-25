@@ -36,6 +36,12 @@ final class AlertModel {
     var messagingTeam = false
     // teamChannel is the index of the channel picked in the Let them know row.
     var teamChannel = 0
+    // updateVersion is the newer version the update card names, or nil while the card is closed.
+    var updateVersion: String?
+    // updateFromHomebrew reports a Homebrew install, whose card copies the upgrade command.
+    var updateFromHomebrew = false
+    // updateCopied reports that the upgrade command was just copied.
+    var updateCopied = false
     // drawsStill reports that the views are being drawn to an image, where AppKit-backed text
     // fields render as placeholders, so the note field draws its text directly.
     var drawsStill = false
@@ -66,6 +72,12 @@ final class AlertModel {
     var onDoneHandBack: () -> Void = {}
     // onClearHandBacks is called when the user acknowledges every handed back note at once.
     var onClearHandBacks: () -> Void = {}
+    // onOpenUpdate is called when the user opens the release page or copies the upgrade command.
+    var onOpenUpdate: () -> Void = {}
+    // onRemindUpdate is called when the user asks to be reminded about the update later.
+    var onRemindUpdate: () -> Void = {}
+    // onSkipUpdate is called when the user skips the update's version.
+    var onSkipUpdate: () -> Void = {}
 
     // hasStarted reports whether the meeting's start has passed.
     var hasStarted: Bool {

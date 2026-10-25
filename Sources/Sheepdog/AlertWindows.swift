@@ -9,7 +9,7 @@ final class KeyPanel: NSPanel {
     override var canBecomeMain: Bool { true }
 }
 
-// AlertWindows owns the takeover panels, the countdown pill and the hand-back card.
+// AlertWindows owns the takeover panels, the countdown pill, the hand-back card and the update card.
 @MainActor
 final class AlertWindows {
     // model is shared by every alert view.
@@ -20,6 +20,8 @@ final class AlertWindows {
     private var pill: NSPanel?
     // handBack is the card that gives back a held note.
     private var handBack: NSPanel?
+    // updateCard is the card that says a newer Sheepdog is out.
+    private var updateCard: NSPanel?
     // previousApp is the app that was in front before the takeover took focus.
     private var previousApp: NSRunningApplication?
 
@@ -120,10 +122,33 @@ final class AlertWindows {
     // the first time it appears. It stays on that display wherever the user is working, so it is
     // always in the same spot.
     func showHandBack() {
-        let appearing = handBack?.isVisible != true
-        let panel = handBack ?? makeHandBack()
+        let panel = handBack ?? makeCard(HandBackView(model: model))
         handBack = panel
-        guard let host = panel.contentView as? NSHostingView<HandBackView>, let screen = NSScreen.screens.first else {
+        float(panel)
+    }
+
+    // hideHandBack removes the hand-back card.
+    func hideHandBack() {
+        handBack?.orderOut(nil)
+    }
+
+    // showUpdate floats the update card where the hand-back card goes. The two never show together.
+    func showUpdate() {
+        let panel = updateCard ?? makeCard(UpdateCardView(model: model))
+        updateCard = panel
+        float(panel)
+    }
+
+    // hideUpdate removes the update card.
+    func hideUpdate() {
+        updateCard?.orderOut(nil)
+    }
+
+    // float puts a card in the top right of the menu bar display, sliding it in when it appears, and
+    // resizes it to its content while it stays up.
+    private func float(_ panel: NSPanel) {
+        let appearing = !panel.isVisible
+        guard let host = panel.contentView, let screen = NSScreen.screens.first else {
             return
         }
         let size = host.fittingSize
@@ -146,12 +171,7 @@ final class AlertWindows {
         }
     }
 
-    // hideHandBack removes the hand-back card.
-    func hideHandBack() {
-        handBack?.orderOut(nil)
-    }
-
-    // hideAll removes every alert window except the hand-back card, which outlives alerts.
+    // hideAll removes every alert window except the cards, which outlive alerts.
     func hideAll() {
         hideTakeover()
         hidePill()
@@ -179,8 +199,8 @@ final class AlertWindows {
         return panel
     }
 
-    // makeHandBack builds the floating card, which never takes focus.
-    private func makeHandBack() -> NSPanel {
+    // makeCard builds a floating card, which never takes focus.
+    private func makeCard<Content: View>(_ view: Content) -> NSPanel {
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 340, height: 100),
             styleMask: [.borderless, .nonactivatingPanel],
@@ -195,7 +215,7 @@ final class AlertWindows {
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.appearance = NSAppearance(named: .darkAqua)
-        panel.contentView = NSHostingView(rootView: HandBackView(model: model))
+        panel.contentView = NSHostingView(rootView: view)
         return panel
     }
 }
