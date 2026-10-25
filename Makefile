@@ -13,13 +13,15 @@ SHEEPDOG_SUPPORT_URL ?=
 ARCHS ?=
 ARCH_FLAGS := $(foreach arch,$(ARCHS),--arch $(arch))
 ZIP ?= .build/Sheepdog.zip
+DMG ?= .build/Sheepdog.dmg
+DMGBUILD ?= dmgbuild
 
 ICONSET := .build/AppIcon.iconset
 ICNS := .build/AppIcon.icns
 RUNTIME_ART := art/glyph-idle.png art/glyph-warning.png art/glyph-takeover.png art/tug.png art/tug-head.png
 SOUNDS := sounds/tug-woof.caf sounds/tug-barking.caf
 
-.PHONY: build test app zip run demo clean
+.PHONY: build test app zip dmg run demo clean
 
 build:
 	swift build
@@ -54,6 +56,11 @@ app: $(ICNS)
 zip: app
 	rm -f $(ZIP)
 	ditto -c -k --keepParent $(APP) $(ZIP)
+
+dmg:
+	rm -f $(DMG)
+	$(DMGBUILD) -s dmg.py -D app=$(APP) "Sheepdog" $(DMG)
+	$(if $(filter-out -,$(SIGN_ID)),codesign --force --sign "$(SIGN_ID)" --timestamp $(DMG))
 
 demo:
 	$(MAKE) app APP=$(DEMO_APP)

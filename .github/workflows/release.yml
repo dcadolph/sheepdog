@@ -4,6 +4,8 @@ on:
     types: [published]
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 jobs:
   build:
     runs-on: macos-15
@@ -94,6 +96,33 @@ jobs:
           done
           rm -f "$zip"
           ditto -c -k --keepParent .build/Sheepdog.app "$zip"
+      - name: Build, notarize and staple the disk image
+        env:
+          NOTARY_KEY_P8: ${{ secrets.NOTARY_KEY_P8 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+          SIGN_ID: "Developer ID Application: Douglas Adolph (U7L4P2YHWJ)"
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/dmgbuild"
+          "$RUNNER_TEMP/dmgbuild/bin/pip" install --quiet dmgbuild==1.6.6
+          dmg="dist/sheepdog_${TAG}_macos_universal.dmg"
+          make dmg DMGBUILD="$RUNNER_TEMP/dmgbuild/bin/dmgbuild" DMG="$dmg" SIGN_ID="$SIGN_ID"
+          codesign -dv "$dmg" 2>&1 | grep -q "TeamIdentifier=U7L4P2YHWJ"
+          key="$RUNNER_TEMP/notary.p8"
+          printf '%s' "$NOTARY_KEY_P8" > "$key"
+          xcrun notarytool submit "$dmg" --key "$key" --key-id "$NOTARY_KEY_ID" \
+            --issuer "$NOTARY_ISSUER_ID" --wait --timeout 180m --output-format json > "$RUNNER_TEMP/notary-dmg.json"
+          rm -f "$key"
+          cat "$RUNNER_TEMP/notary-dmg.json"
+          test "$(jq -r .status "$RUNNER_TEMP/notary-dmg.json")" = "Accepted"
+          # Apple's ticket service drops connections now and then, so retry before failing.
+          for try in 1 2 3; do
+            xcrun stapler staple "$dmg" && break
+            test "$try" -lt 3
+            sleep 20
+          done
       - name: Verify as a user would
         env:
           TAG: ${{ github.event.release.tag_name }}
@@ -110,13 +139,33 @@ jobs:
           done
           spctl --assess --type execute --verbose=4 "$check/Sheepdog.app"
           codesign --verify --deep --strict --verbose=2 "$check/Sheepdog.app"
+          dmg="dist/sheepdog_${TAG}_macos_universal.dmg"
+          for try in 1 2 3; do
+            xcrun stapler validate "$dmg" && break
+            test "$try" -lt 3
+            sleep 20
+          done
+          spctl --assess --type open --context context:primary-signature --verbose=4 "$dmg"
+          mount="$RUNNER_TEMP/dmg-mount"
+          hdiutil attach -nobrowse -readonly -mountpoint "$mount" "$dmg"
+          spctl --assess --type execute --verbose=4 "$mount/Sheepdog.app"
+          test "$(readlink "$mount/Applications")" = "/Applications"
+          test -f "$mount/.DS_Store"
+          hdiutil detach "$mount"
           cd dist
-          # A fixed name lets releases/latest/download/sheepdog_macos_universal.zip always work.
+          # Fixed names let releases/latest/download/sheepdog_macos_universal.{zip,dmg} always work.
           cp -- "sheepdog_${TAG}_macos_universal.zip" sheepdog_macos_universal.zip
-          shasum -a 256 -- *.zip > SHA256SUMS
+          cp -- "sheepdog_${TAG}_macos_universal.dmg" sheepdog_macos_universal.dmg
+          shasum -a 256 -- *.zip *.dmg > SHA256SUMS
       - name: Remove signing keychain
         if: always()
         run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/*.zip
+            dist/*.dmg
       - name: Attach to release
         uses: softprops/action-gh-release@v2
         with:
