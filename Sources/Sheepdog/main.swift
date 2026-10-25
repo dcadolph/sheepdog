@@ -10,6 +10,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let loginItem = LoginItem()
     // accounts holds the Microsoft and Google sign-ins.
     private let accounts = Accounts()
+    // installer puts a downloaded copy into Applications and tidies the disk image after.
+    private let installer = Installer()
     // coordinator runs the alert loop.
     private var coordinator: Coordinator?
     // statusItem is the menu bar controller.
@@ -17,11 +19,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // settingsWindow is created on first open and reused.
     private var settingsWindow: NSWindow?
 
-    // applicationDidFinishLaunching builds the menu bar item and starts the loop.
+    // applicationDidFinishLaunching builds the menu bar item and starts the loop. The install offer comes
+    // before the hand-off so a newer copy opened from a disk image replaces a running one instead of
+    // deferring to it, and before the login item so a disk image path is never registered.
     func applicationDidFinishLaunching(_ notification: Notification) {
-        if handOffToRunningCopy() {
+        if installer.offerMove() || handOffToRunningCopy() {
             return
         }
+        installer.offerTrash()
         NSApp.mainMenu = Self.makeMainMenu()
         loginItem.configureOnFirstLaunch()
         let coordinator = Coordinator(settingsStore: settingsStore, accounts: accounts)
