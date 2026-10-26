@@ -126,3 +126,72 @@ let homebrewCases: [HomebrewCase] = [
 func testInstallHomebrew(_ c: HomebrewCase) {
     #expect(Install.homebrew { c.present.contains($0) } == c.want)
 }
+
+// KeyCase is one pair of image identities and whether their keys should match.
+struct KeyCase: Sendable, CustomTestStringConvertible {
+    // Name labels the case in test output.
+    let name: String
+    // FileA is the file number of the first identity.
+    let fileA: UInt64
+    // FileB is the file number of the second identity.
+    let fileB: UInt64
+    // Want reports whether the two keys are expected to be equal.
+    let want: Bool
+
+    // testDescription labels the case in test output.
+    var testDescription: String { name }
+}
+
+// keyCases cover the same path with the same and with a different file number.
+let keyCases: [KeyCase] = [
+    // Test 0: Same path and file number.
+    KeyCase(name: "same file", fileA: 7, fileB: 7, want: true),
+    // Test 1: Same path, different file number.
+    KeyCase(name: "different file number", fileA: 7, fileB: 8, want: false),
+]
+
+// testInstallImageKey tells files at one path apart by file number.
+@Test(arguments: keyCases)
+func testInstallImageKey(_ c: KeyCase) {
+    let made = Date(timeIntervalSince1970: 1_700_000_000.9)
+    let a = Install.imageKey(path: "/d/a.dmg", fileNumber: c.fileA, created: made)
+    let b = Install.imageKey(path: "/d/a.dmg", fileNumber: c.fileB, created: made)
+    #expect((a == b) == c.want)
+    #expect(a == "/d/a.dmg|\(c.fileA)|1700000000")
+}
+
+// PruneCase is a list of keys, the current identities on disk, and the keys that should survive.
+struct PruneCase: Sendable, CustomTestStringConvertible {
+    // Name labels the case in test output.
+    let name: String
+    // Keys is the stored list.
+    let keys: [String]
+    // Current maps a path to its present key, absent when the file is gone.
+    let current: [String: String]
+    // Want is the expected surviving list.
+    let want: [String]
+
+    // testDescription labels the case in test output.
+    var testDescription: String { name }
+}
+
+// pruneCases cover a match, a missing file, a changed identity, order, and a path with a separator.
+let pruneCases: [PruneCase] = [
+    // Test 0: A matching key stays.
+    PruneCase(name: "match", keys: ["/a|1|10"], current: ["/a": "/a|1|10"], want: ["/a|1|10"]),
+    // Test 1: A key whose file is gone is dropped.
+    PruneCase(name: "gone", keys: ["/a|1|10"], current: [:], want: []),
+    // Test 2: A key whose identity changed is dropped.
+    PruneCase(name: "changed", keys: ["/a|1|10"], current: ["/a": "/a|2|10"], want: []),
+    // Test 3: Order is kept.
+    PruneCase(name: "order", keys: ["/b|1|1", "/x|1|1", "/a|1|1"],
+              current: ["/b": "/b|1|1", "/a": "/a|1|1"], want: ["/b|1|1", "/a|1|1"]),
+    // Test 4: A path containing a separator round-trips.
+    PruneCase(name: "pipe path", keys: ["/a|b|1|10"], current: ["/a|b": "/a|b|1|10"], want: ["/a|b|1|10"]),
+]
+
+// testInstallPruned keeps only keys that still match their file.
+@Test(arguments: pruneCases)
+func testInstallPruned(_ c: PruneCase) {
+    #expect(Install.pruned(c.keys) { c.current[$0] } == c.want)
+}

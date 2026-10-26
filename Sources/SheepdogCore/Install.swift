@@ -89,4 +89,21 @@ public enum Install {
     static func trimmed(_ path: String) -> String {
         path.count > 1 && path.hasSuffix("/") ? String(path.dropLast()) : path
     }
+
+    // imageKey identifies one disk image file by path, file number, and creation time in whole
+    // seconds, so a file replaced at the same path gets a different key.
+    public static func imageKey(path: String, fileNumber: UInt64, created: Date) -> String {
+        "\(path)|\(fileNumber)|\(Int64(created.timeIntervalSince1970))"
+    }
+
+    // pruned keeps the keys whose file still has that identity. The path of a key is everything
+    // before its last two separators, so a path containing a separator still round-trips.
+    public static func pruned(_ keys: [String], current: (String) -> String?) -> [String] {
+        keys.filter { key in
+            let parts = key.split(separator: "|", omittingEmptySubsequences: false)
+            guard parts.count >= 3 else { return false }
+            let path = parts.dropLast(2).joined(separator: "|")
+            return current(path) == key
+        }
+    }
 }

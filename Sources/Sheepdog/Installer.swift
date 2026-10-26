@@ -9,7 +9,7 @@ import SheepdogCore
 final class Installer {
     // installedFromFlag is the launch argument that hands the image path to the relaunched copy.
     static let installedFromFlag = "--installed-from"
-    // askedKey is the defaults key for the image paths already offered to the Trash.
+    // askedKey is the defaults key for the image files already offered to the Trash.
     static let askedKey = "installerAsked"
     // declinedKey is the defaults key for the bundle paths whose move was declined.
     static let declinedKey = "moveDeclined"
@@ -72,7 +72,8 @@ final class Installer {
 
     // offerTrash ejects a disk image that still holds Sheepdog once the installed copy runs. It
     // trashes the image the install was okayed from without asking again, and asks once per image
-    // about any other.
+    // file about any other. An image is known by its file's identity, not its path, so a fresh
+    // download under the same name is asked about again.
     func offerTrash() {
         let bundle = Self.originalURL(Bundle.main.bundleURL)
         guard Install.inApplications(bundle: bundle.path, home: NSHomeDirectory()) else { return }
@@ -85,15 +86,23 @@ final class Installer {
                 targets.append(MountedImage(image: args[i + 1], mount: ""))
             }
         }
-        var asked = UserDefaults.standard.stringArray(forKey: Self.askedKey) ?? []
-        for target in targets where !asked.contains(target.image) {
-            asked.append(target.image)
-            UserDefaults.standard.set(asked, forKey: Self.askedKey)
+        var asked = Install.pruned(UserDefaults.standard.stringArray(forKey: Self.askedKey) ?? [],
+                                   current: Self.imageKey)
+        UserDefaults.standard.set(asked, forKey: Self.askedKey)
+        for target in targets {
+            let key = Self.imageKey(target.image)
+            if target.image != okayed, let key, asked.contains(key) {
+                continue
+            }
+            if let key, !asked.contains(key) {
+                asked.append(key)
+                UserDefaults.standard.set(asked, forKey: Self.askedKey)
+            }
             if !target.mount.isEmpty {
                 eject(target.mount)
             }
             let file = URL(fileURLWithPath: target.image)
-            guard FileManager.default.fileExists(atPath: file.path) else { continue }
+            guard key != nil else { continue }
             if target.image != okayed {
                 NSApp.activate()
                 let alert = NSAlert()
@@ -191,6 +200,15 @@ final class Installer {
             }
         }
         logger.error("eject of \(mount, privacy: .public) failed")
+    }
+
+    // imageKey identifies the disk image file at path, or returns nil when it is gone.
+    static func imageKey(_ path: String) -> String? {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: path),
+              let number = (attributes[.systemFileNumber] as? NSNumber)?.uint64Value,
+              let created = attributes[.creationDate] as? Date
+        else { return nil }
+        return Install.imageKey(path: path, fileNumber: number, created: created)
     }
 
     // originalURL undoes App Translocation, which runs a quarantined app from a random read-only
