@@ -43,6 +43,16 @@ Notes stay on your Mac, and unclaimed ones are cleared at 4 a.m.
 sheepdog is free and will stay free. If I ever stop maintaining it, I'll archive it, and the code
 stays open.
 
+## Holiday outfits
+
+Tug dresses up in the days around seven holidays: a party hat for New Year's (Dec 27 to Jan 2), a
+heart headband for Valentine's Day (Feb 10 to 14), a green top hat for St. Patrick's Day (Mar 13 to
+17), bunny ears for Easter (the Saturday before through the Tuesday after), a vampire cape for
+Halloween (Oct 24 to 31), a turkey hat for Thanksgiving week (Monday to Sunday), and a Santa hat for
+Christmas (Dec 18 to 26). The outfit goes over any collar and shows on the alarm, the countdown
+pill, the hand-back card, Settings and the menu bar. Turn off **Dress Tug up for holidays** in
+Settings, General, to keep him plain.
+
 ## Requirements
 
 - macOS 14 or later

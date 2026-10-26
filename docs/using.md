@@ -114,6 +114,16 @@ Sheepdog yet." Try again later, after Homebrew refreshes its tap.
 The check sends no version or identifier. Turn it off with **Check for updates** in Settings,
 under General.
 
+## Holiday outfits
+
+Tug dresses up in the days around seven holidays: a party hat for New Year's (Dec 27 to Jan 2), a
+heart headband for Valentine's Day (Feb 10 to 14), a green top hat for St. Patrick's Day (Mar 13 to
+17), bunny ears for Easter (the Saturday before through the Tuesday after), a vampire cape for
+Halloween (Oct 24 to 31), a turkey hat for Thanksgiving week (Monday to Sunday), and a Santa hat for
+Christmas (Dec 18 to 26). The outfit goes over any collar and shows on the alarm, the countdown
+pill, the hand-back card, Settings and the menu bar. Turn off **Dress Tug up for holidays** in
+Settings, General, to keep him plain.
+
 ## Settings and features
 
 | Feature       | What it does                                                               |
@@ -134,6 +144,7 @@ under General.
 | Hover         | The glyph says what is next, and each menu item says what it does.         |
 | Backup        | Exports settings to a file and imports them on any Mac. Sign-ins stay out. |
 | Collar        | Seven collars for Tug that also color the alarm, pill and hand-back card.  |
+| Outfits       | Holiday outfits for Tug. Dress Tug up for holidays turns them off.         |
 | Updates       | Checks GitHub once a day for a newer release and offers to install it.     |
 
 Use **Test the alarm** in Tug's menu to see the whole thing without a real meeting.
