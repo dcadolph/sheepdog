@@ -1,19 +1,14 @@
 (function () {
   "use strict";
 
-  // Themes mirror Sources/SheepdogCore/Palette.swift: bg, surface, text, muted, accent, late.
+  // Collars mirror Sources/SheepdogCore/Palette.swift: bg, surface, text, muted, accent, late.
   var themes = [
     ["Harbor", "#0f1012", "#0f1012", "#ffffff", "#aaa59b", "#f3e3b8", "#ff7361"],
-    ["Dragonfire", "#0d0a08", "#1a1310", "#f4e6d8", "#b89c86", "#ff7a1a", "#ff7361"],
-    ["Wildfire", "#120805", "#24100a", "#ffe9c2", "#c99a6b", "#ffb000", "#ff7361"],
-    ["Phosphor", "#050a05", "#0b160b", "#b8ffb0", "#5fae5a", "#33ff33", "#ff7361"],
     ["Rose", "#0e0c0c", "#1c1919", "#f4f1ee", "#a9a3a0", "#d6282f", "#ff7361"],
-    ["Hussar", "#1a0608", "#2b0c10", "#f3e3c0", "#c2a272", "#d4a63a", "#ff7361"],
-    ["Grapes", "#140816", "#231027", "#f0e2f5", "#b597bf", "#b04cc8", "#ff7361"],
-    ["Coast", "#060b1f", "#0e1736", "#e3e9ff", "#8e9cc9", "#4f78ff", "#ff7361"],
+    ["Wildfire", "#120805", "#24100a", "#ffe9c2", "#c99a6b", "#ffb000", "#ff7361"],
     ["Verdigris", "#0a1614", "#12241f", "#dff3ec", "#86b3a5", "#43b39a", "#ff7361"],
-    ["Copper", "#0c0c0d", "#18181a", "#f5f5f2", "#a8a8a3", "#c07a44", "#ff7361"],
-    ["Baby Blue", "#0a1218", "#13212a", "#eaf6fc", "#8fa9b8", "#89cff0", "#ff7361"],
+    ["Coast", "#060b1f", "#0e1736", "#e3e9ff", "#8e9cc9", "#4f78ff", "#ff7361"],
+    ["Grapes", "#140816", "#231027", "#f0e2f5", "#b597bf", "#b04cc8", "#ff7361"],
     ["Concierge", "#ece4cf", "#f6f0dd", "#1a1a17", "#5c5748", "#7a2e12", "#9c1c14"]
   ];
 
