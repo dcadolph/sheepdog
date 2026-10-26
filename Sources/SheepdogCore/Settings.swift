@@ -60,6 +60,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var slackChannels: [SlackChannel] = []
     // Theme colors the takeover, the pill, and the hand-back card.
     public var theme: ThemeName = .harbor
+    // ShowOutfits reports whether Tug dresses up for holidays.
+    public var showOutfits: Bool = true
     // CheckForUpdates reports whether Sheepdog asks GitHub once a day for a newer release.
     public var checkForUpdates: Bool = true
     // WorkingHours limits barking to shifts on chosen weekdays.
@@ -94,6 +96,7 @@ public struct AlertSettings: Sendable, Codable, Equatable {
             ?? defaults.slackChannels
         // An unknown theme, e.g. one from a newer build, falls back instead of failing every setting.
         theme = (try? container.decodeIfPresent(ThemeName.self, forKey: .theme)) ?? defaults.theme
+        showOutfits = try container.decodeIfPresent(Bool.self, forKey: .showOutfits) ?? defaults.showOutfits
         checkForUpdates = try container.decodeIfPresent(Bool.self, forKey: .checkForUpdates)
             ?? defaults.checkForUpdates
         workingHours = try container.decodeIfPresent(WorkingHours.self, forKey: .workingHours)

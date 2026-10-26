@@ -85,3 +85,26 @@ func testSettingsBackupDecode(test: BackupDecodeCase) {
     #expect(text.contains(#""app" : "Sheepdog""#))
     #expect(text.contains(#""version" : 1"#))
 }
+
+// testSettingsBackupMissingShowOutfits checks that an export without showOutfits imports with
+// outfits on and every other field intact.
+@Test func testSettingsBackupMissingShowOutfits() throws {
+    let json = #"{"app":"Sheepdog","version":1,"exported":"2026-10-23T18:00:00Z","settings":{"theme":"rose","maxSnoozes":7,"holdPlace":false}}"#
+    let got = try SettingsBackup.decode(Data(json.utf8))
+    var want = AlertSettings()
+    want.theme = .rose
+    want.maxSnoozes = 7
+    want.holdPlace = false
+    #expect(got.showOutfits)
+    #expect(got == want)
+}
+
+// testSettingsBackupShowOutfitsOffRoundTrip checks that turning outfits off survives export and import.
+@Test func testSettingsBackupShowOutfitsOffRoundTrip() throws {
+    var settings = AlertSettings()
+    settings.showOutfits = false
+    let data = try SettingsBackup.encode(settings, exported: Date(timeIntervalSince1970: 1_792_000_000))
+    let got = try SettingsBackup.decode(data)
+    #expect(got.showOutfits == false)
+    #expect(got == settings)
+}
