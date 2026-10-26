@@ -172,6 +172,54 @@
   });
   if (still) { show(3); } else { show(0); }
 
+  // Tug's outfits mirror Sources/SheepdogCore/Outfit.swift: the same windows in the same order, read
+  // from the viewer's local date. Change both together. ?outfit=<name> forces one to check the art.
+  function easterSunday(y) {
+    var a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4;
+    var f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+    var i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+    var m = Math.floor((a + 11 * h + 22 * l) / 451), n = h + l - 7 * m + 114;
+    return new Date(y, Math.floor(n / 31) - 1, n % 31 + 1);
+  }
+  // The nth weekday of a month, with weekday 0 as Sunday (Swift counts Sunday as 1).
+  function nthWeekday(y, month, weekday, n) {
+    var first = new Date(y, month - 1, 1).getDay();
+    return new Date(y, month - 1, 1 + (weekday - first + 7) % 7 + 7 * (n - 1));
+  }
+  function fixed(sm, sd, em, ed) {
+    return function (day) {
+      var v = (day.getMonth() + 1) * 100 + day.getDate(), s = sm * 100 + sd, e = em * 100 + ed;
+      return s <= e ? v >= s && v <= e : v >= s || v <= e;
+    };
+  }
+  function around(anchor, from, through) {
+    return function (day) {
+      var o = Math.round((day - anchor(day.getFullYear())) / 864e5);
+      return o >= from && o <= through;
+    };
+  }
+  var outfits = [
+    ["party", fixed(12, 27, 1, 2)],
+    ["heart", fixed(2, 10, 2, 14)],
+    ["shamrock", fixed(3, 13, 3, 17)],
+    ["easter", around(easterSunday, -1, 2)],
+    ["halloween", fixed(10, 24, 10, 31)],
+    ["thanksgiving", around(function (y) { return nthWeekday(y, 11, 4, 4); }, -3, 3)],
+    ["santa", fixed(12, 18, 12, 26)]
+  ];
+  var now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var forced = new URLSearchParams(location.search).get("outfit");
+  var outfit = outfits.filter(function (o) { return forced ? o[0] === forced : o[1](today); })[0];
+  if (outfit) {
+    [[".take .ring", ""], [".pill .head", "-head"]].forEach(function (p) {
+      var img = document.createElement("img");
+      img.className = "outfit";
+      img.alt = "";
+      img.src = "/assets/outfit-" + outfit[0] + p[1] + ".png";
+      document.querySelector(p[0]).appendChild(img);
+    });
+  }
+
   // Copy buttons.
   Array.prototype.forEach.call(document.querySelectorAll("[data-copy]"), function (b) {
     b.addEventListener("click", function () {

@@ -125,6 +125,8 @@ p b { color: var(--text); font-weight: 600; }
   background: var(--lift2); border: 1px solid var(--line); border-radius: 999px; white-space: nowrap;
   font: 700 calc(1.8 * var(--u))/1 var(--sans); transition: transform .6s cubic-bezier(.2,1.2,.3,1), opacity .4s; }
 .pill img { width: calc(3.6 * var(--u)); height: calc(3.6 * var(--u)); border-radius: 50%; }
+.pill .head { position: relative; display: flex; }
+.pill .head .outfit { position: absolute; inset: 0; }
 .pill .t { font: 600 calc(1.8 * var(--u))/1 var(--mono); color: var(--accent); font-variant-numeric: tabular-nums; }
 .pill .j { background: var(--accent); color: var(--on); border-radius: 999px; padding: calc(.9 * var(--u)) calc(1.7 * var(--u)); font-size: calc(1.6 * var(--u)); }
 .pill .x { color: var(--muted); }
