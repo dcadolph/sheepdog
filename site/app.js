@@ -1,15 +1,16 @@
 (function () {
   "use strict";
 
-  // Collars mirror Sources/SheepdogCore/Palette.swift: bg, surface, text, muted, accent, late.
+  // Collars mirror Sources/SheepdogCore/Palette.swift: name, bg, surface, text, muted, accent, late,
+  // collar ("orig" keeps the drawing's own collar).
   var themes = [
-    ["Harbor", "#0f1012", "#0f1012", "#ffffff", "#aaa59b", "#f3e3b8", "#ff7361"],
-    ["Rose", "#0e0c0c", "#1c1919", "#f4f1ee", "#a9a3a0", "#d6282f", "#ff7361"],
-    ["Wildfire", "#120805", "#24100a", "#ffe9c2", "#c99a6b", "#ffb000", "#ff7361"],
-    ["Verdigris", "#0a1614", "#12241f", "#dff3ec", "#86b3a5", "#43b39a", "#ff7361"],
-    ["Coast", "#060b1f", "#0e1736", "#e3e9ff", "#8e9cc9", "#4f78ff", "#ff7361"],
-    ["Grapes", "#140816", "#231027", "#f0e2f5", "#b597bf", "#b04cc8", "#ff7361"],
-    ["Concierge", "#ece4cf", "#f6f0dd", "#1a1a17", "#5c5748", "#7a2e12", "#9c1c14"]
+    ["Wolf", "#0f1012", "#0f1012", "#ffffff", "#aaa59b", "#f3e3b8", "#ff7361", "orig"],
+    ["Black Diamond", "#0e0d0a", "#1a1812", "#fff8e6", "#b3a88a", "#d4af37", "#ff7361", "#2a2a2a"],
+    ["Golden Spark", "#0b100c", "#142019", "#fff6d8", "#b0a57f", "#e8b923", "#ff7361", "#2f9e4f"],
+    ["Rubie", "#f4f1ee", "#fbf9f7", "#111111", "#5a5552", "#111111", "#b3261e", "#c8102e"],
+    ["Lightning", "#0a0d1a", "#131a30", "#fffbe0", "#b3ad8a", "#ffd400", "#ff7361", "#2457e6"],
+    ["Thunder", "#07141a", "#0e222b", "#e6fbff", "#8fb8c2", "#5fd4e6", "#ff7361", "#1f3fbf"],
+    ["Strawhat", "#13100c", "#211c15", "#f7efe2", "#ad9f88", "#d9c7a3", "#ff7361", "#d22b2b"]
   ];
 
   function lum(hex) {
@@ -29,18 +30,18 @@
     return contrast("#ffffff", accent) >= contrast("#000000", accent) ? "#ffffff" : "#000000";
   }
 
-  // Tug's collar is the only blue in the drawings. It takes the theme's accent, keeping its shading.
+  // Tug's collar is the only blue in the drawings. It takes the theme's collar, keeping its shading.
   var tugImages = [];
   Array.prototype.forEach.call(document.querySelectorAll('img[src="/assets/tug.png"], img[src="/assets/tug-head.png"]'), function (img) {
     var src = new Image();
-    src.onload = function () { tugImages.push({ img: img, src: src }); recolor(currentAccent); };
+    src.onload = function () { tugImages.push({ img: img, src: src }); recolor(currentCollar); };
     src.src = img.getAttribute("src");
   });
-  var currentAccent = null;
-  function recolor(accent) {
-    if (!accent) return;
-    if (accent === "orig") { tugImages.forEach(function (o) { o.img.src = o.src.src; }); return; }
-    var ar = parseInt(accent.substr(1, 2), 16), ag = parseInt(accent.substr(3, 2), 16), ab = parseInt(accent.substr(5, 2), 16);
+  var currentCollar = null;
+  function recolor(collar) {
+    if (!collar) return;
+    if (collar === "orig") { tugImages.forEach(function (o) { o.img.src = o.src.src; }); return; }
+    var ar = parseInt(collar.substr(1, 2), 16), ag = parseInt(collar.substr(3, 2), 16), ab = parseInt(collar.substr(5, 2), 16);
     tugImages.forEach(function (o) {
       var c = document.createElement("canvas");
       c.width = o.src.naturalWidth; c.height = o.src.naturalHeight;
@@ -72,8 +73,8 @@
     s.colorScheme = lum(t[1]) > 0.4 ? "light" : "dark";
     s.setProperty("--glyph-invert", lum(t[1]) > 0.4 ? "0" : "1");
     s.setProperty("--rule", "color-mix(in srgb, " + t[3] + " 22%, transparent)");
-    currentAccent = t[0] === "Harbor" ? "orig" : t[5];
-    recolor(currentAccent);
+    currentCollar = t[7];
+    recolor(currentCollar);
     try { localStorage.setItem("theme", t[0]); } catch (e) {}
   }
 

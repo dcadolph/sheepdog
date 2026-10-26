@@ -20,13 +20,32 @@ func testPaletteContrast(theme: ThemeName) {
     #expect(p.late.contrast(with: p.surface) >= text, "late on surface")
 }
 
-// testPaletteFallbacks checks the label and accent text fallbacks on the themes that need them.
+// testPaletteFallbacks checks the label and accent text fallbacks, on palettes built to need them and on
+// themes that do not.
 @Test func testPaletteFallbacks() {
-    #expect(ThemeName.rose.palette.onAccent == .white)
-    #expect(ThemeName.grapes.palette.onAccent == .black)
-    #expect(ThemeName.harbor.palette.onAccent == ThemeName.harbor.palette.background)
-    #expect(ThemeName.rose.palette.accentText == ThemeName.rose.palette.text)
-    #expect(ThemeName.harbor.palette.accentText == ThemeName.harbor.palette.accent)
+    let dark = RGB(hex: "#0e0c0c")!
+    let text = RGB(hex: "#f4f1ee")!
+    func palette(_ accent: String) -> Palette {
+        Palette(background: dark, surface: dark, text: text, muted: text, accent: RGB(hex: accent)!, late: text)
+    }
+    #expect(palette("#d6282f").onAccent == .white)
+    #expect(palette("#b04cc8").onAccent == .black)
+    #expect(palette("#d6282f").accentText == text)
+    #expect(ThemeName.wolf.palette.onAccent == ThemeName.wolf.palette.background)
+    #expect(ThemeName.rubie.palette.onAccent == ThemeName.rubie.palette.background)
+    #expect(ThemeName.wolf.palette.accentText == ThemeName.wolf.palette.accent)
+}
+
+// testThemeCollars checks that only Wolf keeps the drawing's collar and that every other collar differs.
+@Test func testThemeCollars() {
+    #expect(ThemeName.wolf.palette.collar == nil)
+    let collars = ThemeName.allCases.filter { $0 != .wolf }.compactMap(\.palette.collar)
+    #expect(collars.count == ThemeName.allCases.count - 1)
+    for (i, a) in collars.enumerated() {
+        for b in collars[(i + 1)...] {
+            #expect(a != b)
+        }
+    }
 }
 
 // testContrastKnownValues checks the contrast math against WCAG's black and white extremes.
@@ -46,17 +65,19 @@ func testPaletteContrast(theme: ThemeName) {
 
 // testThemeSetting checks the default, a round trip, and that an unknown or removed theme keeps the rest.
 @Test func testThemeSetting() throws {
-    #expect(AlertSettings().theme == .harbor)
+    #expect(AlertSettings().theme == .wolf)
     var settings = AlertSettings()
-    settings.theme = .coast
+    settings.theme = .blackDiamond
     let data = try JSONEncoder().encode(settings)
-    #expect(try JSONDecoder().decode(AlertSettings.self, from: data).theme == .coast)
+    #expect(try JSONDecoder().decode(AlertSettings.self, from: data).theme == .blackDiamond)
     let unknown = #"{"theme":"plaid","maxSnoozes":4}"#
     let got = try JSONDecoder().decode(AlertSettings.self, from: Data(unknown.utf8))
-    #expect(got.theme == .harbor)
+    #expect(got.theme == .wolf)
     #expect(got.maxSnoozes == 4)
-    let removed = #"{"theme":"copper","maxSnoozes":3}"#
-    let kept = try JSONDecoder().decode(AlertSettings.self, from: Data(removed.utf8))
-    #expect(kept.theme == .harbor)
-    #expect(kept.maxSnoozes == 3)
+    for removed in ["copper", "harbor", "rose"] {
+        let json = #"{"theme":"\#(removed)","maxSnoozes":3}"#
+        let kept = try JSONDecoder().decode(AlertSettings.self, from: Data(json.utf8))
+        #expect(kept.theme == .wolf)
+        #expect(kept.maxSnoozes == 3)
+    }
 }

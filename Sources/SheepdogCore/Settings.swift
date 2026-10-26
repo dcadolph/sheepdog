@@ -59,7 +59,7 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     // SlackChannels are the channels the alarm's Let them know button can open.
     public var slackChannels: [SlackChannel] = []
     // Theme colors the takeover, the pill, and the hand-back card.
-    public var theme: ThemeName = .harbor
+    public var theme: ThemeName = .wolf
     // ShowOutfits reports whether Tug dresses up for holidays.
     public var showOutfits: Bool = true
     // CheckForUpdates reports whether Sheepdog asks GitHub once a day for a newer release.

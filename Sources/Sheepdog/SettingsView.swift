@@ -104,7 +104,7 @@ struct SettingsView: View {
                         }
                     }
                     TugImage(
-                        name: "tug-head", accent: store.settings.theme.palette.accent,
+                        name: "tug-head", palette: store.settings.theme.palette,
                         outfit: Theme.dressed(store.settings)
                     )
                     .frame(width: 32, height: 32)

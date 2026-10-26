@@ -6,7 +6,7 @@ import SheepdogCore
 @MainActor
 enum Theme {
     // palette is the current theme's colors. The coordinator sets it whenever settings change.
-    static var palette = ThemeName.harbor.palette
+    static var palette = ThemeName.wolf.palette
     // outfit is the costume Tug wears today, or nil for none. The coordinator sets it every tick.
     static var outfit: Outfit?
     // outfitOverrideKey names a debug default that forces an outfit by asset name, for checking the art.

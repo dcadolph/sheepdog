@@ -61,6 +61,8 @@ public struct Palette: Sendable, Equatable {
     public var accent: RGB
     // Late marks a meeting that has already started.
     public var late: RGB
+    // Collar recolors Tug's collar, or is nil to keep the drawing's own collar.
+    public var collar: RGB?
 
     // textMinimum is the WCAG AA contrast for normal text.
     public static let textMinimum = 4.5
@@ -82,13 +84,13 @@ public struct Palette: Sendable, Equatable {
 
 // ThemeName is a collar for Tug. Each one colors his collar and the alert surfaces.
 public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
-    case harbor
-    case rose
-    case wildfire
-    case verdigris
-    case coast
-    case grapes
-    case concierge
+    case wolf
+    case blackDiamond
+    case goldenSpark
+    case rubie
+    case lightning
+    case thunder
+    case strawhat
 
     // id identifies the theme in pickers.
     public var id: String { rawValue }
@@ -96,32 +98,43 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     // label is the theme's user-facing name.
     public var label: String {
         switch self {
-        case .harbor: return "Harbor"
-        case .wildfire: return "Wildfire"
-        case .rose: return "Rose"
-        case .grapes: return "Grapes"
-        case .coast: return "Coast"
-        case .verdigris: return "Verdigris"
-        case .concierge: return "Concierge"
+        case .wolf: return "Wolf"
+        case .blackDiamond: return "Black Diamond"
+        case .goldenSpark: return "Golden Spark"
+        case .rubie: return "Rubie"
+        case .lightning: return "Lightning"
+        case .thunder: return "Thunder"
+        case .strawhat: return "Strawhat"
         }
     }
 
-    // palette is the theme's colors, in background, surface, text, muted, accent, late order.
+    // palette is the theme's colors: the collar, then background, surface, text, muted, accent, late.
     public var palette: Palette {
         switch self {
-        case .harbor: return Self.make("#0f1012", "#0f1012", "#ffffff", "#aaa59b", "#f3e3b8", "#ff7361")
-        case .wildfire: return Self.make("#120805", "#24100a", "#ffe9c2", "#c99a6b", "#ffb000", "#ff7361")
-        case .rose: return Self.make("#0e0c0c", "#1c1919", "#f4f1ee", "#a9a3a0", "#d6282f", "#ff7361")
-        case .grapes: return Self.make("#140816", "#231027", "#f0e2f5", "#b597bf", "#b04cc8", "#ff7361")
-        case .coast: return Self.make("#060b1f", "#0e1736", "#e3e9ff", "#8e9cc9", "#4f78ff", "#ff7361")
-        case .verdigris: return Self.make("#0a1614", "#12241f", "#dff3ec", "#86b3a5", "#43b39a", "#ff7361")
-        case .concierge: return Self.make("#ece4cf", "#f6f0dd", "#1a1a17", "#5c5748", "#7a2e12", "#9c1c14")
+        case .wolf:
+            return Self.make(nil, "#0f1012", "#0f1012", "#ffffff", "#aaa59b", "#f3e3b8", "#ff7361")
+        case .blackDiamond:
+            return Self.make("#2a2a2a", "#0e0d0a", "#1a1812", "#fff8e6", "#b3a88a", "#d4af37", "#ff7361")
+        case .goldenSpark:
+            return Self.make("#2f9e4f", "#0b100c", "#142019", "#fff6d8", "#b0a57f", "#e8b923", "#ff7361")
+        case .rubie:
+            return Self.make("#c8102e", "#f4f1ee", "#fbf9f7", "#111111", "#5a5552", "#111111", "#b3261e")
+        case .lightning:
+            return Self.make("#2457e6", "#0a0d1a", "#131a30", "#fffbe0", "#b3ad8a", "#ffd400", "#ff7361")
+        case .thunder:
+            return Self.make("#1f3fbf", "#07141a", "#0e222b", "#e6fbff", "#8fb8c2", "#5fd4e6", "#ff7361")
+        case .strawhat:
+            return Self.make("#d22b2b", "#13100c", "#211c15", "#f7efe2", "#ad9f88", "#d9c7a3", "#ff7361")
         }
     }
 
-    // make builds a palette from hex strings that are known to parse.
-    private static func make(_ hexes: String...) -> Palette {
+    // make builds a palette from a collar hex, or nil for the drawing's own, and hex strings that are known
+    // to parse.
+    private static func make(_ collar: String?, _ hexes: String...) -> Palette {
         let c = hexes.map { RGB(hex: $0)! }
-        return Palette(background: c[0], surface: c[1], text: c[2], muted: c[3], accent: c[4], late: c[5])
+        return Palette(
+            background: c[0], surface: c[1], text: c[2], muted: c[3], accent: c[4], late: c[5],
+            collar: collar.map { RGB(hex: $0)! }
+        )
     }
 }

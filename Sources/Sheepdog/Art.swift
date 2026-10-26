@@ -26,9 +26,9 @@ enum Art {
     // collarBase is the average luminance of the drawn collar, used to keep its shading when recolored.
     private static let collarBase = 127.0
 
-    // tinted returns a bundled drawing with the blue collar recolored to the accent.
-    static func tinted(_ name: String, accent: RGB) -> NSImage? {
-        let key = "\(name)#\(accent.red),\(accent.green),\(accent.blue)"
+    // tinted returns a bundled drawing with the blue collar recolored to the collar color.
+    static func tinted(_ name: String, collar: RGB) -> NSImage? {
+        let key = "\(name)#\(collar.red),\(collar.green),\(collar.blue)"
         if let cached = cache[key] {
             return cached
         }
@@ -55,9 +55,9 @@ enum Art {
                 continue
             }
             let scale = (0.299 * r + 0.587 * g + 0.114 * b) / collarBase
-            bytes[i] = UInt8(min(255, accent.red * 255 * scale) * a)
-            bytes[i + 1] = UInt8(min(255, accent.green * 255 * scale) * a)
-            bytes[i + 2] = UInt8(min(255, accent.blue * 255 * scale) * a)
+            bytes[i] = UInt8(min(255, collar.red * 255 * scale) * a)
+            bytes[i + 1] = UInt8(min(255, collar.green * 255 * scale) * a)
+            bytes[i + 2] = UInt8(min(255, collar.blue * 255 * scale) * a)
         }
         guard let out = ctx.makeImage() else {
             return nil
@@ -147,15 +147,14 @@ enum Art {
 struct TugImage: View {
     // name is the drawing's file name without the extension.
     let name: String
-    // accent is the collar color, or nil for the current theme's accent.
-    var accent: RGB?
+    // palette is the theme whose collar Tug wears, or nil for the current theme.
+    var palette: Palette?
     // outfit is the costume drawn over Tug, or nil for none.
     var outfit: Outfit? = Theme.outfit
 
-    // body draws the image scaled to fit its frame, with the collar in the accent and the outfit on top.
+    // body draws the image scaled to fit its frame, with the theme's collar and the outfit on top.
     var body: some View {
-        let accent = accent ?? Theme.palette.accent
-        let themed = accent == ThemeName.harbor.palette.accent ? Art.image(name) : Art.tinted(name, accent: accent)
+        let themed = (palette ?? Theme.palette).collar.map { Art.tinted(name, collar: $0) } ?? Art.image(name)
         if let image = themed {
             ZStack {
                 Image(nsImage: image)

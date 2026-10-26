@@ -89,10 +89,10 @@ func testSettingsBackupDecode(test: BackupDecodeCase) {
 // testSettingsBackupMissingShowOutfits checks that an export without showOutfits imports with
 // outfits on and every other field intact.
 @Test func testSettingsBackupMissingShowOutfits() throws {
-    let json = #"{"app":"Sheepdog","version":1,"exported":"2026-10-23T18:00:00Z","settings":{"theme":"rose","maxSnoozes":7,"holdPlace":false}}"#
+    let json = #"{"app":"Sheepdog","version":1,"exported":"2026-10-23T18:00:00Z","settings":{"theme":"rubie","maxSnoozes":7,"holdPlace":false}}"#
     let got = try SettingsBackup.decode(Data(json.utf8))
     var want = AlertSettings()
-    want.theme = .rose
+    want.theme = .rubie
     want.maxSnoozes = 7
     want.holdPlace = false
     #expect(got.showOutfits)
