@@ -1,5 +1,7 @@
 import Foundation
+#if os(macOS)
 import Security
+#endif
 
 // MountedImage is one attached disk image and where its volume is mounted.
 public struct MountedImage: Sendable, Equatable {
@@ -84,6 +86,7 @@ public enum Install {
         + " and certificate leaf[field.1.2.840.113635.100.6.1.13]"
         + " and certificate leaf[subject.OU] = \"U7L4P2YHWJ\""
 
+    #if os(macOS)
     // signed reports whether the code at path has a valid signature, nested code and every
     // architecture included, that meets requirement.
     public static func signed(_ path: String, requirement: String) -> Bool {
@@ -97,6 +100,7 @@ public enum Install {
         let flags = SecCSFlags(rawValue: kSecCSCheckAllArchitectures | kSecCSStrictValidate | kSecCSCheckNestedCode)
         return SecStaticCodeCheckValidity(code, flags, compiled) == errSecSuccess
     }
+    #endif
 
     // brewPath returns the Homebrew executable, Apple silicon first, or nil when neither exists.
     public static func brewPath(exists: (String) -> Bool) -> String? {

@@ -283,6 +283,7 @@ func testInstallDMGURL(_ c: DMGCase) {
     #expect(script.contains("/usr/bin/open '/Users/o'\\''neil/Sheepdog.app'"))
 }
 
+#if os(macOS)
 // testInstallSigned accepts code that meets a requirement and refuses what the release requirement
 // rules out: an Apple app, an ad hoc signed copy, and a missing path.
 @Test func testInstallSigned() throws {
@@ -304,3 +305,4 @@ func testInstallDMGURL(_ c: DMGCase) {
     #expect(Install.signed(copy.path, requirement: "identifier \"com.dcadolph.sheepdog\""))
     #expect(!Install.signed(copy.path, requirement: Install.releaseRequirement))
 }
+#endif
