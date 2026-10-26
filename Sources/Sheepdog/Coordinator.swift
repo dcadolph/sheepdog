@@ -652,20 +652,14 @@ final class Coordinator {
             closeUpdateCard()
             return
         }
-        guard !Self.fromHomebrew else {
-            do {
-                try updater.brew()
-                closeUpdateCard()
-            } catch {
-                log.error("Homebrew update failed: \(String(describing: error), privacy: .public)")
-                model.updateFailed = true
-            }
-            return
-        }
         model.updateBusy = true
         Task { [weak self, updater] in
             do {
-                try await updater.install(tag: update.tag)
+                if Self.fromHomebrew {
+                    try await updater.brew()
+                } else {
+                    try await updater.install(tag: update.tag)
+                }
             } catch {
                 self?.log.error("update install failed: \(String(describing: error), privacy: .public)")
                 self?.model.updateFailed = true

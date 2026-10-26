@@ -4,12 +4,14 @@ import os
 import SheepdogCore
 
 // Updater installs a newer release when the user presses Update now on the update card. A Homebrew
-// install upgrades through brew in Terminal. A disk image install downloads the release's image,
+// install upgrades through brew in the background. A disk image install downloads the release's image,
 // checks who signed the app on it, and starts that copy, which installs itself.
 @MainActor
 final class Updater {
-    // scriptName is the file name of the Terminal script a Homebrew upgrade runs.
-    static let scriptName = "sheepdog-update.command"
+    // scriptName is the file name of the script a Homebrew upgrade runs.
+    static let scriptName = "sheepdog-update.sh"
+    // logName is the file name of the log a Homebrew upgrade writes its output to.
+    static let logName = "sheepdog-update.log"
 
     // logger writes to the unified log under the com.dcadolph.sheepdog subsystem.
     private let logger = Logger(subsystem: "com.dcadolph.sheepdog", category: "update")
@@ -20,20 +22,40 @@ final class Updater {
         Installer.originalURL(Bundle.main.bundleURL).standardizedFileURL.path == Installer.destination.path
     }
 
-    // brew writes the upgrade script and opens it in Terminal, which shows brew's progress and quits
-    // and reopens Sheepdog once the upgrade is done.
-    func brew() throws {
+    // brew runs the upgrade script in the background with its output in the update log. It runs the
+    // script directly rather than through Terminal, which types a .command file into the user's login
+    // shell, where shell startup can mangle it. On success the script quits and reopens Sheepdog, so
+    // this returns only when the upgrade could not start or failed.
+    func brew() async throws {
         guard let brew = Install.brewPath(exists: { FileManager.default.isExecutableFile(atPath: $0) }) else {
             throw UpdaterError.noBrew
         }
-        let script = try Self.folder().appendingPathComponent(Self.scriptName)
+        let folder = try Self.folder()
+        let script = folder.appendingPathComponent(Self.scriptName)
+        let log = folder.appendingPathComponent(Self.logName)
         let text = Install.brewScript(brew: brew, app: Installer.destination.path)
         try Data(text.utf8).write(to: script, options: .atomic)
-        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
-        guard NSWorkspace.shared.open(script) else {
-            throw UpdaterError.terminal
+        FileManager.default.createFile(atPath: log.path, contents: nil)
+        let output = try FileHandle(forWritingTo: log)
+        defer { try? output.close() }
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/bin/sh")
+        task.arguments = [script.path, String(ProcessInfo.processInfo.processIdentifier)]
+        task.standardInput = FileHandle.nullDevice
+        task.standardOutput = output
+        task.standardError = output
+        logger.notice("started the Homebrew upgrade for the update")
+        let status: Int32 = try await withCheckedThrowingContinuation { done in
+            task.terminationHandler = { done.resume(returning: $0.terminationStatus) }
+            do {
+                try task.run()
+            } catch {
+                done.resume(throwing: error)
+            }
         }
-        logger.notice("opened the Homebrew upgrade for the update")
+        guard status == 0 else {
+            throw UpdaterError.brew(status: status)
+        }
     }
 
     // install downloads the disk image of the release named by tag, mounts it, checks that the app on

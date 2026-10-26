@@ -82,10 +82,10 @@ should be `U7L4P2YHWJ`.
 Once a day Sheepdog asks GitHub for the latest release. When a newer one exists, the menu shows
 a line that opens its release page, and a card offers **Update now**, **Remind me later** and
 **Skip this version**. The card never shows during a countdown, a call or off hours. Update now
-runs `brew upgrade --cask sheepdog` in Terminal for a Homebrew install. Otherwise it downloads the
-release's disk image, checks that the app on it is signed by team `U7L4P2YHWJ`, and installs it.
-Nothing installs until you press it, and the check sends no version or identifier. Turn it off in
-settings with **Check for updates**.
+runs `brew upgrade --cask sheepdog` in the background for a Homebrew install. Otherwise it
+downloads the release's disk image, checks that the app on it is signed by team `U7L4P2YHWJ`,
+and installs it. Nothing installs until you press it, and the check sends no version or
+identifier. Turn it off in settings with **Check for updates**.
 
 ## Build from source
 

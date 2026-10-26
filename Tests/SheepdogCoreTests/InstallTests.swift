@@ -272,7 +272,9 @@ func testInstallDMGURL(_ c: DMGCase) {
     #expect(process.terminationStatus == 0)
 
     #expect(script.hasPrefix("#!/bin/sh\n"))
-    #expect(script.contains("/usr/bin/pkill -x Sheepdog"))
+    #expect(script.contains("pid=\"$1\""))
+    #expect(script.contains("/bin/kill \"$pid\""))
+    #expect(script.contains("while /bin/kill -0 \"$pid\""))
     #expect(script.contains("/usr/bin/open '/Applications/Sheepdog.app'"))
     #expect(script.contains("'/opt/homebrew/bin/brew' upgrade --cask sheepdog"))
 }

@@ -20,8 +20,8 @@ enum LoopbackError: Error, Equatable {
 enum UpdaterError: Error, Equatable {
     // noBrew means Homebrew manages Sheepdog but its executable was not found.
     case noBrew
-    // terminal means the upgrade script could not be opened.
-    case terminal
+    // brew means the Homebrew upgrade failed, carrying the script's exit status.
+    case brew(status: Int32)
     // download means the release's disk image did not download, carrying the HTTP status.
     case download(status: Int)
     // attach means the disk image could not be mounted.

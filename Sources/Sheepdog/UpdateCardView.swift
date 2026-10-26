@@ -68,7 +68,7 @@ struct UpdateCardView: View {
     // otherwise, or after a failed install, opens the release page.
     private var primaryLabel: String {
         if model.updateBusy {
-            return "Downloading"
+            return "Updating"
         }
         return model.updateCanInstall && !model.updateFailed ? "Update now" : "Open release page"
     }

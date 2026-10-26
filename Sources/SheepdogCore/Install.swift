@@ -107,25 +107,27 @@ public enum Install {
         ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"].first { exists($0) }
     }
 
-    // brewScript returns the shell script that upgrades the cask, quits Sheepdog, waits for it to
-    // exit, and opens the new copy. A failed upgrade leaves Sheepdog running. It quits with a signal,
-    // since an Apple event from Terminal would first ask the user to let Terminal control Sheepdog.
+    // brewScript returns the shell script that upgrades the cask, quits the Sheepdog whose process id
+    // is its first argument, waits for it to exit, and opens the new copy. A failed upgrade leaves
+    // Sheepdog running. It quits by process id because pkill skips its own ancestors, and Sheepdog
+    // starts the script, and with a signal because an Apple event can ask for Automation consent.
     public static func brewScript(brew: String, app: String) -> String {
         [
             "#!/bin/sh",
+            "pid=\"$1\"",
             "if ! \(shellQuoted(brew)) upgrade --cask sheepdog; then",
             "  echo",
             "  echo 'Sheepdog was not updated.'",
             "  exit 1",
             "fi",
-            "/usr/bin/pkill -x Sheepdog",
+            "/bin/kill \"$pid\"",
             "waited=0",
-            "while /usr/bin/pgrep -x Sheepdog >/dev/null && [ \"$waited\" -lt 75 ]; do",
+            "while /bin/kill -0 \"$pid\" 2>/dev/null && [ \"$waited\" -lt 75 ]; do",
             "  sleep 0.2",
             "  waited=$((waited + 1))",
             "done",
             "/usr/bin/open \(shellQuoted(app))",
-            "echo 'Sheepdog is up to date. You can close this window.'",
+            "echo 'Sheepdog is up to date.'",
             "",
         ].joined(separator: "\n")
     }

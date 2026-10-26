@@ -41,7 +41,7 @@ final class AlertModel {
     // updateCanInstall reports that this copy can install the update itself, so the card offers
     // Update now instead of the release page.
     var updateCanInstall = false
-    // updateBusy reports that the update is downloading.
+    // updateBusy reports that the update is being installed.
     var updateBusy = false
     // updateFailed reports that installing the update failed, so the card falls back to the release page.
     var updateFailed = false
