@@ -63,7 +63,7 @@ struct SettingsView: View {
         Form {
             Section {
                 HStack(spacing: 14) {
-                    TugImage(name: "tug")
+                    TugImage(name: "tug", outfit: Theme.dressed(store.settings))
                         .frame(width: 64, height: 64)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Sheepdog")
@@ -103,15 +103,20 @@ struct SettingsView: View {
                             Text(theme == AlertSettings().theme ? "\(theme.label) (default)" : theme.label).tag(theme)
                         }
                     }
-                    TugImage(name: "tug-head", accent: store.settings.theme.palette.accent)
-                        .frame(width: 32, height: 32)
-                        .clipShape(Circle())
+                    TugImage(
+                        name: "tug-head", accent: store.settings.theme.palette.accent,
+                        outfit: Theme.dressed(store.settings)
+                    )
+                    .frame(width: 32, height: 32)
+                    .clipShape(Circle())
                 }
+                Toggle("Dress Tug up for holidays", isOn: $store.settings.showOutfits)
             } header: {
                 Text("Look")
             } footer: {
                 Text("The collar also colors the alarm, the countdown and the hold-my-place card. "
-                    + "Use Test the alarm to see it.")
+                    + "Around New Year's, Valentine's Day, St. Patrick's Day, Easter, Halloween, "
+                    + "Thanksgiving and Christmas, Tug wears an outfit. Use Test the alarm to see it.")
                     .foregroundStyle(.secondary)
             }
             Section {

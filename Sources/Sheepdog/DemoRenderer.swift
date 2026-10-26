@@ -199,6 +199,8 @@ enum DemoRenderer {
     // runStills writes the README stills into dir at twice scene resolution and returns a process exit code.
     static func runStills(dir: String) -> Int32 {
         let out = URL(fileURLWithPath: dir, isDirectory: true)
+        // Stills show plain Tug unless the debug override names an outfit, e.g. -outfitOverride party.
+        Theme.outfit = UserDefaults.standard.string(forKey: Theme.outfitOverrideKey).flatMap(Outfit.init(rawValue:))
         for still in stills() {
             let renderer = ImageRenderer(content: still.scene.frame(width: size.width, height: size.height))
             renderer.scale = 2

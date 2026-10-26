@@ -19,6 +19,7 @@ DMGBUILD ?= dmgbuild
 ICONSET := .build/AppIcon.iconset
 ICNS := .build/AppIcon.icns
 RUNTIME_ART := art/glyph-idle.png art/glyph-warning.png art/glyph-takeover.png art/tug.png art/tug-head.png
+RUNTIME_ART += $(wildcard art/outfit-*.png)
 SOUNDS := sounds/tug-woof.caf sounds/tug-barking.caf
 
 .PHONY: build test app zip dmg run demo clean

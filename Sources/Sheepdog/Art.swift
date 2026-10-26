@@ -116,16 +116,26 @@ struct TugImage: View {
     let name: String
     // accent is the collar color, or nil for the current theme's accent.
     var accent: RGB?
+    // outfit is the costume drawn over Tug, or nil for none.
+    var outfit: Outfit? = Theme.outfit
 
-    // body draws the image scaled to fit its frame, with the collar in the accent.
+    // body draws the image scaled to fit its frame, with the collar in the accent and the outfit on top.
     var body: some View {
         let accent = accent ?? Theme.palette.accent
         let themed = accent == ThemeName.harbor.palette.accent ? Art.image(name) : Art.tinted(name, accent: accent)
         if let image = themed {
-            Image(nsImage: image)
-                .resizable()
-                .interpolation(.high)
-                .aspectRatio(contentMode: .fit)
+            ZStack {
+                Image(nsImage: image)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                if let outfit, let prop = Art.image("outfit-\(outfit.asset)\(name == "tug-head" ? "-head" : "")") {
+                    Image(nsImage: prop)
+                        .resizable()
+                        .interpolation(.high)
+                        .aspectRatio(contentMode: .fit)
+                }
+            }
         } else {
             Image(systemName: "dog.fill")
                 .resizable()

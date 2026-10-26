@@ -7,6 +7,21 @@ import SheepdogCore
 enum Theme {
     // palette is the current theme's colors. The coordinator sets it whenever settings change.
     static var palette = ThemeName.harbor.palette
+    // outfit is the costume Tug wears today, or nil for none. The coordinator sets it every tick.
+    static var outfit: Outfit?
+    // outfitOverrideKey names a debug default that forces an outfit by asset name, for checking the art.
+    static let outfitOverrideKey = "outfitOverride"
+
+    // dressed returns the outfit Tug wears under the settings on the date, honoring the debug override.
+    static func dressed(_ settings: AlertSettings, on date: Date = Date()) -> Outfit? {
+        guard settings.showOutfits else {
+            return nil
+        }
+        if let name = UserDefaults.standard.string(forKey: outfitOverrideKey) {
+            return Outfit(rawValue: name)
+        }
+        return Outfit.current(on: date, calendar: .current)
+    }
 
     // background is behind the takeover.
     static var background: Color { Color(palette.background) }

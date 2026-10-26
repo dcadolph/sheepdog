@@ -221,6 +221,7 @@ final class Coordinator {
     private func tick() {
         let now = Date()
         Theme.palette = settings.theme.palette
+        Theme.outfit = Theme.dressed(settings, on: now)
         accounts.refreshIfDue(now: now)
         checkForUpdateIfDue(now: now)
         if now.timeIntervalSince(lastRefresh) >= 60 {
