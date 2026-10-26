@@ -1,4 +1,5 @@
 import Foundation
+import Security
 
 // MountedImage is one attached disk image and where its volume is mounted.
 public struct MountedImage: Sendable, Equatable {
@@ -74,6 +75,27 @@ public enum Install {
     // on Apple silicon or Intel.
     public static func homebrew(exists: (String) -> Bool) -> Bool {
         ["/opt/homebrew/Caskroom/sheepdog", "/usr/local/Caskroom/sheepdog"].contains { exists($0) }
+    }
+
+    // releaseRequirement is the code requirement a downloaded Sheepdog must meet: the Developer ID
+    // Application certificate of the team that signs every release.
+    public static let releaseRequirement = "identifier \"com.dcadolph.sheepdog\" and anchor apple generic"
+        + " and certificate 1[field.1.2.840.113635.100.6.2.6]"
+        + " and certificate leaf[field.1.2.840.113635.100.6.1.13]"
+        + " and certificate leaf[subject.OU] = \"U7L4P2YHWJ\""
+
+    // signed reports whether the code at path has a valid signature, nested code and every
+    // architecture included, that meets requirement.
+    public static func signed(_ path: String, requirement: String) -> Bool {
+        var code: SecStaticCode?
+        var compiled: SecRequirement?
+        guard SecStaticCodeCreateWithPath(URL(fileURLWithPath: path) as CFURL, [], &code) == errSecSuccess,
+              let code,
+              SecRequirementCreateWithString(requirement as CFString, [], &compiled) == errSecSuccess,
+              let compiled
+        else { return false }
+        let flags = SecCSFlags(rawValue: kSecCSCheckAllArchitectures | kSecCSStrictValidate | kSecCSCheckNestedCode)
+        return SecStaticCodeCheckValidity(code, flags, compiled) == errSecSuccess
     }
 
     // brewPath returns the Homebrew executable, Apple silicon first, or nil when neither exists.

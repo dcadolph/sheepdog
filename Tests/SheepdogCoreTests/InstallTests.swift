@@ -282,3 +282,25 @@ func testInstallDMGURL(_ c: DMGCase) {
     let script = Install.brewScript(brew: "/b/brew", app: "/Users/o'neil/Sheepdog.app")
     #expect(script.contains("/usr/bin/open '/Users/o'\\''neil/Sheepdog.app'"))
 }
+
+// testInstallSigned accepts code that meets a requirement and refuses what the release requirement
+// rules out: an Apple app, an ad hoc signed copy, and a missing path.
+@Test func testInstallSigned() throws {
+    #expect(Install.signed("/System/Applications/Calculator.app", requirement: "anchor apple"))
+    #expect(!Install.signed("/System/Applications/Calculator.app", requirement: Install.releaseRequirement))
+    #expect(!Install.signed("/nonexistent/Sheepdog.app", requirement: "anchor apple"))
+    #expect(!Install.signed("/System/Applications/Calculator.app", requirement: "not a requirement ("))
+
+    let copy = FileManager.default.temporaryDirectory.appendingPathComponent("sheepdog-adhoc-\(UUID().uuidString)")
+    try FileManager.default.copyItem(atPath: "/usr/bin/true", toPath: copy.path)
+    defer { try? FileManager.default.removeItem(at: copy) }
+    let sign = Process()
+    sign.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
+    sign.arguments = ["--force", "--sign", "-", "--identifier", "com.dcadolph.sheepdog", copy.path]
+    sign.standardError = FileHandle.nullDevice
+    try sign.run()
+    sign.waitUntilExit()
+    #expect(sign.terminationStatus == 0)
+    #expect(Install.signed(copy.path, requirement: "identifier \"com.dcadolph.sheepdog\""))
+    #expect(!Install.signed(copy.path, requirement: Install.releaseRequirement))
+}

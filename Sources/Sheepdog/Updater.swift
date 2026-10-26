@@ -1,6 +1,5 @@
 import AppKit
 import os
-import Security
 
 import SheepdogCore
 
@@ -9,12 +8,6 @@ import SheepdogCore
 // checks who signed the app on it, and starts that copy, which installs itself.
 @MainActor
 final class Updater {
-    // requirement is the code requirement a downloaded Sheepdog must meet: the Developer ID
-    // Application certificate of the team that signs every release.
-    nonisolated static let requirement = "identifier \"com.dcadolph.sheepdog\" and anchor apple generic"
-        + " and certificate 1[field.1.2.840.113635.100.6.2.6]"
-        + " and certificate leaf[field.1.2.840.113635.100.6.1.13]"
-        + " and certificate leaf[subject.OU] = \"U7L4P2YHWJ\""
     // scriptName is the file name of the Terminal script a Homebrew upgrade runs.
     static let scriptName = "sheepdog-update.command"
 
@@ -112,14 +105,7 @@ final class Updater {
 
     // check verifies that app meets the release signing requirement and carries version.
     nonisolated static func check(_ app: URL, version: String) throws {
-        var code: SecStaticCode?
-        var requirement: SecRequirement?
-        guard SecStaticCodeCreateWithPath(app as CFURL, [], &code) == errSecSuccess, let code,
-              SecRequirementCreateWithString(Self.requirement as CFString, [], &requirement) == errSecSuccess,
-              let requirement
-        else { throw UpdaterError.signature }
-        let flags = SecCSFlags(rawValue: kSecCSCheckAllArchitectures | kSecCSStrictValidate | kSecCSCheckNestedCode)
-        guard SecStaticCodeCheckValidity(code, flags, requirement) == errSecSuccess else {
+        guard Install.signed(app.path, requirement: Install.releaseRequirement) else {
             throw UpdaterError.signature
         }
         let found = Bundle(url: app)?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
