@@ -277,6 +277,10 @@ func testInstallDMGURL(_ c: DMGCase) {
     #expect(script.contains("while /bin/kill -0 \"$pid\""))
     #expect(script.contains("/usr/bin/open '/Applications/Sheepdog.app'"))
     #expect(script.contains("'/opt/homebrew/bin/brew' upgrade --cask sheepdog"))
+    #expect(script.contains("'/opt/homebrew/bin/brew' update --quiet"))
+    #expect(script.contains("before=$(/usr/bin/defaults read '/Applications/Sheepdog.app/Contents/Info' "
+        + "CFBundleShortVersionString 2>/dev/null)"))
+    #expect(script.contains("echo 'Homebrew has no newer Sheepdog yet.'"))
 }
 
 // testInstallBrewScriptQuoting escapes single quotes in interpolated values and still parses.

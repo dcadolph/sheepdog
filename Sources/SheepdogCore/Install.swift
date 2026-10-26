@@ -107,17 +107,28 @@ public enum Install {
         ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"].first { exists($0) }
     }
 
-    // brewScript returns the shell script that upgrades the cask, quits the Sheepdog whose process id
-    // is its first argument, waits for it to exit, and opens the new copy. A failed upgrade leaves
-    // Sheepdog running. It quits by process id because pkill skips its own ancestors, and Sheepdog
-    // starts the script, and with a signal because an Apple event can ask for Automation consent.
+    // brewScript returns the shell script that refreshes Homebrew, upgrades the cask, quits the
+    // Sheepdog whose process id is its first argument, waits for it to exit, and opens the new copy.
+    // It refreshes first because Homebrew refreshes a tap only about once a day, so a release can be
+    // out before brew knows of it. A failed upgrade, or one that leaves the app's version unchanged,
+    // leaves Sheepdog running and exits with an error. It quits by process id because pkill skips its
+    // own ancestors, and Sheepdog starts the script, and with a signal because an Apple event can ask
+    // for Automation consent.
     public static func brewScript(brew: String, app: String) -> String {
-        [
+        let version = "/usr/bin/defaults read \(shellQuoted(app + "/Contents/Info")) CFBundleShortVersionString"
+        return [
             "#!/bin/sh",
             "pid=\"$1\"",
+            "before=$(\(version) 2>/dev/null)",
+            "\(shellQuoted(brew)) update --quiet",
             "if ! \(shellQuoted(brew)) upgrade --cask sheepdog; then",
             "  echo",
             "  echo 'Sheepdog was not updated.'",
+            "  exit 1",
+            "fi",
+            "if [ \"$(\(version) 2>/dev/null)\" = \"$before\" ]; then",
+            "  echo",
+            "  echo 'Homebrew has no newer Sheepdog yet.'",
             "  exit 1",
             "fi",
             "/bin/kill \"$pid\"",
