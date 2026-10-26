@@ -252,3 +252,13 @@ footer a { color: var(--muted); } footer a:hover { color: var(--accent); }
   .tiles { display: grid; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto; } }
+.doc ol { padding-left: 24px; color: var(--muted); }
+.doc h3 { font-size: 19px; margin: 26px 0 10px; }
+.doc .toc { padding-left: 22px; }
+.doc details { border-top: 1px solid var(--line); padding: 12px 0; }
+.doc details:last-of-type { border-bottom: 1px solid var(--line); }
+.doc summary { cursor: pointer; font-weight: 600; font-size: 17px; }
+.doc details p { margin: 10px 0 0; color: var(--muted); }
+.doc .shot { margin: 22px 0 6px; text-align: center; }
+.doc .shot img { max-width: 100%; height: auto; border-radius: 12px; }
+.doc p, .doc li { overflow-wrap: break-word; }

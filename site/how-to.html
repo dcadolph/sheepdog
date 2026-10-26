@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to use sheepdog</title>
+<meta name="description" content="Short guides for sheepdog: connect your calendars, set working hours, hold your place, let your team know, quiet Tug, tune him and move your settings.">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="/assets/favicon.png">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top"><div class="w"><a class="brand" href="/"><img src="/assets/favicon.png" alt="" width="30" height="30">sheepdog</a><nav><a class="keep" href="/">Home</a><a class="keep" href="https://github.com/dcadolph/sheepdog">GitHub</a></nav></div></header>
+<main class="doc">
+<p class="small">How to</p>
+<h1>Short guides.</h1>
+<p>Each guide is a few steps and the questions people ask about it. Everything here starts from Tug in the menu bar. <a href="https://github.com/dcadolph/sheepdog/blob/main/docs/using.md">Using sheepdog</a> has the full reference.</p>
+<ul class="toc">
+  <li><a href="#calendars">Connect your calendars</a></li>
+  <li><a href="#hours">Set your working hours</a></li>
+  <li><a href="#hold">Hold your place</a></li>
+  <li><a href="#slack">Let your team know</a></li>
+  <li><a href="#quiet">Quiet Tug for a while</a></li>
+  <li><a href="#tune">Make Tug yours</a></li>
+  <li><a href="#install">Install, update and move your settings</a></li>
+</ul>
+
+<h2 id="calendars">Connect your calendars</h2>
+<p>sheepdog reads every calendar macOS Calendar knows about, and signs in to Microsoft 365 and Outlook.com directly. It only reads. It never creates, changes or deletes an event.</p>
+<h3>Steps</h3>
+<ol>
+  <li>Open sheepdog and click <b>Allow</b> when macOS asks for calendar access. If you said no, choose <b>Allow calendar access…</b> from Tug's menu to open System Settings.</li>
+  <li>To add Google, Exchange or iCloud, add the account in System Settings &gt; Internet Accounts with Calendars turned on. sheepdog reads it through macOS Calendar.</li>
+  <li>For a Microsoft 365 or Outlook.com calendar, open <b>Settings…</b> from Tug's menu, then the <b>Calendars</b> tab, and click <b>Connect…</b> beside Microsoft 365 or Outlook.com. Finish signing in in your browser.</li>
+  <li>Open Tug's menu. Your meetings for the next 12 hours are listed there.</li>
+</ol>
+<h3>Questions</h3>
+<details><summary>A meeting is missing from Tug's menu.</summary><p>sheepdog leaves out all-day events, events marked free and meetings you declined. Tentative meetings are left out too, unless you turn on Include tentative meetings in the Calendars tab. If none of those apply, choose Refresh calendars from Tug's menu.</p></details>
+<details><summary>Can it skip events that are only me?</summary><p>Yes. Turn on Skip events with no other attendees in the Calendars tab. It is off at first.</p></details>
+<details><summary>Where is Google sign-in?</summary><p>Direct Google sign-in waits on Google's review. Until then, add your Google account in Internet Accounts and sheepdog reads it through macOS Calendar.</p></details>
+<details><summary>Tug's menu asks me to sign in again.</summary><p>Tug lost access to that calendar. Choose the line in the menu, then click Sign in again… in the Calendars tab.</p></details>
+<details><summary>Where does my calendar data go?</summary><p>Nowhere. sheepdog reads it on your Mac and keeps sign-ins in your Keychain. The <a href="/privacy/">privacy policy</a> has the details.</p></details>
+
+<h2 id="hours">Set your working hours</h2>
+<p>Working hours keep Tug quiet in the evening and on weekends. They are off until you turn them on.</p>
+<h3>Steps</h3>
+<ol>
+  <li>Open <b>Settings…</b>, then the <b>Hours</b> tab.</li>
+  <li>Turn on <b>Only bark during working hours</b>. It starts at 8:00 to 18:00, Monday to Friday.</li>
+  <li>Set <b>Start</b> and <b>End</b>, and tick the <b>Days</b> a shift starts on.</li>
+  <li>Under <b>Outside working hours</b>, pick <b>Silent</b>, <b>Quiet: countdown only, no sound</b>, or <b>Full alarm</b>.</li>
+</ol>
+<h3>Questions</h3>
+<details><summary>A meeting runs past the end of my day.</summary><p>Tug goes by when the meeting starts. With hours ending at 17:00, a 16:55 meeting alarms in full even if you snooze past 17:00, and a 17:05 meeting is outside your hours from start to finish.</p></details>
+<details><summary>I work nights.</summary><p>An end before the start is an overnight shift, and it belongs to the day it starts. For 22:00 to 6:00, Sunday to Thursday, tick Sunday through Thursday. The Thursday shift runs into Friday morning.</p></details>
+<details><summary>I only want weekends off.</summary><p>Set Start and End to the same time, such as 0:00 and 0:00, and tick Monday to Friday. A start and end that match cover the whole day.</p></details>
+<details><summary>Where did my evening meetings go?</summary><p>They stay in Tug's menu, marked "after hours". Hover over Tug in the menu bar to see when he is back, such as "Off duty until Mon 8:00 AM".</p></details>
+
+<h2 id="hold">Hold your place</h2>
+<p>Before a meeting, jot down what you were in the middle of. When the meeting ends, Tug hands the note back.</p>
+<p class="shot"><img src="/assets/howto-handback.png" width="440" height="180" alt="The hand-back card: Before Design review you were: Retry tests for the upload queue, with Copy, Done and Clear all" loading="lazy"></p>
+<h3>Steps</h3>
+<ol>
+  <li>When the countdown pill shows, click <b>What were you in the middle of?</b>, type a few words and press Return.</li>
+  <li>Or on the alarm, click <b>Hold my place</b>. Tug goes quiet while you type.</li>
+  <li>The pill and the alarm show <b>Tug is holding</b> with your note, and Tug's menu lists it too.</li>
+  <li>When the meeting ends, a card in the top right of your main display shows the note. Click <b>Copy</b> to put it on the clipboard, or <b>Done</b> to put the card away.</li>
+</ol>
+<h3>Questions</h3>
+<details><summary>The meeting ended and no card showed up.</summary><p>The card waits while your mic is still in use, so it shows up when the call is over. After 30 minutes past the scheduled end it shows anyway.</p></details>
+<details><summary>I skipped the meeting. Where is my note?</summary><p>It comes back right away.</p></details>
+<details><summary>I held more than one note.</summary><p>The cards stack newest first, the way macOS notifications do, with Clear all to put them all away.</p></details>
+<details><summary>How long is a note kept?</summary><p>A note you leave on the card is cleared at 4 a.m. Done clears it now. Notes are kept only on your Mac.</p></details>
+<details><summary>Can I turn it off?</summary><p>Yes. Turn off Ask what I was in the middle of in the Alerts tab.</p></details>
+
+<h2 id="slack">Let your team know</h2>
+<p>Add your team's Slack channels and the alarm offers <b>Let them know</b> beside Hold my place. sheepdog never signs in to Slack and never sends anything itself.</p>
+<h3>Steps</h3>
+<ol>
+  <li>In Slack, use <b>Copy link</b> on the channel.</li>
+  <li>Open <b>Settings…</b>, then the <b>Calendars</b> tab, and click <b>Add channel</b> under Slack. Give it a name such as #team and paste the link.</li>
+  <li>When the alarm shows, click <b>Let them know</b>, then <b>Running late</b> or <b>Can't make it</b>.</li>
+  <li>Slack opens on the channel with the message on your clipboard. Paste it and press Return to send.</li>
+</ol>
+<h3>Questions</h3>
+<details><summary>What does each one say?</summary><p>Running late copies "Running a few minutes late to Design review." and drops the alarm to the countdown pill, so the meeting is still tracked. Can't make it copies "I can't make Design review." and counts the meeting as skipped.</p></details>
+<details><summary>I don't see Let them know.</summary><p>It shows on the full-screen alarm once a channel is added. The countdown pill does not have it.</p></details>
+<details><summary>It says the link isn't a Slack channel link.</summary><p>Use Copy link on the channel itself. The link looks like <code>https://yourteam.slack.com/archives/C0123ABCD</code>.</p></details>
+<details><summary>I have more than one channel.</summary><p>Let them know asks which channel first.</p></details>
+
+<h2 id="quiet">Quiet Tug for a while</h2>
+<p>Tug can stand down for one meeting or for a few hours.</p>
+<p class="shot"><img src="/assets/howto-alarm.jpg" width="700" height="438" alt="The full-screen alarm: Tug inside a countdown ring, the meeting title, Join now, Snooze, and Hold my place" loading="lazy"></p>
+<h3>Steps</h3>
+<ol>
+  <li>On the alarm, <b>Snooze</b> drops back to the countdown for a minute, or 30 seconds once the meeting has started. Each meeting gets two.</li>
+  <li>The <b>X</b> on the alarm stops the barking and leaves the silent countdown pill for that meeting. <b>I'm skipping this one</b> ends the alerts for it.</li>
+  <li>For longer, open Tug's menu and choose <b>Nap time</b>, then <b>For 1 hour</b>, <b>For 3 hours</b>, until morning, or <b>Until I wake him</b>.</li>
+  <li>Choose <b>Wake Tug</b> from the menu to end a nap early.</li>
+</ol>
+<h3>Questions</h3>
+<details><summary>Snooze says Tug is out of patience.</summary><p>The meeting's snoozes are used up. Change Snoozes per meeting in the Alerts tab.</p></details>
+<details><summary>I joined from my phone and the alarm kept going.</summary><p>Tug listens for your Mac's mic. Starting a call that uses it counts as joining and quiets the alarm, but a call on another device does not. Close the alarm with its X.</p></details>
+<details><summary>A meeting was due while Tug napped.</summary><p>When he wakes, a meeting already in its alert window alerts right away.</p></details>
+<details><summary>Can I hide the countdown pill?</summary><p>Its X hides it for that meeting, and the alarm still comes a minute before the start. Turn off Show the floating countdown in the Alerts tab to stop showing it at all.</p></details>
+
+<h2 id="tune">Make Tug yours</h2>
+<p>Warning times, sounds, volume and colors are all in Settings.</p>
+<p class="shot"><img src="/assets/howto-pill.png" width="600" height="116" alt="The countdown pill at the top of the screen: Tug, the meeting title, 2:05, and Join" loading="lazy"></p>
+<h3>Steps</h3>
+<ol>
+  <li>Open <b>Settings…</b>, then <b>Alerts</b>. <b>Warn at</b> takes minutes before the meeting, separated by commas, and starts at 10, 5. The full-screen alarm comes 60 seconds before the start and keeps at you for 10 minutes after.</li>
+  <li>In <b>Sound</b>, pick the <b>Warning chime</b> and <b>Alarm sound</b> from Tug's barks or any macOS sound. The play button lets you hear one first.</li>
+  <li>In <b>General</b>, pick a <b>Theme</b> for the alarm, the countdown and the hand-back card, and turn on <b>Start Sheepdog at login</b>.</li>
+  <li>Click <b>Test the alarm</b> at the bottom of Settings, or in Tug's menu, to run a pretend meeting through the whole thing.</li>
+</ol>
+<h3>Questions</h3>
+<details><summary>The alarm plays on my speakers with headphones on.</summary><p>Play alerts on starts at Current output and built-in speakers. Pick Current output (headphones if connected) to keep it in your headphones.</p></details>
+<details><summary>Why did my volume go up?</summary><p>Unmute and raise volume during the alarm unmutes your Mac and raises it to at least 60% while Tug barks, then puts it back. Turn it off or move the slider in the Sound tab.</p></details>
+<details><summary>Start at login did not stick.</summary><p>macOS needs you to allow Sheepdog in Login Items. Click Open Login Items in the General tab.</p></details>
+<details><summary>How do I start over?</summary><p>Restore defaults, at the bottom of Settings, puts every setting back. Your Slack channels, theme and sign-ins stay.</p></details>
+
+<h2 id="install">Install, update and move your settings</h2>
+<p>sheepdog is signed and notarized, so it opens like any other Mac app. It runs on Apple silicon and Intel Macs with macOS 14 or later.</p>
+<h3>Steps</h3>
+<ol>
+  <li>Download the disk image from the <a href="/">home page</a>, open it and double-click Sheepdog. Click <b>Install</b> and it copies itself into Applications, starts from there, ejects the disk image and moves it to the Trash. With Homebrew, run <code>brew install --cask dcadolph/tap/sheepdog</code> instead.</li>
+  <li>Once a day sheepdog asks GitHub for the latest release. When a newer one is out, a card offers <b>Update now</b>, <b>Remind me later</b> and <b>Skip this version</b>.</li>
+  <li><b>Update now</b> upgrades a Homebrew install with Homebrew. Otherwise it downloads the disk image, checks that the app on it is signed by the same developer, and installs it.</li>
+  <li>To move to another Mac, open <b>Settings…</b>, then <b>General</b>, and click <b>Export settings…</b>. On the other Mac, click <b>Import settings…</b> and pick the file.</li>
+</ol>
+<h3>Questions</h3>
+<details><summary>I dragged Sheepdog to Applications instead.</summary><p>That works too. It asks once before moving the disk image to the Trash.</p></details>
+<details><summary>When does the update card show?</summary><p>Never during a countdown, a call or off hours. Remind me later asks again in a week, then every 30 days, three times at most. Skip this version keeps it quiet until the next release, and the menu still shows a line that opens the release page.</p></details>
+<details><summary>The card says Open release page instead of Update now.</summary><p>Update now shows only when Sheepdog runs from Applications and the last try did not fail. Open release page lets you download it by hand.</p></details>
+<details><summary>What does the update check send?</summary><p>Nothing about you. It sends no version or identifier. Turn it off with Check for updates in the General tab.</p></details>
+<details><summary>What is in the exported file?</summary><p>Your warnings, sounds, filters, working hours and Slack channels. Sign-ins stay in your Keychain, so connect your calendars again after importing on a new Mac.</p></details>
+<details><summary>How do I check a download is real?</summary><p>The README's <a href="https://github.com/dcadolph/sheepdog#verify-the-download">Verify the download</a> section has the commands.</p></details>
+</main>
+<footer><div class="w"><span><a href="https://github.com/dcadolph/sheepdog">Source</a> &nbsp;&middot;&nbsp; <a href="https://github.com/dcadolph/sheepdog/issues">Issues</a> &nbsp;&middot;&nbsp; <a href="/">Home</a></span><span>sheepdog is free and open source under the Apache 2.0 license.</span></div></footer>
+</body>
+</html>
