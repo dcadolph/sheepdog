@@ -83,6 +83,37 @@ Examples:
 A start and end that match cover the whole day. An end before the start is an overnight shift,
 and it belongs to the day it starts, so a Thursday 22:00 shift runs into Friday morning.
 
+## Install and update
+
+Open the disk image from the latest release and double-click Sheepdog. Click **Install** and it
+copies itself into Applications, starts from there, ejects the disk image, and moves it to the
+Trash. Dragging Sheepdog onto Applications works too, and then it asks once before moving the
+disk image to the Trash. A downloaded copy started from anywhere else, such as Downloads,
+offers **Move to Applications**. Homebrew users can run
+`brew install --cask dcadolph/tap/sheepdog` instead.
+
+Once a day Sheepdog asks GitHub for the latest release. When a newer one is out, Tug's menu shows
+a line such as "Sheepdog 1.6.0 is available" that opens its release page, and a card in the top
+right corner offers three choices.
+
+- **Update now** installs the new version. A Homebrew install runs `brew update` and
+  `brew upgrade --cask sheepdog` in the background. Any other install downloads the release's
+  disk image, checks that the app on it is signed by the same developer, and installs it. Either
+  way Sheepdog quits and the new version starts.
+- **Remind me later** puts the card away. It comes back a week later, then every 30 days, three
+  times at most.
+- **Skip this version** keeps the card away until the next release. The menu line stays.
+
+The card never shows during a countdown, the alarm, a call, a hand-back card or off hours. It
+offers **Update now** only when Sheepdog runs from Applications, and **Open release page**
+otherwise. If an update fails, the button turns into **Open release page** so you can download it
+by hand. A Homebrew update fails when Homebrew does not know of the release yet, and the log at
+`~/Library/Caches/com.dcadolph.sheepdog/sheepdog-update.log` then says "Homebrew has no newer
+Sheepdog yet." Try again later, after Homebrew refreshes its tap.
+
+The check sends no version or identifier. Turn it off with **Check for updates** in Settings,
+under General.
+
 ## Settings and features
 
 | Feature       | What it does                                                               |
@@ -103,5 +134,6 @@ and it belongs to the day it starts, so a Thursday 22:00 shift runs into Friday 
 | Hover         | The glyph says what is next, and each menu item says what it does.         |
 | Backup        | Exports settings to a file and imports them on any Mac. Sign-ins stay out. |
 | Themes        | Twelve color themes for the alarm, the countdown and the hand-back card.   |
+| Updates       | Checks GitHub once a day for a newer release and offers to install it.     |
 
 Use **Test the alarm** in Tug's menu to see the whole thing without a real meeting.
