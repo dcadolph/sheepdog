@@ -195,3 +195,90 @@ let pruneCases: [PruneCase] = [
 func testInstallPruned(_ c: PruneCase) {
     #expect(Install.pruned(c.keys) { c.current[$0] } == c.want)
 }
+
+// BrewPathCase is one set of existing paths and the Homebrew executable that should be chosen.
+struct BrewPathCase: Sendable, CustomTestStringConvertible {
+    // Name labels the case in test output.
+    let name: String
+    // Present is the set of paths that exist.
+    let present: Set<String>
+    // Want is the expected path, nil when none exists.
+    let want: String?
+
+    // testDescription labels the case in test output.
+    var testDescription: String { name }
+}
+
+// brewPathCases cover neither, each location alone, and both.
+let brewPathCases: [BrewPathCase] = [
+    // Test 0: No Homebrew executable.
+    BrewPathCase(name: "neither", present: [], want: nil),
+    // Test 1: Apple silicon only.
+    BrewPathCase(name: "apple silicon", present: ["/opt/homebrew/bin/brew"], want: "/opt/homebrew/bin/brew"),
+    // Test 2: Intel only.
+    BrewPathCase(name: "intel", present: ["/usr/local/bin/brew"], want: "/usr/local/bin/brew"),
+    // Test 3: Both, Apple silicon wins.
+    BrewPathCase(name: "both", present: ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"],
+                 want: "/opt/homebrew/bin/brew"),
+]
+
+// testInstallBrewPath picks the Apple silicon executable before the Intel one.
+@Test(arguments: brewPathCases)
+func testInstallBrewPath(_ c: BrewPathCase) {
+    #expect(Install.brewPath { c.present.contains($0) } == c.want)
+}
+
+// DMGCase is one release tag and the download URL it should give.
+struct DMGCase: Sendable, CustomTestStringConvertible {
+    // Name labels the case in test output.
+    let name: String
+    // Tag is the release tag as given.
+    let tag: String
+    // Want is the expected URL string.
+    let want: String
+
+    // testDescription labels the case in test output.
+    var testDescription: String { name }
+}
+
+// dmgCases cover a tag with and without the v prefix.
+let dmgCases: [DMGCase] = [
+    // Test 0: A tag with the v prefix.
+    DMGCase(name: "v tag", tag: "v1.5.1",
+            want: "https://github.com/dcadolph/sheepdog/releases/download/v1.5.1/sheepdog_v1.5.1_macos_universal.dmg"),
+    // Test 1: A tag without the v prefix stays without it.
+    DMGCase(name: "bare tag", tag: "1.5.1",
+            want: "https://github.com/dcadolph/sheepdog/releases/download/1.5.1/sheepdog_1.5.1_macos_universal.dmg"),
+]
+
+// testInstallDMGURL builds the download URL from the tag as given.
+@Test(arguments: dmgCases)
+func testInstallDMGURL(_ c: DMGCase) {
+    #expect(Install.dmgURL(tag: c.tag).absoluteString == c.want)
+}
+
+// testInstallBrewScript checks the script parses, quotes its values, and quits and reopens the app.
+@Test func testInstallBrewScript() throws {
+    let script = Install.brewScript(brew: "/opt/homebrew/bin/brew", app: "/Applications/Sheepdog.app")
+    let file = FileManager.default.temporaryDirectory.appendingPathComponent("sheepdog-\(UUID().uuidString).sh")
+    try script.write(to: file, atomically: true, encoding: .utf8)
+    defer { try? FileManager.default.removeItem(at: file) }
+
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/bin/bash")
+    process.arguments = ["-n", file.path]
+    try process.run()
+    process.waitUntilExit()
+    #expect(process.terminationStatus == 0)
+
+    #expect(script.hasPrefix("#!/bin/sh\n"))
+    #expect(script.contains("/usr/bin/pkill -x Sheepdog"))
+    #expect(script.contains("/usr/bin/open '/Applications/Sheepdog.app'"))
+    #expect(script.contains("'/opt/homebrew/bin/brew' upgrade --cask sheepdog"))
+}
+
+// testInstallBrewScriptQuoting escapes single quotes in interpolated values and still parses.
+@Test func testInstallBrewScriptQuoting() throws {
+    let script = Install.brewScript(brew: "/b/brew", app: "/Users/o'neil/Sheepdog.app")
+    #expect(script.contains("/usr/bin/open '/Users/o'\\''neil/Sheepdog.app'"))
+}

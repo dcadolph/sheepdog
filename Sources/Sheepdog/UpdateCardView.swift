@@ -21,12 +21,6 @@ struct UpdateCardView: View {
                     Text("Sheepdog \(version) is out.")
                         .font(.system(size: 15, weight: .semibold, design: .rounded))
                         .foregroundStyle(Theme.text)
-                    if model.updateFromHomebrew {
-                        Text(Install.brewCommand)
-                            .font(.system(size: 11, design: .monospaced))
-                            .foregroundStyle(Theme.muted)
-                            .textSelection(.enabled)
-                    }
                     HStack(spacing: 8) {
                         Button(action: model.onOpenUpdate) {
                             Text(primaryLabel)
@@ -38,6 +32,7 @@ struct UpdateCardView: View {
                                 .foregroundStyle(Theme.onAccent)
                         }
                         .buttonStyle(.plain)
+                        .disabled(model.updateBusy)
                         Button(action: model.onRemindUpdate) {
                             Text("Remind me later")
                                 .fixedSize()
@@ -69,11 +64,12 @@ struct UpdateCardView: View {
         }
     }
 
-    // primaryLabel names the first button, which copies the upgrade command for a Homebrew install.
+    // primaryLabel names the first button, which installs the update when this copy can, and
+    // otherwise, or after a failed install, opens the release page.
     private var primaryLabel: String {
-        guard model.updateFromHomebrew else {
-            return "Open release page"
+        if model.updateBusy {
+            return "Downloading"
         }
-        return model.updateCopied ? "Copied" : "Copy upgrade command"
+        return model.updateCanInstall && !model.updateFailed ? "Update now" : "Open release page"
     }
 }

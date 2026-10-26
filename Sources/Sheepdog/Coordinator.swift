@@ -72,6 +72,8 @@ final class Coordinator {
     // updateCardOpen reports that the update card was shown and not yet answered. A blocked card hides
     // and comes back when the way is clear.
     private var updateCardOpen = false
+    // updater installs the update when the user presses Update now.
+    private let updater = Updater()
     // fromHomebrew reports that Homebrew manages this install.
     private static let fromHomebrew = Install.homebrew { FileManager.default.fileExists(atPath: $0) }
     // runningVersion is this build's version, or nil outside the app bundle.
@@ -117,7 +119,7 @@ final class Coordinator {
         model.onOpenUpdate = { [weak self] in self?.openUpdate() }
         model.onRemindUpdate = { [weak self] in self?.closeUpdateCard() }
         model.onSkipUpdate = { [weak self] in self?.skipUpdate() }
-        model.updateFromHomebrew = Self.fromHomebrew
+        model.updateCanInstall = Updater.canUpdate
         calendar.onChange = { [weak self] in self?.refresh() }
         accounts.onChange = { [weak self] in self?.refresh() }
         mic.onStart = { [weak self] in self?.micStarted() }
@@ -637,23 +639,38 @@ final class Coordinator {
         }
     }
 
-    // openUpdate opens the release page, or for a Homebrew install copies the upgrade command and
-    // closes the card a moment later so the user sees it worked.
+    // openUpdate installs the update when this copy can, through Homebrew when Homebrew manages it and
+    // from the release's disk image otherwise. It opens the release page instead when this copy cannot
+    // install, or after an install failed.
     private func openUpdate() {
         guard let update = availableUpdate else {
             closeUpdateCard()
             return
         }
-        guard Self.fromHomebrew else {
+        guard Updater.canUpdate, !model.updateFailed else {
             NSWorkspace.shared.open(update.page)
             closeUpdateCard()
             return
         }
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(Install.brewCommand, forType: .string)
-        model.updateCopied = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            self?.closeUpdateCard()
+        guard !Self.fromHomebrew else {
+            do {
+                try updater.brew()
+                closeUpdateCard()
+            } catch {
+                log.error("Homebrew update failed: \(String(describing: error), privacy: .public)")
+                model.updateFailed = true
+            }
+            return
+        }
+        model.updateBusy = true
+        Task { [weak self, updater] in
+            do {
+                try await updater.install(tag: update.tag)
+            } catch {
+                self?.log.error("update install failed: \(String(describing: error), privacy: .public)")
+                self?.model.updateFailed = true
+            }
+            self?.model.updateBusy = false
         }
     }
 
@@ -667,7 +684,6 @@ final class Coordinator {
     // closeUpdateCard puts the card away until its next reminder is due.
     private func closeUpdateCard() {
         updateCardOpen = false
-        model.updateCopied = false
         model.updateVersion = nil
         windows.hideUpdate()
     }
