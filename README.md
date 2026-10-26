@@ -82,10 +82,14 @@ should be `U7L4P2YHWJ`.
 Once a day Sheepdog asks GitHub for the latest release. When a newer one exists, the menu shows
 a line that opens its release page, and a card offers **Update now**, **Remind me later** and
 **Skip this version**. The card never shows during a countdown, a call or off hours. Update now
-runs `brew upgrade --cask sheepdog` in the background for a Homebrew install. Otherwise it
-downloads the release's disk image, checks that the app on it is signed by team `U7L4P2YHWJ`,
-and installs it. Nothing installs until you press it, and the check sends no version or
-identifier. Turn it off in settings with **Check for updates**.
+appears only when Sheepdog runs from Applications. For a Homebrew install it runs `brew update`
+and then `brew upgrade --cask sheepdog` in the background, logging to
+`~/Library/Caches/com.dcadolph.sheepdog/sheepdog-update.log`. If Homebrew does not know of the
+release yet, it stops with "Homebrew has no newer Sheepdog yet." in that log, Sheepdog keeps
+running, and the button turns into **Open release page**. Otherwise it downloads the release's
+disk image, checks that the app on it is signed by team `U7L4P2YHWJ`, and installs it. Nothing
+installs until you press it, and the check sends no version or identifier. Turn it off in
+settings with **Check for updates**.
 
 ## Build from source
 
@@ -101,8 +105,10 @@ without a real meeting. Copy the app to `/Applications` to keep it.
 
 ## Docs
 
+- [How To](https://macsheepdog.com/how-to) has short guides with steps and answers to common
+  questions, from connecting calendars to moving your settings to another Mac.
 - [Using sheepdog](docs/using.md) covers the countdown pill, the alarm, Hold my place, working
-  hours and every setting.
+  hours, installing and updating, and every setting.
 - [Building sheepdog](docs/building.md) covers direct Microsoft and Google sign-in, the tests and
   the demo renderer.
 
