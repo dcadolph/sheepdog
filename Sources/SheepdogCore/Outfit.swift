@@ -15,9 +15,10 @@ public enum Outfit: String, Sendable, CaseIterable {
         // fixed spans the same month and day range every year, inclusive at both ends. A window whose
         // start falls after its end wraps across the year end.
         case fixed(startMonth: Int, startDay: Int, endMonth: Int, endDay: Int)
-        // weekdayOrdinal is one day: the ordinal occurrence of a weekday in a month, with weekday 1 as
-        // Sunday, e.g. the fourth Thursday of November.
-        case weekdayOrdinal(month: Int, weekday: Int, ordinal: Int)
+        // weekdayOrdinal spans days counted from the ordinal occurrence of a weekday in a month,
+        // inclusive at both ends, with weekday 1 as Sunday, e.g. -3 through 3 around the fourth
+        // Thursday of November for that week's Monday through Sunday.
+        case weekdayOrdinal(month: Int, weekday: Int, ordinal: Int, from: Int, through: Int)
         // easterOffset spans days counted from Western Easter Sunday, inclusive at both ends, e.g. -1
         // through 0 for Saturday and Sunday.
         case easterOffset(from: Int, through: Int)
@@ -37,22 +38,29 @@ public enum Outfit: String, Sendable, CaseIterable {
                     return value >= start && value <= end
                 }
                 return value >= start || value <= end
-            case let .weekdayOrdinal(wantMonth, weekday, ordinal):
+            case let .weekdayOrdinal(wantMonth, weekday, ordinal, from, through):
                 let rule = DateComponents(
                     year: year, month: wantMonth, weekday: weekday, weekdayOrdinal: ordinal
                 )
-                guard let target = calendar.date(from: rule) else { return false }
-                return calendar.isDate(target, inSameDayAs: date)
+                return Window.offset(of: date, from: rule, calendar: calendar).map {
+                    $0 >= from && $0 <= through
+                } ?? false
             case let .easterOffset(from, through):
                 let sunday = Outfit.easterSunday(year: year)
                 let easter = DateComponents(year: year, month: sunday.month, day: sunday.day)
-                guard let target = calendar.date(from: easter),
-                      let offset = calendar.dateComponents(
-                          [.day], from: calendar.startOfDay(for: target), to: calendar.startOfDay(for: date)
-                      ).day
-                else { return false }
-                return offset >= from && offset <= through
+                return Window.offset(of: date, from: easter, calendar: calendar).map {
+                    $0 >= from && $0 <= through
+                } ?? false
             }
+        }
+
+        // offset returns the number of local calendar days from the anchor day to the date's day,
+        // or nil when the anchor does not resolve to a date.
+        static func offset(of date: Date, from anchor: DateComponents, calendar: Calendar) -> Int? {
+            guard let target = calendar.date(from: anchor) else { return nil }
+            return calendar.dateComponents(
+                [.day], from: calendar.startOfDay(for: target), to: calendar.startOfDay(for: date)
+            ).day
         }
     }
 
@@ -79,21 +87,22 @@ public enum Outfit: String, Sendable, CaseIterable {
     // asset is the name of the image asset for the outfit.
     public var asset: String { rawValue }
 
-    // window is the span of days the outfit is worn.
+    // window is the span of days the outfit is worn. Windows lead up to each holiday so the outfit
+    // lands on workdays, when Tug has meetings to call.
     public var window: Window {
         switch self {
         case .newYears:
-            return .fixed(startMonth: 12, startDay: 31, endMonth: 1, endDay: 1)
+            return .fixed(startMonth: 12, startDay: 27, endMonth: 1, endDay: 2)
         case .valentines:
-            return .fixed(startMonth: 2, startDay: 14, endMonth: 2, endDay: 14)
+            return .fixed(startMonth: 2, startDay: 10, endMonth: 2, endDay: 14)
         case .stPatricks:
-            return .fixed(startMonth: 3, startDay: 17, endMonth: 3, endDay: 17)
+            return .fixed(startMonth: 3, startDay: 13, endMonth: 3, endDay: 17)
         case .easter:
-            return .easterOffset(from: -1, through: 0)
+            return .easterOffset(from: -1, through: 2)
         case .halloween:
             return .fixed(startMonth: 10, startDay: 24, endMonth: 10, endDay: 31)
         case .thanksgiving:
-            return .weekdayOrdinal(month: 11, weekday: 5, ordinal: 4)
+            return .weekdayOrdinal(month: 11, weekday: 5, ordinal: 4, from: -3, through: 3)
         case .christmas:
             return .fixed(startMonth: 12, startDay: 18, endMonth: 12, endDay: 26)
         }
