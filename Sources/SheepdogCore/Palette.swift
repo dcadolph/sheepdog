@@ -80,19 +80,14 @@ public struct Palette: Sendable, Equatable {
     }
 }
 
-// ThemeName is a color theme shared by name with moorings.
+// ThemeName is a collar for Tug. Each one colors his collar and the alert surfaces.
 public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     case harbor
-    case dragonfire
-    case wildfire
-    case phosphor
     case rose
-    case hussar
-    case grapes
-    case coast
+    case wildfire
     case verdigris
-    case copper
-    case babyBlue
+    case coast
+    case grapes
     case concierge
 
     // id identifies the theme in pickers.
@@ -102,16 +97,11 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     public var label: String {
         switch self {
         case .harbor: return "Harbor"
-        case .dragonfire: return "Dragonfire"
         case .wildfire: return "Wildfire"
-        case .phosphor: return "Phosphor"
         case .rose: return "Rose"
-        case .hussar: return "Hussar"
         case .grapes: return "Grapes"
         case .coast: return "Coast"
         case .verdigris: return "Verdigris"
-        case .copper: return "Copper"
-        case .babyBlue: return "Baby Blue"
         case .concierge: return "Concierge"
         }
     }
@@ -120,16 +110,11 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     public var palette: Palette {
         switch self {
         case .harbor: return Self.make("#0f1012", "#0f1012", "#ffffff", "#aaa59b", "#f3e3b8", "#ff7361")
-        case .dragonfire: return Self.make("#0d0a08", "#1a1310", "#f4e6d8", "#b89c86", "#ff7a1a", "#ff7361")
         case .wildfire: return Self.make("#120805", "#24100a", "#ffe9c2", "#c99a6b", "#ffb000", "#ff7361")
-        case .phosphor: return Self.make("#050a05", "#0b160b", "#b8ffb0", "#5fae5a", "#33ff33", "#ff7361")
         case .rose: return Self.make("#0e0c0c", "#1c1919", "#f4f1ee", "#a9a3a0", "#d6282f", "#ff7361")
-        case .hussar: return Self.make("#1a0608", "#2b0c10", "#f3e3c0", "#c2a272", "#d4a63a", "#ff7361")
         case .grapes: return Self.make("#140816", "#231027", "#f0e2f5", "#b597bf", "#b04cc8", "#ff7361")
         case .coast: return Self.make("#060b1f", "#0e1736", "#e3e9ff", "#8e9cc9", "#4f78ff", "#ff7361")
         case .verdigris: return Self.make("#0a1614", "#12241f", "#dff3ec", "#86b3a5", "#43b39a", "#ff7361")
-        case .copper: return Self.make("#0c0c0d", "#18181a", "#f5f5f2", "#a8a8a3", "#c07a44", "#ff7361")
-        case .babyBlue: return Self.make("#0a1218", "#13212a", "#eaf6fc", "#8fa9b8", "#89cff0", "#ff7361")
         case .concierge: return Self.make("#ece4cf", "#f6f0dd", "#1a1a17", "#5c5748", "#7a2e12", "#9c1c14")
         }
     }

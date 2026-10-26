@@ -133,7 +133,7 @@ under General.
 | Hours         | Keeps Tug quiet, or down to the countdown, outside your working hours.     |
 | Hover         | The glyph says what is next, and each menu item says what it does.         |
 | Backup        | Exports settings to a file and imports them on any Mac. Sign-ins stay out. |
-| Themes        | Twelve color themes for the alarm, the countdown and the hand-back card.   |
+| Collar        | Seven collars for Tug that also color the alarm, pill and hand-back card.  |
 | Updates       | Checks GitHub once a day for a newer release and offers to install it.     |
 
 Use **Test the alarm** in Tug's menu to see the whole thing without a real meeting.

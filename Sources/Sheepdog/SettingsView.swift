@@ -97,15 +97,21 @@ struct SettingsView: View {
                 }
             }
             Section {
-                Picker("Theme", selection: $store.settings.theme) {
-                    ForEach(ThemeName.allCases) { theme in
-                        Text(theme == AlertSettings().theme ? "\(theme.label) (default)" : theme.label).tag(theme)
+                HStack {
+                    Picker("Tug's collar", selection: $store.settings.theme) {
+                        ForEach(ThemeName.allCases) { theme in
+                            Text(theme == AlertSettings().theme ? "\(theme.label) (default)" : theme.label).tag(theme)
+                        }
                     }
+                    TugImage(name: "tug-head", accent: store.settings.theme.palette.accent)
+                        .frame(width: 32, height: 32)
+                        .clipShape(Circle())
                 }
             } header: {
                 Text("Look")
             } footer: {
-                Text("Colors the alarm, the countdown and the hold-my-place card. Use Test the alarm to see it.")
+                Text("The collar also colors the alarm, the countdown and the hold-my-place card. "
+                    + "Use Test the alarm to see it.")
                     .foregroundStyle(.secondary)
             }
             Section {

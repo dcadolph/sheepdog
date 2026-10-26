@@ -114,10 +114,12 @@ enum Art {
 struct TugImage: View {
     // name is the drawing's file name without the extension.
     let name: String
+    // accent is the collar color, or nil for the current theme's accent.
+    var accent: RGB?
 
-    // body draws the image scaled to fit its frame, with the collar in the theme's accent.
+    // body draws the image scaled to fit its frame, with the collar in the accent.
     var body: some View {
-        let accent = Theme.palette.accent
+        let accent = accent ?? Theme.palette.accent
         let themed = accent == ThemeName.harbor.palette.accent ? Art.image(name) : Art.tinted(name, accent: accent)
         if let image = themed {
             Image(nsImage: image)

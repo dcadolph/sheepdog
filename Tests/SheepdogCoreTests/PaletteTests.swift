@@ -44,15 +44,19 @@ func testPaletteContrast(theme: ThemeName) {
     #expect(RGB(hex: "") == nil)
 }
 
-// testThemeSetting checks the default, a round trip, and that an unknown theme keeps the rest.
+// testThemeSetting checks the default, a round trip, and that an unknown or removed theme keeps the rest.
 @Test func testThemeSetting() throws {
     #expect(AlertSettings().theme == .harbor)
     var settings = AlertSettings()
-    settings.theme = .copper
+    settings.theme = .coast
     let data = try JSONEncoder().encode(settings)
-    #expect(try JSONDecoder().decode(AlertSettings.self, from: data).theme == .copper)
+    #expect(try JSONDecoder().decode(AlertSettings.self, from: data).theme == .coast)
     let unknown = #"{"theme":"plaid","maxSnoozes":4}"#
     let got = try JSONDecoder().decode(AlertSettings.self, from: Data(unknown.utf8))
     #expect(got.theme == .harbor)
     #expect(got.maxSnoozes == 4)
+    let removed = #"{"theme":"copper","maxSnoozes":3}"#
+    let kept = try JSONDecoder().decode(AlertSettings.self, from: Data(removed.utf8))
+    #expect(kept.theme == .harbor)
+    #expect(kept.maxSnoozes == 3)
 }
