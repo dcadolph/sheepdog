@@ -121,6 +121,20 @@
     { n: "take", ms: 5200 }, { n: "join", ms: 3000 }
   ];
   var cur = 0, timer = null, tick = null, held = false;
+  // The editor line types itself while the screen is quiet, so the alarm interrupts real work.
+  var typed = document.getElementById("typed");
+  var line = "backoff = min(backoff*2, q.ceiling)";
+  var typer = null;
+  function type(n) {
+    if (n === "chime") return;
+    clearInterval(typer);
+    if (n !== "idle" || still) { typed.textContent = line; return; }
+    typed.textContent = "";
+    typer = setInterval(function () {
+      typed.textContent = line.slice(0, typed.textContent.length + 1);
+      if (typed.textContent === line) clearInterval(typer);
+    }, 105);
+  }
   var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function fmt(sec) { return Math.floor(sec / 60) + ":" + (sec % 60 < 10 ? "0" : "") + (sec % 60); }
@@ -133,6 +147,7 @@
     });
     mclock.textContent = n === "idle" ? "9:55 AM" : n === "chime" ? "9:55 AM" : n === "pill" ? "9:58 AM" : "9:59 AM";
     clearInterval(tick);
+    type(n);
     var left, total;
     if (n === "pill") {
       left = 125; pt.textContent = fmt(left);
