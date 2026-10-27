@@ -53,6 +53,12 @@ Christmas (Dec 18 to 26). The outfit goes over any collar and shows on the alarm
 pill, the hand-back card, Settings and the menu bar. Turn off **Dress Tug up for holidays** in
 Settings, General, to keep him plain.
 
+In the same days the alarm barks a holiday tune instead of the plain bark: Auld Lang Syne, Let Me
+Call You Sweetheart, The Irish Washerwoman, In the Hall of the Mountain King, Over the River and
+Through the Wood, and Jingle Bells. Easter has no tune. Every note is Tug's own woof. The tune plays
+only when the alarm sound is one of Tug's, and the warning chime stays a single woof. Turn off
+**Bark holiday tunes** in Settings, Sound, to keep the plain bark.
+
 ## Requirements
 
 - macOS 14 or later
@@ -127,6 +133,16 @@ without a real meeting. Copy the app to `/Applications` to keep it.
 Tug's bark is cut from [Ladrido perro](https://commons.wikimedia.org/wiki/File:Ladrido_perro.ogg)
 by Edo.pt2 on Wikimedia Commons, released under
 [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
+
+The holiday tunes are that same bark, pitched to each note. The melodies are in the public domain
+and the arrangements were written for sheepdog:
+
+- Auld Lang Syne, traditional Scots air, 1799.
+- Let Me Call You Sweetheart, Leo Friedman, 1910.
+- The Irish Washerwoman, traditional jig, in print by 1790.
+- In the Hall of the Mountain King, Edvard Grieg, 1875.
+- Over the River and Through the Wood, traditional tune to Lydia Maria Child's 1844 poem.
+- Jingle Bells, James Lord Pierpont, 1857.
 
 ## License
 

@@ -124,6 +124,12 @@ Christmas (Dec 18 to 26). The outfit goes over any collar and shows on the alarm
 pill, the hand-back card, Settings and the menu bar. Turn off **Dress Tug up for holidays** in
 Settings, General, to keep him plain.
 
+In the same days the alarm barks a holiday tune instead of the plain bark: Auld Lang Syne, Let Me
+Call You Sweetheart, The Irish Washerwoman, In the Hall of the Mountain King, Over the River and
+Through the Wood, and Jingle Bells. Easter has no tune. Every note is Tug's own woof. The tune plays
+only when the alarm sound is one of Tug's, and the warning chime stays a single woof. Turn off
+**Bark holiday tunes** in Settings, Sound, to keep the plain bark.
+
 ## Settings and features
 
 | Feature       | What it does                                                               |
@@ -145,6 +151,7 @@ Settings, General, to keep him plain.
 | Backup        | Exports settings to a file and imports them on any Mac. Sign-ins stay out. |
 | Collar        | Seven collars for Tug that also color the alarm, pill and hand-back card.  |
 | Outfits       | Holiday outfits for Tug. Dress Tug up for holidays turns them off.         |
+| Tunes         | Holiday tunes for the alarm, in barks. Bark holiday tunes turns them off.  |
 | Updates       | Checks GitHub once a day for a newer release and offers to install it.     |
 
 Use **Test the alarm** in Tug's menu to see the whole thing without a real meeting.
