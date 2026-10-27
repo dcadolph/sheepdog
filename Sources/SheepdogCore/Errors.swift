@@ -26,6 +26,10 @@ public enum RemoteError: Error, Sendable, Equatable {
     case decode
     // tooManyPages means paging did not end within the page limit.
     case tooManyPages
+    // notCalDAV means the server did not name a principal or calendar home, so it is not a CalDAV server.
+    case notCalDAV
+    // insecureURL means the server pointed at a URL that would send the password without https.
+    case insecureURL
 }
 
 // BackupError is a failure to read a settings backup file.

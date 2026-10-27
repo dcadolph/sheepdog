@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<multistatus xmlns="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+  <response>
+    <href>/123456789/calendars/work/standup.ics</href>
+    <propstat>
+      <prop>
+        <getetag>"1"</getetag>
+        <C:calendar-data>BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Apple Inc.//iCloud//EN
+BEGIN:VTIMEZONE
+TZID:America/Chicago
+BEGIN:DAYLIGHT
+DTSTART:20070311T020000
+TZOFFSETFROM:-0600
+TZOFFSETTO:-0500
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:standup-uid
+RECURRENCE-ID;TZID=America/Chicago:20261022T093000
+DTSTART;TZID=America/Chicago:20261022T093000
+DTEND;TZID=America/Chicago:20261022T094500
+SUMMARY:Standup
+LOCATION:https://example.zoom.us/j/987654321
+ORGANIZER;CN=Alice:mailto:alice@example.com
+ATTENDEE;CN=Alice;PARTSTAT=ACCEPTED:mailto:alice@example.com
+ATTENDEE;CN=Bob;PARTSTAT=ACCEPTED:mailto:bob@example.com
+ATTENDEE;CN=Me;PARTSTAT=ACCEPTED:mailto:ME@example.com
+ATTENDEE;CUTYPE=ROOM;CN=Room 4;PARTSTAT=ACCEPTED:mailto:room4@example.com
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+TRIGGER:-PT10M
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:standup-uid
+RECURRENCE-ID;TZID=America/Chicago:20261023T093000
+DTSTART;TZID=America/Chicago:20261023T093000
+DTEND;TZID=America/Chicago:20261023T094500
+SUMMARY:Standup
+END:VEVENT
+END:VCALENDAR
+</C:calendar-data>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+  </response>
+  <response>
+    <href>/123456789/calendars/work/offsite.ics</href>
+    <propstat>
+      <prop>
+        <C:calendar-data>BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+UID:offsite-uid
+DTSTART;VALUE=DATE:20261022
+DTEND;VALUE=DATE:20261023
+SUMMARY:Offsite
+END:VEVENT
+BEGIN:VEVENT
+UID:canceled-uid
+DTSTART:20261022T160000Z
+DTEND:20261022T170000Z
+STATUS:CANCELLED
+SUMMARY:Canceled sync
+END:VEVENT
+END:VCALENDAR
+</C:calendar-data>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+  </response>
+  <response>
+    <href>/123456789/calendars/work/review.ics</href>
+    <propstat>
+      <prop>
+        <C:calendar-data><![CDATA[BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+UID:review-uid
+DTSTART:20261022T190000Z
+DTEND:20261022T200000Z
+SUMMARY:Design review\, round 2
+TRANSP:TRANSPARENT
+DESCRIPTION:Join with Google Meet: https://meet.google.com/abc-d
+ efg-hij\nOr dial: +1 555 0100\, PIN 123\; ask & wait
+ORGANIZER;CN="Pat: Lee":mailto:pat@example.com
+ATTENDEE;CN="Pat: Lee";PARTSTAT=ACCEPTED:mailto:pat@example.com
+ATTENDEE;CN="me@icloud.com";PARTSTAT=TENTATIVE:mailto:alias-1234@privaterelay.example
+END:VEVENT
+END:VCALENDAR
+]]></C:calendar-data>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+  </response>
+  <response>
+    <href>/123456789/calendars/work/planning.ics</href>
+    <propstat>
+      <prop>
+        <C:calendar-data>BEGIN:VCALENDAR&#13;
+VERSION:2.0&#13;
+BEGIN:VEVENT&#13;
+UID:planning-uid&#13;
+DTSTART:20261022T210000Z&#13;
+DURATION:PT45M&#13;
+SUMMARY:Planning&#13;
+URL:https://example.zoom.us/j/123456789?pwd=abc&#13;
+ORGANIZER:mailto:me@icloud.com&#13;
+ATTENDEE;PARTSTAT=NEEDS-ACTION:mailto:pat@example.com&#13;
+END:VEVENT&#13;
+END:VCALENDAR&#13;
+</C:calendar-data>
+      </prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+  </response>
+</multistatus>

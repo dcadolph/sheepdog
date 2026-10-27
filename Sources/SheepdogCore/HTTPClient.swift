@@ -59,5 +59,13 @@ func bearerRequest(_ url: URL, accessToken: String) -> URLRequest {
     return request
 }
 
+// basicRequest builds a GET request authorized with a user name and password.
+func basicRequest(_ url: URL, username: String, password: String) -> URLRequest {
+    var request = URLRequest(url: url)
+    let token = Data("\(username):\(password)".utf8).base64EncodedString()
+    request.setValue("Basic \(token)", forHTTPHeaderField: "Authorization")
+    return request
+}
+
 // maxPages bounds paging so a misbehaving service cannot loop forever.
 let maxPages = 25
