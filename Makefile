@@ -21,8 +21,9 @@ ICNS := .build/AppIcon.icns
 RUNTIME_ART := art/glyph-idle.png art/glyph-warning.png art/glyph-takeover.png art/tug.png art/tug-head.png
 RUNTIME_ART += $(wildcard art/outfit-*.png)
 SOUNDS := sounds/tug-woof.caf sounds/tug-barking.caf
+SOUNDS += $(wildcard sounds/melody-*.caf)
 
-.PHONY: build test app zip dmg run demo clean
+.PHONY: build test app zip dmg run demo melodies clean
 
 build:
 	swift build
@@ -71,6 +72,9 @@ demo:
 		-vf "scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle" \
 		-loop 0 art/demo.gif
 	$(DEMO_APP)/Contents/MacOS/Sheepdog --render-stills art
+
+melodies:
+	python3 sounds/melodies.py
 
 run: app
 	-pkill -x Sheepdog
