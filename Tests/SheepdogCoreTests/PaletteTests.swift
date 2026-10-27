@@ -3,21 +3,25 @@ import Testing
 
 @testable import SheepdogCore
 
-// testPaletteContrast checks every theme against WCAG AA for each pairing the alert surfaces use.
-@Test(arguments: ThemeName.allCases)
+// testPaletteContrast checks every preset against WCAG AA for each pairing the alert surfaces use.
+@Test(arguments: ThemeName.presets)
 func testPaletteContrast(theme: ThemeName) {
-    let p = theme.palette
+    expectReadable(theme.palette)
+}
+
+// expectReadable checks one palette against WCAG AA for each pairing the alert surfaces use.
+func expectReadable(_ p: Palette, _ comment: String = "", sourceLocation: SourceLocation = #_sourceLocation) {
     let text = Palette.textMinimum
-    #expect(p.text.contrast(with: p.background) >= text, "text on background")
-    #expect(p.text.contrast(with: p.surface) >= text, "text on surface")
-    #expect(p.muted.contrast(with: p.background) >= text, "muted on background")
-    #expect(p.muted.contrast(with: p.surface) >= text, "muted on surface")
-    #expect(p.accent.contrast(with: p.background) >= 3, "accent on background")
-    #expect(p.onAccent.contrast(with: p.accent) >= text, "label on accent")
-    #expect(p.accentText.contrast(with: p.background) >= text, "accent text on background")
-    #expect(p.accentText.contrast(with: p.surface) >= text, "accent text on surface")
-    #expect(p.late.contrast(with: p.background) >= text, "late on background")
-    #expect(p.late.contrast(with: p.surface) >= text, "late on surface")
+    #expect(p.text.contrast(with: p.background) >= text, "text on background \(comment)", sourceLocation: sourceLocation)
+    #expect(p.text.contrast(with: p.surface) >= text, "text on surface \(comment)", sourceLocation: sourceLocation)
+    #expect(p.muted.contrast(with: p.background) >= text, "muted on background \(comment)", sourceLocation: sourceLocation)
+    #expect(p.muted.contrast(with: p.surface) >= text, "muted on surface \(comment)", sourceLocation: sourceLocation)
+    #expect(p.accent.contrast(with: p.background) >= 3, "accent on background \(comment)", sourceLocation: sourceLocation)
+    #expect(p.onAccent.contrast(with: p.accent) >= text, "label on accent \(comment)", sourceLocation: sourceLocation)
+    #expect(p.accentText.contrast(with: p.background) >= text, "accent text on background \(comment)", sourceLocation: sourceLocation)
+    #expect(p.accentText.contrast(with: p.surface) >= text, "accent text on surface \(comment)", sourceLocation: sourceLocation)
+    #expect(p.late.contrast(with: p.background) >= text, "late on background \(comment)", sourceLocation: sourceLocation)
+    #expect(p.late.contrast(with: p.surface) >= text, "late on surface \(comment)", sourceLocation: sourceLocation)
 }
 
 // testPaletteFallbacks checks the label and accent text fallbacks, on palettes built to need them and on
@@ -38,9 +42,11 @@ func testPaletteContrast(theme: ThemeName) {
 
 // testThemeCollars checks that only Wolf keeps the drawing's collar and that every other collar differs.
 @Test func testThemeCollars() {
+    #expect(ThemeName.presets.count == 10)
+    #expect(ThemeName.allCases.count == 11)
     #expect(ThemeName.wolf.palette.collar == nil)
-    let collars = ThemeName.allCases.filter { $0 != .wolf }.compactMap(\.palette.collar)
-    #expect(collars.count == ThemeName.allCases.count - 1)
+    let collars = ThemeName.presets.filter { $0 != .wolf }.compactMap(\.palette.collar)
+    #expect(collars.count == ThemeName.presets.count - 1)
     for (i, a) in collars.enumerated() {
         for b in collars[(i + 1)...] {
             #expect(a != b)
@@ -80,4 +86,92 @@ func testPaletteContrast(theme: ThemeName) {
         #expect(kept.theme == .wolf)
         #expect(kept.maxSnoozes == 3)
     }
+}
+
+// testDerivedGrid checks that every derived palette over a cube of backgrounds and accents, with and
+// without a picked late color, passes the same pairings the presets do.
+@Test func testDerivedGrid() {
+    let steps = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+    var cube: [RGB] = []
+    for r in steps { for g in steps { for b in steps { cube.append(RGB(red: r, green: g, blue: b)) } } }
+    let lates: [RGB?] = [nil] + [0.0, 0.5, 1.0].flatMap { r in
+        [0.0, 0.5, 1.0].flatMap { g in [0.0, 0.5, 1.0].map { b in RGB(red: r, green: g, blue: b) } }
+    }
+    for bg in cube {
+        for ac in cube {
+            expectReadable(Palette.derived(background: bg, accent: ac, collar: nil, late: nil).palette,
+                           "bg \(bg.hex) accent \(ac.hex)")
+        }
+        for late in lates {
+            expectReadable(Palette.derived(background: bg, accent: bg, collar: nil, late: late).palette,
+                           "bg \(bg.hex) late \(late?.hex ?? "nil")")
+        }
+    }
+}
+
+// testDerivedHonorsGoodPicks checks that picks which already pass come through unchanged and nothing is
+// reported adjusted, and that a failing accent is moved and reported.
+@Test func testDerivedHonorsGoodPicks() {
+    let bg = RGB(hex: "#0f1012")!
+    let good = Palette.derived(background: bg, accent: RGB(hex: "#f3e3b8")!, collar: nil, late: RGB(hex: "#ff7361")!)
+    #expect(good.adjusted.isEmpty)
+    #expect(good.palette.background == bg)
+    #expect(good.palette.accent == RGB(hex: "#f3e3b8")!)
+    #expect(good.palette.late == RGB(hex: "#ff7361")!)
+    #expect(good.palette.text == .white)
+    let bad = Palette.derived(background: bg, accent: RGB(hex: "#111111")!, collar: nil, late: nil)
+    #expect(bad.adjusted == [.accent])
+    #expect(bad.palette.accent != RGB(hex: "#111111")!)
+    #expect(bad.palette.accent.contrast(with: bg) >= 3)
+    let gray = Palette.derived(background: RGB(hex: "#777777")!, accent: RGB(hex: "#ffffff")!, collar: nil, late: nil)
+    #expect(gray.adjusted.contains(.background))
+    expectReadable(gray.palette)
+}
+
+// testCustomColors checks the defaults, the hex round trip, the bad-hex fallback and seeding from a preset,
+// which carries the picked colors through unchanged while the rest is derived.
+@Test func testCustomColors() {
+    #expect(CustomColors().palette.background == ThemeName.wolf.palette.background)
+    #expect(CustomColors().palette.accent == ThemeName.wolf.palette.accent)
+    #expect(CustomColors().palette.collar == nil)
+    #expect(ThemeName.custom.palette == CustomColors().palette)
+    expectReadable(ThemeName.custom.palette)
+    #expect(RGB(hex: "#ff0080")!.hex == "#ff0080")
+    let bad = CustomColors(background: "nope", accent: "#4f8bff", collar: "#zzzzzz", late: nil)
+    #expect(bad.palette.background == RGB(hex: "#0f1012")!)
+    #expect(bad.palette.accent == RGB(hex: "#4f8bff")!)
+    #expect(bad.palette.collar == nil)
+    let seeded = CustomColors.seeded(from: .lightning)
+    #expect(seeded.resolved.adjusted.isEmpty)
+    #expect(seeded.palette.background == ThemeName.lightning.palette.background)
+    #expect(seeded.palette.accent == ThemeName.lightning.palette.accent)
+    #expect(seeded.palette.late == ThemeName.lightning.palette.late)
+    #expect(seeded.palette.collar == ThemeName.lightning.palette.collar)
+    #expect(seeded.collar == "#ffd400")
+    #expect(CustomColors.seeded(from: .wolf).collar == nil)
+    for theme in ThemeName.presets {
+        #expect(CustomColors.seeded(from: theme).resolved.adjusted.isEmpty, "\(theme)")
+    }
+}
+
+// testCustomSetting checks that settings carry custom colors, that an old backup without them decodes to the
+// defaults, and that a bad hex inside them keeps every other setting.
+@Test func testCustomSetting() throws {
+    var settings = AlertSettings()
+    settings.theme = .custom
+    settings.customColors = CustomColors(background: "#16081f", accent: "#c77dff", collar: "#7b2cbf", late: nil)
+    let data = try JSONEncoder().encode(settings)
+    let back = try JSONDecoder().decode(AlertSettings.self, from: data)
+    #expect(back.customColors == settings.customColors)
+    #expect(back.palette == settings.customColors.palette)
+    let old = #"{"theme":"rubie","maxSnoozes":5}"#
+    let decoded = try JSONDecoder().decode(AlertSettings.self, from: Data(old.utf8))
+    #expect(decoded.customColors == CustomColors())
+    #expect(decoded.palette == ThemeName.rubie.palette)
+    let bad = ##"{"theme":"custom","customColors":{"background":"bad","accent":"#ff8c1a"},"maxSnoozes":6}"##
+    let kept = try JSONDecoder().decode(AlertSettings.self, from: Data(bad.utf8))
+    #expect(kept.maxSnoozes == 6)
+    #expect(kept.theme == .custom)
+    #expect(kept.palette.background == RGB(hex: "#0f1012")!)
+    #expect(kept.palette.accent == RGB(hex: "#ff8c1a")!)
 }
