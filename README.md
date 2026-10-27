@@ -139,6 +139,7 @@ without a real meeting. Copy the app to `/Applications` to keep it.
   hours, installing and updating, and every setting.
 - [Building sheepdog](docs/building.md) covers direct Microsoft and Google sign-in, the tests and
   the demo renderer.
+- [For IT admins](https://macsheepdog.com/admins) explains the Microsoft permissions an admin approves.
 
 ## Credits
 

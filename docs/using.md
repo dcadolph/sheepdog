@@ -167,5 +167,8 @@ only when the alarm sound is one of Tug's, and the warning chime stays a single 
 | Tunes         | Holiday tunes for the alarm, in barks. Bark holiday tunes turns them off.  |
 | Updates       | Checks GitHub once a day for a newer release and offers to install it.     |
 
+When a direct sign-in is refused, the message says why and what to do next, and the
+[For IT admins](https://macsheepdog.com/admins) page covers what an admin approves.
+
 Use **Test the alarm** in Tug's menu to see the whole thing without a real meeting. While Tug
 naps, the test shows the alarm without sound.

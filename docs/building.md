@@ -63,6 +63,9 @@ to the build:
 make app SHEEPDOG_MICROSOFT_CLIENT_ID=... SHEEPDOG_GOOGLE_CLIENT_ID=... SHEEPDOG_GOOGLE_CLIENT_SECRET=...
 ```
 
+A Microsoft registration needs four delegated permissions: `openid`, `email`, `offline_access` and
+`Calendars.Read`.
+
 Tokens are kept in the macOS Keychain.
 
 ## Tests
