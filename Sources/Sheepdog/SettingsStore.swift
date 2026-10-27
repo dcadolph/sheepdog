@@ -25,6 +25,12 @@ final class SettingsStore {
         }
     }
 
+    // init holds the given settings without reading or writing user defaults until they change, for
+    // offscreen renders.
+    init(fixture: AlertSettings) {
+        settings = fixture
+    }
+
     // reset restores the defaults and keeps the Slack channels, theme, custom colors, outfit switch and holiday
     // tunes switch,
     // which are setup rather than tuning.

@@ -82,6 +82,11 @@ final class Accounts {
         }
     }
 
+    // init shows the given states without reading the Keychain, for offscreen renders.
+    init(fixture: [AccountKind: AccountState]) {
+        states = fixture
+    }
+
     // entries returns the cached events of every connected service, Microsoft first.
     var entries: [[CalendarEntry]] {
         AccountKind.allCases.compactMap { cache[$0] }

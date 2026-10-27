@@ -216,7 +216,73 @@ enum DemoRenderer {
                 return 1
             }
         }
+        return runSetupStills(out: out)
+    }
+
+    // runSetupStills renders each setup step with made-up calendars, as setup-<step>.png.
+    private static func runSetupStills(out: URL) -> Int32 {
+        let names: [SetupStep: String] = [
+            .access: "access", .connect: "connect", .bark: "bark", .dressUp: "dress", .done: "done",
+        ]
+        let facts = SetupFacts(
+            macCalendarOn: true,
+            macCalendarAccess: .granted,
+            sources: [
+                SetupSource(kind: .icloud, title: "iCloud", calendarCount: 4),
+                SetupSource(kind: .local, title: "On My Mac", calendarCount: 1),
+            ],
+            availableKinds: [.microsoft, .icloud, .caldav],
+            installedApps: [CalendarSetup.microsoftApps.first ?? ""],
+            now: Date(timeIntervalSinceReferenceDate: 0)
+        )
+        let accounts = Accounts(fixture: [
+            .microsoft: .signedOut, .google: .notConfigured, .icloud: .signedOut, .caldav: .signedOut,
+        ])
+        for (index, step) in SetupStep.allCases.enumerated() {
+            let state = SetupFlowState(steps: SetupStep.allCases, upgrade: false, startAtLogin: true)
+            state.index = index
+            let view = SetupFlowView(
+                state: state,
+                store: SettingsStore(fixture: AlertSettings()),
+                accounts: accounts,
+                setupFacts: { facts },
+                onSourcesChanged: {},
+                onAllowAccess: {},
+                onRequestAccess: { false },
+                onTestAlarm: {},
+                onDone: { _ in false },
+                onClose: {},
+                onOpenLoginItems: {}
+            )
+            let url = out.appendingPathComponent("setup-\(names[step] ?? "step").png")
+            guard let image = snapshot(view), write(image, to: url) else {
+                FileHandle.standardError.write(Data("setup still failed: \(url.path)\n".utf8))
+                return 1
+            }
+        }
         return 0
+    }
+
+    // snapshot draws a view in a window that is never shown, so AppKit controls such as forms and toggles
+    // render as they do on screen, which ImageRenderer cannot do.
+    private static func snapshot(_ view: some View) -> CGImage? {
+        let host = NSHostingView(rootView: view.background(Color(nsColor: .windowBackgroundColor)))
+        host.appearance = NSAppearance(named: .aqua)
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 600),
+            styleMask: [.borderless], backing: .buffered, defer: false
+        )
+        window.appearance = NSAppearance(named: .aqua)
+        window.contentView = host
+        host.frame = NSRect(x: 0, y: 0, width: 560, height: 600)
+        host.layoutSubtreeIfNeeded()
+        RunLoop.current.run(until: Date().addingTimeInterval(0.3))
+        host.layoutSubtreeIfNeeded()
+        guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else {
+            return nil
+        }
+        host.cacheDisplay(in: host.bounds, to: rep)
+        return rep.cgImage
     }
 
     // write saves a frame as PNG.
