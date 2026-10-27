@@ -319,6 +319,7 @@ struct SettingsView: View {
                 facts = setupFacts()
             }
         }
+        .onChange(of: accounts.states) { facts = setupFacts() }
     }
 
     // whatTugSees lists the macOS Calendar accounts Tug reads and the hints about missing ones.
