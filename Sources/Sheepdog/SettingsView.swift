@@ -31,8 +31,6 @@ struct SettingsView: View {
             TabView {
                 generalTab
                     .tabItem { Label("General", systemImage: "gearshape") }
-                lookTab
-                    .tabItem { Label("Look", systemImage: "paintpalette") }
                 calendarsTab
                     .tabItem { Label("Calendars", systemImage: "calendar") }
                 alertsTab
@@ -41,6 +39,8 @@ struct SettingsView: View {
                     .tabItem { Label("Sound", systemImage: "speaker.wave.2") }
                 hoursTab
                     .tabItem { Label("Hours", systemImage: "clock") }
+                lookTab
+                    .tabItem { Label("Look", systemImage: "paintpalette") }
             }
             .padding([.top, .horizontal])
             HStack {
