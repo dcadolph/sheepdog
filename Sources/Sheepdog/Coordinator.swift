@@ -292,7 +292,10 @@ final class Coordinator {
             if state.quieted {
                 sounds.stopAlarm()
             } else {
-                sounds.startAlarm(settings: settings)
+                sounds.startAlarm(
+                    settings: settings,
+                    melody: BarkMelody.current(outfit: Theme.season(on: now), settings: settings)
+                )
             }
         case .warning:
             sounds.stopAlarm()

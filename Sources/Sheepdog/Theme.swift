@@ -14,9 +14,12 @@ enum Theme {
 
     // dressed returns the outfit Tug wears under the settings on the date, honoring the debug override.
     static func dressed(_ settings: AlertSettings, on date: Date = Date()) -> Outfit? {
-        guard settings.showOutfits else {
-            return nil
-        }
+        settings.showOutfits ? season(on: date) : nil
+    }
+
+    // season returns the holiday in season on the date whatever the outfit switch says, honoring the debug
+    // override. Holiday tunes follow it, so they keep their own switch.
+    static func season(on date: Date = Date()) -> Outfit? {
         if let name = UserDefaults.standard.string(forKey: outfitOverrideKey) {
             return Outfit(rawValue: name)
         }

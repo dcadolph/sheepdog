@@ -24,8 +24,9 @@ final class SoundPlayer {
         return files.map { ($0 as NSString).deletingPathExtension }.sorted()
     }
 
-    // startAlarm loops the alarm sound until stopAlarm, boosting volume when the settings ask for it.
-    func startAlarm(settings: AlertSettings) {
+    // startAlarm loops the holiday tune when one is given, else the alarm sound, until stopAlarm, boosting
+    // volume when the settings ask for it.
+    func startAlarm(settings: AlertSettings, melody: BarkMelody? = nil) {
         guard !isAlarming else {
             return
         }
@@ -35,7 +36,8 @@ final class SoundPlayer {
             snapshots = devices.map { AudioDevices.boost($0, to: Float32(settings.boostLevel)) }
         }
         for device in devices {
-            if let engine = play(sound: settings.alarmSound, on: device, loop: true) {
+            let file = melody.flatMap(melodyFile) ?? soundFile(named: settings.alarmSound)
+            if let engine = play(file: file, on: device, loop: true) {
                 engines.append(engine)
             }
         }
@@ -70,6 +72,21 @@ final class SoundPlayer {
         }
     }
 
+    // previewMelody plays a holiday tune once to its end on the chosen devices, without a volume boost.
+    func previewMelody(_ melody: BarkMelody, settings: AlertSettings) {
+        for device in targetDevices(settings.alarmOutput) {
+            guard let file = melodyFile(melody),
+                  let engine = play(file: file, on: device, loop: false)
+            else {
+                continue
+            }
+            let seconds = Double(file.length) / file.processingFormat.sampleRate
+            DispatchQueue.main.asyncAfter(deadline: .now() + seconds + 0.5) {
+                engine.stop()
+            }
+        }
+    }
+
     // targetDevices resolves the output setting into distinct device ids.
     private func targetDevices(_ output: AlarmOutput) -> [AudioDeviceID] {
         let current = AudioDevices.defaultOutput()
@@ -87,9 +104,14 @@ final class SoundPlayer {
         return picked.compactMap { $0 }.filter { seen.insert($0).inserted }
     }
 
-    // play starts a sound file on one device and returns the engine that owns it.
+    // play starts a sound by name on one device and returns the engine that owns it.
     private func play(sound: String, on device: AudioDeviceID, loop: Bool) -> AVAudioEngine? {
-        guard let file = soundFile(named: sound) else {
+        play(file: soundFile(named: sound), on: device, loop: loop)
+    }
+
+    // play starts an opened sound file on one device and returns the engine that owns it.
+    private func play(file: AVAudioFile?, on device: AudioDeviceID, loop: Bool) -> AVAudioEngine? {
+        guard let file else {
             return nil
         }
         let engine = AVAudioEngine()
@@ -124,6 +146,14 @@ final class SoundPlayer {
         player.scheduleBuffer(buffer, at: nil, options: loop ? .loops : [])
         player.play()
         return engine
+    }
+
+    // melodyFile opens a bundled holiday tune.
+    private func melodyFile(_ melody: BarkMelody) -> AVAudioFile? {
+        guard let url = Bundle.main.url(forResource: melody.resource, withExtension: "caf") else {
+            return nil
+        }
+        return try? AVAudioFile(forReading: url)
     }
 
     // soundFile opens a bundled Tug sound or a built-in sound by name, falling back to Sosumi.

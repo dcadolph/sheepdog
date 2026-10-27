@@ -241,6 +241,26 @@ struct SettingsView: View {
                     }
                 }
             }
+            Section {
+                Toggle("Bark holiday tunes", isOn: $store.settings.holidayTunes)
+                if let melody = BarkMelody.current(outfit: Theme.season(), settings: store.settings) {
+                    HStack {
+                        Text("This week: \(melody.title)")
+                        Spacer()
+                        Button {
+                            previewer.previewMelody(melody, settings: store.settings)
+                        } label: {
+                            Image(systemName: "play.circle")
+                        }
+                        .buttonStyle(.borderless)
+                        .help("Play this tune")
+                    }
+                }
+            } footer: {
+                Text("Around New Year's, Valentine's Day, St. Patrick's Day, Halloween, Thanksgiving and "
+                    + "Christmas, Tug barks a tune for the alarm when the alarm sound is one of his barks.")
+                    .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
     }
