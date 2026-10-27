@@ -229,6 +229,8 @@ struct CallbackCase: Sendable, CustomTestStringConvertible {
     let wantCode: String?
     // Want is the expected error.
     let want: AuthError?
+    // Kind is the service signing in.
+    var kind: AccountKind = .google
 
     // testDescription labels the case in test output.
     var testDescription: String { name }
@@ -261,7 +263,7 @@ let callbackCases: [CallbackCase] = [
         name: "denied",
         request: "GET /?error=access_denied&error_description=The+user+said+no&state=st HTTP/1.1\r\n\r\n",
         wantTarget: "/?error=access_denied&error_description=The+user+said+no&state=st",
-        wantCode: nil, want: .denied("The user said no")
+        wantCode: nil, want: .refused(.userDeclined)
     ),
     CallbackCase( // Test 5: A code with a forged state is rejected.
         name: "state mismatch",
@@ -283,6 +285,19 @@ let callbackCases: [CallbackCase] = [
         request: "hello",
         wantTarget: nil, wantCode: nil, want: nil
     ),
+    CallbackCase( // Test 9: A Microsoft tenant that needs admin consent.
+        name: "microsoft admin approval",
+        request: "GET /?error=access_denied&error_description=AADSTS65001%3A+The+user+or+administrator"
+            + "+has+not+consented.+Trace+ID%3A+abc&state=st HTTP/1.1\r\n\r\n",
+        wantTarget: "/?error=access_denied&error_description=AADSTS65001%3A+The+user+or+administrator"
+            + "+has+not+consented.+Trace+ID%3A+abc&state=st",
+        wantCode: nil, want: .refused(.adminApproval), kind: .microsoft
+    ),
+    CallbackCase( // Test 10: A redirect with an empty code is refused without a sentence from the URL.
+        name: "empty code",
+        request: "GET /?code=&state=st HTTP/1.1\r\n\r\n",
+        wantTarget: "/?code=&state=st", wantCode: nil, want: .refused(.other(code: "no_code"))
+    ),
 ]
 
 // testCallback checks request line parsing and code extraction.
@@ -294,7 +309,7 @@ func testCallback(test: CallbackCase) {
         return
     }
     do {
-        let got = try AuthorizationCallback.code(fromTarget: target, expectedState: "st")
+        let got = try AuthorizationCallback.code(fromTarget: target, expectedState: "st", kind: test.kind)
         #expect(test.want == nil)
         #expect(got == test.wantCode)
     } catch {

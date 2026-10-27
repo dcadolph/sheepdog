@@ -251,7 +251,7 @@ public enum AuthorizationCallback {
 
     // code returns the authorization code from a redirect target after checking its state.
     // It returns nil for requests that are not the redirect, such as the browser asking for a favicon.
-    public static func code(fromTarget target: String, expectedState: String) throws -> String? {
+    public static func code(fromTarget target: String, expectedState: String, kind: AccountKind) throws -> String? {
         guard let components = URLComponents(string: target), components.path == "/" || components.path.isEmpty else {
             return nil
         }
@@ -266,11 +266,11 @@ public enum AuthorizationCallback {
             throw AuthError.stateMismatch
         }
         if let error {
-            let reason = value("error_description")?.replacingOccurrences(of: "+", with: " ")
-            throw AuthError.denied(reason ?? error)
+            let description = value("error_description")?.replacingOccurrences(of: "+", with: " ")
+            throw AuthError.refused(SignInRefusal.classify(kind: kind, error: error, description: description))
         }
         guard let code, !code.isEmpty else {
-            throw AuthError.denied("no authorization code")
+            throw AuthError.refused(.other(code: "no_code"))
         }
         return code
     }

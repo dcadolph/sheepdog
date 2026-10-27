@@ -4,8 +4,8 @@ import Foundation
 public enum AuthError: Error, Sendable, Equatable {
     // stateMismatch means the redirect carried a state that this sign-in did not send.
     case stateMismatch
-    // denied means the user or the provider refused the request, with the provider's reason.
-    case denied(String)
+    // refused means the user or the organization refused the sign-in, sorted by what to do next.
+    case refused(SignInRefusal)
     // noRefreshToken means the token response had no refresh token, so the account cannot stay signed in.
     case noRefreshToken
     // reauthorize means the refresh token is no longer accepted and the user must sign in again.

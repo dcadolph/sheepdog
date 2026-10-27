@@ -117,7 +117,7 @@ public enum SignIn {
         case .google:
             address = try await GoogleCalendar.profile(client: client, accessToken: tokens.accessToken)
         case .icloud, .caldav:
-            throw AuthError.denied("\(provider.kind.label) does not sign in through the browser.")
+            throw AuthError.refused(.other(code: "not_browser"))
         }
         return AccountRecord(kind: provider.kind, address: address, refreshToken: refreshToken)
     }

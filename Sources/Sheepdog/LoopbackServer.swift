@@ -12,6 +12,8 @@ final class LoopbackServer: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.dcadolph.sheepdog.loopback")
     // state is the value the redirect must carry back.
     private let state: String
+    // kind is the service signing in, used to sort a refusal.
+    private let kind: AccountKind
     // ready resumes start once the listener has a port.
     private var ready: CheckedContinuation<UInt16, Error>?
     // waiter resumes code once the redirect arrives.
@@ -22,12 +24,13 @@ final class LoopbackServer: @unchecked Sendable {
     private let timeout: TimeInterval = 300
 
     // init prepares a listener restricted to the loopback interface.
-    init(state: String) throws {
+    init(kind: AccountKind, state: String) throws {
         let parameters = NWParameters.tcp
         parameters.requiredInterfaceType = .loopback
         parameters.acceptLocalOnly = true
         listener = try NWListener(using: parameters, on: .any)
         self.state = state
+        self.kind = kind
     }
 
     // start begins listening and returns the port the redirect URI must use.
@@ -101,7 +104,9 @@ final class LoopbackServer: @unchecked Sendable {
                 return
             }
             do {
-                guard let code = try AuthorizationCallback.code(fromTarget: target, expectedState: self.state) else {
+                guard let code = try AuthorizationCallback.code(
+                    fromTarget: target, expectedState: self.state, kind: self.kind
+                ) else {
                     self.respond(connection, status: "404 Not Found", page: nil)
                     return
                 }

@@ -562,6 +562,8 @@ struct AccountRow: View {
     let kind: AccountKind
     // accounts holds the sign-ins.
     let accounts: Accounts
+    // openURL opens the admins page and System Settings.
+    @Environment(\.openURL) private var openURL
 
     // body lays out the label, status and button.
     var body: some View {
@@ -593,12 +595,28 @@ struct AccountRow: View {
                 }
             }
             if let problem = accounts.problems[kind] {
+                let refusal = accounts.refusals[kind]
                 Text(problem)
                     .font(.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(refusal == .userDeclined ? Color.secondary : Color.red)
+                    .fixedSize(horizontal: false, vertical: true)
+                if refusal?.needsOrganization == true {
+                    HStack {
+                        Button("For IT admins") { openURL(Self.adminsPage) }
+                        Button("Open Internet Accounts") { openURL(Self.internetAccounts) }
+                    }
+                    .controlSize(.small)
+                }
             }
         }
     }
+
+    // adminsPage is the site page that tells an IT admin how to approve Sheepdog.
+    private static let adminsPage = URL(string: "https://macsheepdog.com/admins")!
+    // internetAccounts opens System Settings at Internet Accounts.
+    private static let internetAccounts = URL(
+        string: "x-apple.systempreferences:com.apple.Internet-Accounts-Settings.extension"
+    )!
 
     // status describes a state in a few words.
     private static func status(_ state: AccountState, kind: AccountKind) -> String {

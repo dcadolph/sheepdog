@@ -27,6 +27,9 @@ final class Accounts {
     private(set) var states: [AccountKind: AccountState] = [:]
     // problems holds the last sign-in or read failure per service, for display.
     private(set) var problems: [AccountKind: String] = [:]
+    // refusals holds why the last browser sign-in was refused per service, so settings can offer
+    // the next step.
+    private(set) var refusals: [AccountKind: SignInRefusal] = [:]
     // passwordPrompt is the password service whose sign-in sheet is showing.
     var passwordPrompt: AccountKind?
     // onChange is called when the cached events or the account list change.
@@ -102,6 +105,7 @@ final class Accounts {
         let previous = states[kind] ?? .signedOut
         states[kind] = .signingIn
         problems[kind] = nil
+        refusals[kind] = nil
         Task {
             do {
                 let record = try await signIn(provider)
@@ -113,6 +117,9 @@ final class Accounts {
             } catch {
                 log.error("sign-in failed: \(kind.rawValue, privacy: .public): \(String(describing: error), privacy: .public)")
                 problems[kind] = Self.describe(error)
+                if case AuthError.refused(let refusal) = error {
+                    refusals[kind] = refusal
+                }
                 states[kind] = previous
             }
             pending[kind] = nil
@@ -167,6 +174,7 @@ final class Accounts {
         sessions[kind] = nil
         cache[kind] = nil
         problems[kind] = nil
+        refusals[kind] = nil
         states[kind] = kind.usesPassword || providers[kind] != nil ? .signedOut : .notConfigured
         onChange?()
     }
@@ -194,6 +202,7 @@ final class Accounts {
                 do {
                     cache[kind] = try await session.entries(from: from, to: to)
                     problems[kind] = nil
+                    refusals[kind] = nil
                     states[kind] = .connected(await session.record.address)
                 } catch let error as AuthError {
                     log.error("account needs sign-in: \(kind.rawValue, privacy: .public): \(String(describing: error), privacy: .public)")
@@ -213,7 +222,7 @@ final class Accounts {
     private func signIn(_ provider: OAuthProvider) async throws -> AccountRecord {
         let pkce = PKCE.generate()
         let state = PKCE.randomToken(bytes: 16)
-        let server = try LoopbackServer(state: state)
+        let server = try LoopbackServer(kind: provider.kind, state: state)
         pending[provider.kind] = server
         let port = try await server.start()
         let redirect = provider.redirectURI(port: port)
@@ -249,8 +258,8 @@ final class Accounts {
     // describe turns an error into a short sentence for settings.
     private static func describe(_ error: Error) -> String {
         switch error {
-        case AuthError.denied(let reason):
-            return "Sign-in was refused: \(reason)"
+        case AuthError.refused(let refusal):
+            return refusal.message
         case AuthError.reauthorize:
             return "This account needs you to sign in again."
         case AuthError.noRefreshToken:
