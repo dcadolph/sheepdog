@@ -103,6 +103,9 @@ final class CalendarProvider {
             return .exchange
         case .calDAV:
             let title = source.title.lowercased()
+            if title == "icloud" {
+                return .icloud
+            }
             return title.contains("google") || title.contains("gmail") ? .google : .caldav
         case .birthdays:
             return nil
