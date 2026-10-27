@@ -112,7 +112,8 @@ by hand. A Homebrew update fails when Homebrew does not know of the release yet,
 Sheepdog yet." Try again later, after Homebrew refreshes its tap.
 
 The check sends no version or identifier. Turn it off with **Check for updates** in Settings,
-under General.
+under General. To check right away, pick **Check for Updates…** in Tug's menu. It answers in a
+dialog, and **Update Now** there installs the same way the card does.
 
 ## Tug's collar
 
@@ -165,4 +166,5 @@ only when the alarm sound is one of Tug's, and the warning chime stays a single 
 | Tunes         | Holiday tunes for the alarm, in barks. Bark holiday tunes turns them off.  |
 | Updates       | Checks GitHub once a day for a newer release and offers to install it.     |
 
-Use **Test the alarm** in Tug's menu to see the whole thing without a real meeting.
+Use **Test the alarm** in Tug's menu to see the whole thing without a real meeting. While Tug
+naps, the test shows the alarm without sound.

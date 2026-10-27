@@ -116,7 +116,8 @@ release yet, it stops with "Homebrew has no newer Sheepdog yet." in that log, Sh
 running, and the button turns into **Open release page**. Otherwise it downloads the release's
 disk image, checks that the app on it is signed by team `U7L4P2YHWJ`, and installs it. Nothing
 installs until you press it, and the check sends no version or identifier. Turn it off in
-settings with **Check for updates**.
+settings with **Check for updates**. To check right away, pick **Check for Updates…** in Tug's
+menu.
 
 ## Build from source
 
