@@ -95,6 +95,8 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     case grapes
     case bubblegum
     case berserker
+    case pickleJuice
+    case trunk
     case custom
 
     // presets are the built-in collars, every case but custom.
@@ -116,6 +118,8 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
         case .grapes: return "Grapes"
         case .bubblegum: return "Bubblegum"
         case .berserker: return "Berserker"
+        case .pickleJuice: return "PickleJuice"
+        case .trunk: return "Trunk"
         case .custom: return "Custom"
         }
     }
@@ -144,6 +148,10 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
             return Self.make("#d6336c", "#1a0a12", "#2c1222", "#fff0f6", "#d6a6be", "#ff5fa2", "#ffb347")
         case .berserker:
             return Self.make("#5c3317", "#1a0f08", "#2c1b10", "#fff1e0", "#cfa98a", "#ff8c1a", "#ff6b6b")
+        case .pickleJuice:
+            return Self.make("#8fd400", "#10130a", "#1c2112", "#f4ffe0", "#b4c29a", "#c6f432", "#ff7361")
+        case .trunk:
+            return Self.make("#ff8c42", "#f7ecd6", "#fff8ea", "#14181c", "#5c564a", "#7a4b1e", "#b3261e")
         case .custom:
             return CustomColors().palette
         }

@@ -42,8 +42,8 @@ func expectReadable(_ p: Palette, _ comment: String = "", sourceLocation: Source
 
 // testThemeCollars checks that only Wolf keeps the drawing's collar and that every other collar differs.
 @Test func testThemeCollars() {
-    #expect(ThemeName.presets.count == 10)
-    #expect(ThemeName.allCases.count == 11)
+    #expect(ThemeName.presets.count == 12)
+    #expect(ThemeName.allCases.count == 13)
     #expect(ThemeName.wolf.palette.collar == nil)
     let collars = ThemeName.presets.filter { $0 != .wolf }.compactMap(\.palette.collar)
     #expect(collars.count == ThemeName.presets.count - 1)

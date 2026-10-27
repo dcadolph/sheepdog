@@ -45,9 +45,9 @@ stays open.
 
 ## Tug's collar
 
-Ten collars in Settings, Look: Wolf, Black Diamond, Golden Spark, Rubie, Lightning, Thunder,
-Strawhat, Grapes, Bubblegum and Berserker. Each one colors the collar, the alarm, the countdown
-pill and the hand-back card, and every one is checked for contrast. Pick **Custom** to choose your
+Twelve collars in Settings, Look: Wolf, Black Diamond, Golden Spark, Rubie, Lightning, Thunder,
+Strawhat, Grapes, Bubblegum, Berserker, PickleJuice and Trunk. Each one colors the collar, the
+alarm, the countdown pill and the hand-back card, and every one is checked for contrast. Pick **Custom** to choose your
 own: a background and a ring and buttons color are required, the collar and the already-started
 color are optional. Tug works out the text, surface and muted colors so everything stays readable,
 and if a color you picked would not read, he moves it a little and says so under the picker.

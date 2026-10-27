@@ -215,7 +215,7 @@ p b { color: var(--text); font-weight: 600; }
 .tile .aa { font: 700 42px/1 var(--serif); }
 .tile[aria-pressed="true"] { border-color: var(--accent); outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent); }
 .slim h2 { font-size: clamp(30px, 3.6vw, 46px); }
-.slim .tiles { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; margin-top: 36px; }
+.slim .tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: 720px; gap: 10px; margin-top: 36px; }
 .slim .tile { aspect-ratio: 1 / 1; padding: 12px; font-size: 12px; }
 .slim .tile .aa { font-size: 30px; }
 .themes h2 { margin: 16px 0 22px; }
@@ -252,6 +252,9 @@ footer a { color: var(--muted); } footer a:hover { color: var(--accent); }
   .getit, .hero .getit, .get .getit { display: grid; grid-template-columns: 1fr; }
   .cmd { justify-content: space-between; font-size: 12px; }
   .tiles { display: grid; }
+}
+@media (max-width: 640px) {
+  .slim .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 420px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto; } }
 .doc ol { padding-left: 24px; color: var(--muted); }

@@ -13,7 +13,9 @@
     ["Strawhat", "#13100c", "#211c15", "#f7efe2", "#ad9f88", "#d9c7a3", "#ff7361", "#d22b2b"],
     ["Grapes", "#16081f", "#261236", "#f7eeff", "#c3a9db", "#c77dff", "#ff8a75", "#7b2cbf"],
     ["Bubblegum", "#1a0a12", "#2c1222", "#fff0f6", "#d6a6be", "#ff5fa2", "#ffb347", "#d6336c"],
-    ["Berserker", "#1a0f08", "#2c1b10", "#fff1e0", "#cfa98a", "#ff8c1a", "#ff6b6b", "#5c3317"]
+    ["Berserker", "#1a0f08", "#2c1b10", "#fff1e0", "#cfa98a", "#ff8c1a", "#ff6b6b", "#5c3317"],
+    ["PickleJuice", "#10130a", "#1c2112", "#f4ffe0", "#b4c29a", "#c6f432", "#ff7361", "#8fd400"],
+    ["Trunk", "#f7ecd6", "#fff8ea", "#14181c", "#5c564a", "#7a4b1e", "#b3261e", "#ff8c42"]
   ];
 
   function lum(hex) {
