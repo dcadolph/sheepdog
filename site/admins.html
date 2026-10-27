@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sheepdog for IT admins</title>
+<meta name="description" content="What sheepdog reads, how it is signed, and how to approve it for your Microsoft 365 or Google Workspace organization.">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="/assets/favicon.png">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top"><div class="w"><a class="brand" href="/"><img src="/assets/favicon.png" alt="" width="30" height="30">sheepdog</a><nav><a class="keep" href="/">Home</a><a class="keep" href="https://github.com/dcadolph/sheepdog">GitHub</a></nav></div></header>
+<main class="doc">
+<p class="small">For IT admins</p>
+<h1>Approving sheepdog for your organization.</h1>
+<ul class="toc">
+  <li><a href="#what">What sheepdog is</a></li>
+  <li><a href="#reads">What it reads</a></li>
+  <li><a href="#goes">Where it goes</a></li>
+  <li><a href="#signed">How it is signed</a></li>
+  <li><a href="#microsoft">Microsoft 365</a></li>
+  <li><a href="#google">Google Workspace</a></li>
+  <li><a href="#publisher">Publisher status</a></li>
+  <li><a href="#contact">Source and contact</a></li>
+</ul>
+
+<h2 id="what">What sheepdog is</h2>
+<p>sheepdog is a macOS menu bar meeting alarm. It reads upcoming calendar events on the user's Mac and sounds an alarm before each meeting. It is read-only and has no server.</p>
+
+<h2 id="reads">What it reads</h2>
+<p>From each event sheepdog reads the title, start and end times, whether it is all day, canceled or marked free, the user's response, the organizer and attendees, the location, the online meeting link, the description and the link that opens the event in its calendar. It reads the description and location only to find the link that joins the meeting. It never creates, changes or deletes an event.</p>
+
+<h2 id="goes">Where it goes</h2>
+<p>Nowhere. sheepdog talks directly to the calendar services you connect from the user's Mac, and nothing it reads is sent to its developer or to anyone else. Sign-in tokens are kept in the macOS login Keychain. The <a href="/privacy/">privacy policy</a> has the details.</p>
+
+<h2 id="signed">How it is signed</h2>
+<p>Sheepdog.app is signed with a Developer ID Application certificate and notarized by Apple. The Apple team ID is <code>U7L4P2YHWJ</code>. Release builds carry <a href="https://github.com/dcadolph/sheepdog/attestations">GitHub build attestations</a>.</p>
+
+<h2 id="microsoft">Microsoft 365</h2>
+<p>Application (client) ID: <code>8be262b6-e9bd-4b7c-8478-2a2da629580f</code>. The ID is public. It ships in the app's Info.plist as <code>SheepdogMicrosoftClientID</code>.</p>
+<p>Redirect URI: <code>http://localhost</code>.</p>
+<h3>Scopes</h3>
+<ul>
+  <li><code>openid</code> signs the user in.</li>
+  <li><code>email</code> shows which account is connected.</li>
+  <li><code>offline_access</code> keeps the user signed in without asking every hour.</li>
+  <li><code>Calendars.Read</code> reads upcoming events, including the body text where meeting links live, the attendees and the user's response. sheepdog never writes.</li>
+</ul>
+<h3>Grant admin consent</h3>
+<ol>
+  <li>Open the Microsoft Entra admin center and go to <b>Enterprise applications</b>.</li>
+  <li>Search for the application ID above. If it is not listed yet, open the admin consent URL below once and sign in as an admin.</li>
+  <li>Open the application, then <b>Permissions</b>, then choose <b>Grant admin consent</b>.</li>
+</ol>
+<p>Admin consent URL:</p>
+<p><code>https://login.microsoftonline.com/organizations/v2.0/adminconsent?client_id=8be262b6-e9bd-4b7c-8478-2a2da629580f</code></p>
+
+<h2 id="google">Google Workspace</h2>
+<p>Google sign-in is not yet offered in released builds of sheepdog, so there is no Google client ID to approve today. Until it is, an admin or user can add the Google account in System Settings &gt; Internet Accounts with Calendars turned on, and sheepdog reads it through macOS Calendar.</p>
+<p>When Google sign-in is offered, it will ask for one scope: <code>https://www.googleapis.com/auth/calendar.readonly</code>. To allow it, go to the Admin console, then <b>Security</b>, <b>Access and data control</b>, <b>API controls</b>, <b>Manage Third-Party App Access</b>, add the app by client ID and set it to <b>Trusted</b>.</p>
+
+<h2 id="publisher">Publisher status</h2>
+<!-- TQ8: publisher status wording pending owner answer -->
+<p>Sheepdog is not yet a verified publisher with Microsoft, so Microsoft shows it as unverified on the consent screen.</p>
+
+<h2 id="contact">Source and contact</h2>
+<p>The source is at <a href="https://github.com/dcadolph/sheepdog">github.com/dcadolph/sheepdog</a>. Questions go to <a href="https://github.com/dcadolph/sheepdog/issues">GitHub issues</a>.</p>
+</main>
+<footer><div class="w"><span><a href="https://github.com/dcadolph/sheepdog">Source</a> &nbsp;&middot;&nbsp; <a href="https://github.com/dcadolph/sheepdog/issues">Issues</a> &nbsp;&middot;&nbsp; <a href="/">Home</a></span><span>sheepdog is free and open source under the Apache 2.0 license.</span></div></footer>
+</body>
+</html>
