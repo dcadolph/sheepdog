@@ -249,7 +249,7 @@ struct SettingsView: View {
             } header: {
                 Text("Calendars")
             } footer: {
-                Text("Microsoft and Google sign in in your browser. iCloud needs an app-specific password from account.apple.com. Sheepdog only reads your calendars, and keeps every sign-in in your Keychain.")
+                Text("Microsoft and Google sign in in your browser. iCloud needs an app-specific password from account.apple.com. Other CalDAV servers, such as Fastmail or Nextcloud, need their address and your password. Sheepdog only reads your calendars, and keeps every sign-in in your Keychain.")
                     .foregroundStyle(.secondary)
             }
             .sheet(item: Binding(get: { accounts.passwordPrompt }, set: { accounts.passwordPrompt = $0 })) { kind in
@@ -623,6 +623,8 @@ struct PasswordSignInSheet: View {
     let kind: AccountKind
     // accounts checks and saves the sign-in.
     let accounts: Accounts
+    // server is the typed server address, for services without a fixed one.
+    @State private var server = ""
     // username is the typed user name.
     @State private var username = ""
     // password is the typed password, cleared once the check finishes.
@@ -638,6 +640,10 @@ struct PasswordSignInSheet: View {
             Text("Connect \(kind.label)")
                 .font(.headline)
             Form {
+                if kind.server == nil {
+                    TextField("Server", text: $server, prompt: Text("https://caldav.example.com"))
+                        .textContentType(.URL)
+                }
                 TextField(Self.usernameLabel(kind), text: $username)
                     .textContentType(.username)
                 SecureField(Self.passwordLabel(kind), text: $password)
@@ -663,21 +669,28 @@ struct PasswordSignInSheet: View {
                     .keyboardShortcut(.cancelAction)
                 Button("Connect", action: connect)
                     .keyboardShortcut(.defaultAction)
-                    .disabled(checking || username.trimmingCharacters(in: .whitespaces).isEmpty || password.isEmpty)
+                    .disabled(checking || !filled)
             }
         }
         .padding(20)
         .frame(width: 420)
     }
 
+    // filled reports whether every shown field has something in it.
+    private var filled: Bool {
+        let blank = { (text: String) in text.trimmingCharacters(in: .whitespaces).isEmpty }
+        return !blank(username) && !password.isEmpty && (kind.server != nil || !blank(server))
+    }
+
     // connect checks the credentials and closes the sheet when they work.
     private func connect() {
         checking = true
         problem = nil
+        let address = server
         let name = username.trimmingCharacters(in: .whitespaces)
         let secret = password
         Task {
-            problem = await accounts.connectPassword(kind, username: name, password: secret)
+            problem = await accounts.connectPassword(kind, server: address, username: name, password: secret)
             password = ""
             checking = false
         }
@@ -696,6 +709,8 @@ struct PasswordSignInSheet: View {
     // hint tells the user where the password comes from.
     private static func hint(_ kind: AccountKind) -> String {
         switch kind {
+        case .caldav:
+            return "Use the CalDAV address your provider gives, such as https://caldav.fastmail.com. Sheepdog finds your calendars from there, only reads them, and keeps the password in your Keychain."
         case .icloud:
             return "Make an app-specific password at account.apple.com, under Sign-In and Security. Your Apple ID password will not work here. Sheepdog only reads your calendars and keeps the password in your Keychain."
         default:

@@ -119,11 +119,23 @@ final class Accounts {
         }
     }
 
-    // connectPassword checks the credentials against the server and saves them only when they work. It
-    // returns a sentence for the sheet when they do not.
-    func connectPassword(_ kind: AccountKind, username: String, password: String) async -> String? {
-        guard kind.usesPassword, let server = kind.server, states[kind] != .signingIn else {
+    // allowLocalHTTP lets debug builds sign in to a CalDAV server on this Mac over plain http.
+    #if DEBUG
+    private static let allowLocalHTTP = true
+    #else
+    private static let allowLocalHTTP = false
+    #endif
+
+    // connectPassword checks the credentials against the service's server, or the typed one, and saves them
+    // only when they work. It returns a sentence for the sheet when they do not.
+    func connectPassword(
+        _ kind: AccountKind, server typed: String, username: String, password: String
+    ) async -> String? {
+        guard kind.usesPassword, states[kind] != .signingIn else {
             return nil
+        }
+        guard let server = kind.server ?? PasswordSignIn.serverURL(typed, allowLocalHTTP: Self.allowLocalHTTP) else {
+            return "Enter the server's address. It has to start with https://."
         }
         let previous = states[kind] ?? .signedOut
         states[kind] = .signingIn

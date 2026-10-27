@@ -116,7 +116,7 @@ public enum SignIn {
             address = try await GraphCalendar.profile(client: client, accessToken: tokens.accessToken)
         case .google:
             address = try await GoogleCalendar.profile(client: client, accessToken: tokens.accessToken)
-        case .icloud:
+        case .icloud, .caldav:
             throw AuthError.denied("\(provider.kind.label) does not sign in through the browser.")
         }
         return AccountRecord(kind: provider.kind, address: address, refreshToken: refreshToken)
@@ -194,7 +194,7 @@ public actor RemoteAccount: AccountSession {
             )
         case .google:
             return try await GoogleCalendar.fetch(client: client, accessToken: accessToken, from: from, to: to)
-        case .icloud:
+        case .icloud, .caldav:
             throw AuthError.reauthorize("\(provider.kind.label) does not sign in through the browser.")
         }
     }
@@ -202,6 +202,29 @@ public actor RemoteAccount: AccountSession {
 
 // PasswordSignIn checks a user name and password against a server before anything is saved.
 public enum PasswordSignIn {
+    // serverURL reads a typed server address, adding https when no scheme is given. It refuses anything but
+    // https, except plain http to this Mac when allowLocalHTTP is set, which only debug builds do.
+    public static func serverURL(_ text: String, allowLocalHTTP: Bool) -> URL? {
+        var typed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if typed.isEmpty {
+            return nil
+        }
+        if !typed.contains("://") {
+            typed = "https://" + typed
+        }
+        guard let url = URL(string: typed), let host = url.host, !host.isEmpty else {
+            return nil
+        }
+        switch url.scheme?.lowercased() {
+        case "https":
+            return url
+        case "http" where allowLocalHTTP && ["localhost", "127.0.0.1"].contains(host.lowercased()):
+            return url
+        default:
+            return nil
+        }
+    }
+
     // complete runs discovery with the credentials and returns the record to store and what discovery found.
     public static func complete(
         kind: AccountKind, server: URL, username: String, password: String, client: HTTPClient

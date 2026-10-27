@@ -320,3 +320,63 @@ let icloudRecord = AccountRecord(
     }
     #expect(client.requests.count == 2)
 }
+
+// ServerURLCase is one typed server address and what sign-in makes of it.
+struct ServerURLCase: Sendable, CustomTestStringConvertible {
+    // Typed is what the user typed.
+    let typed: String
+    // AllowLocalHTTP is set only in debug builds.
+    let allowLocalHTTP: Bool
+    // WantResult is the address sign-in uses, or nil when it refuses.
+    let wantResult: String?
+
+    // testDescription labels the case in test output.
+    var testDescription: String { "\(typed) local=\(allowLocalHTTP)" }
+}
+
+// serverURLCases covers https, a bare host, plain http and the debug exception for this Mac.
+let serverURLCases: [ServerURLCase] = [
+    ServerURLCase( // Test 0: https as typed.
+        typed: "https://caldav.fastmail.com/dav/", allowLocalHTTP: false, wantResult: "https://caldav.fastmail.com/dav/"
+    ),
+    ServerURLCase( // Test 1: A bare host gets https.
+        typed: " cloud.example.org/remote.php/dav ", allowLocalHTTP: false,
+        wantResult: "https://cloud.example.org/remote.php/dav"
+    ),
+    ServerURLCase( // Test 2: Plain http to another host is refused, even in debug.
+        typed: "http://caldav.example.com/", allowLocalHTTP: true, wantResult: nil
+    ),
+    ServerURLCase( // Test 3: Release builds refuse plain http to this Mac.
+        typed: "http://localhost:5232/", allowLocalHTTP: false, wantResult: nil
+    ),
+    ServerURLCase( // Test 4: Debug builds allow plain http to localhost.
+        typed: "http://localhost:5232/", allowLocalHTTP: true, wantResult: "http://localhost:5232/"
+    ),
+    ServerURLCase( // Test 5: Debug builds allow plain http to the loopback address.
+        typed: "http://127.0.0.1:5232/", allowLocalHTTP: true, wantResult: "http://127.0.0.1:5232/"
+    ),
+    ServerURLCase( // Test 6: Release builds refuse the loopback address too.
+        typed: "http://127.0.0.1:5232/", allowLocalHTTP: false, wantResult: nil
+    ),
+    ServerURLCase( // Test 7: Empty.
+        typed: "  ", allowLocalHTTP: true, wantResult: nil
+    ),
+    ServerURLCase( // Test 8: Another scheme.
+        typed: "ftp://caldav.example.com/", allowLocalHTTP: true, wantResult: nil
+    ),
+]
+
+// testPasswordServerURL checks which typed server addresses sign-in accepts.
+@Test(arguments: serverURLCases)
+func testPasswordServerURL(test: ServerURLCase) {
+    let got = PasswordSignIn.serverURL(test.typed, allowLocalHTTP: test.allowLocalHTTP)
+    #expect(got?.absoluteString == test.wantResult)
+}
+
+// testAccountKindOrder checks the order that drives the Calendars tab and entry precedence.
+@Test func testAccountKindOrder() {
+    #expect(AccountKind.allCases == [.microsoft, .google, .icloud, .caldav])
+    #expect(AccountKind.allCases.filter(\.usesPassword) == [.icloud, .caldav])
+    #expect(AccountKind.caldav.server == nil)
+    #expect(AccountKind.icloud.server == CalDAVCalendar.iCloudURL)
+}

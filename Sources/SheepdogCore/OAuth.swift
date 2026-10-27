@@ -5,6 +5,7 @@ public enum AccountKind: String, Sendable, Codable, CaseIterable, Identifiable {
     case microsoft
     case google
     case icloud
+    case caldav
 
     // id identifies the kind in lists.
     public var id: String { rawValue }
@@ -14,7 +15,7 @@ public enum AccountKind: String, Sendable, Codable, CaseIterable, Identifiable {
         switch self {
         case .microsoft, .google:
             return false
-        case .icloud:
+        case .icloud, .caldav:
             return true
         }
     }
@@ -22,7 +23,7 @@ public enum AccountKind: String, Sendable, Codable, CaseIterable, Identifiable {
     // server is the fixed address a password service signs in to, or nil when the user types one.
     public var server: URL? {
         switch self {
-        case .microsoft, .google:
+        case .microsoft, .google, .caldav:
             return nil
         case .icloud:
             return CalDAVCalendar.iCloudURL
@@ -38,6 +39,8 @@ public enum AccountKind: String, Sendable, Codable, CaseIterable, Identifiable {
             return "Google"
         case .icloud:
             return "iCloud"
+        case .caldav:
+            return "Other CalDAV"
         }
     }
 }
