@@ -60,6 +60,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var slackChannels: [SlackChannel] = []
     // Theme colors the takeover, the pill, and the hand-back card.
     public var theme: ThemeName = .wolf
+    // CustomColors are the picked colors the custom theme derives its palette from.
+    public var customColors = CustomColors()
     // ShowOutfits reports whether Tug dresses up for holidays.
     public var showOutfits: Bool = true
     // HolidayTunes reports whether Tug's barks play as a holiday tune while an outfit is worn.
@@ -98,12 +100,19 @@ public struct AlertSettings: Sendable, Codable, Equatable {
             ?? defaults.slackChannels
         // An unknown theme, e.g. one from a newer build, falls back instead of failing every setting.
         theme = (try? container.decodeIfPresent(ThemeName.self, forKey: .theme)) ?? defaults.theme
+        customColors = (try? container.decodeIfPresent(CustomColors.self, forKey: .customColors))
+            ?? defaults.customColors
         showOutfits = try container.decodeIfPresent(Bool.self, forKey: .showOutfits) ?? defaults.showOutfits
         holidayTunes = try container.decodeIfPresent(Bool.self, forKey: .holidayTunes) ?? defaults.holidayTunes
         checkForUpdates = try container.decodeIfPresent(Bool.self, forKey: .checkForUpdates)
             ?? defaults.checkForUpdates
         workingHours = try container.decodeIfPresent(WorkingHours.self, forKey: .workingHours)
             ?? defaults.workingHours
+    }
+
+    // palette is the colors of the chosen theme, the derived custom palette when the theme is custom.
+    public var palette: Palette {
+        theme == .custom ? customColors.palette : theme.palette
     }
 
     // validSlackChannels are the channels whose links parse.
