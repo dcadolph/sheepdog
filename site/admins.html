@@ -60,7 +60,7 @@
 
 <h2 id="google">Google Workspace</h2>
 <p>Google sign-in is not yet offered in released builds of sheepdog, so there is no Google client ID to approve today. Until it is, an admin or user can add the Google account in System Settings &gt; Internet Accounts with Calendars turned on, and sheepdog reads it through macOS Calendar.</p>
-<p>When Google sign-in is offered, it will ask for one scope: <code>https://www.googleapis.com/auth/calendar.readonly</code>. To allow it, go to the Admin console, then <b>Security</b>, <b>Access and data control</b>, <b>API controls</b>, <b>Manage Third-Party App Access</b>, add the app by client ID and set it to <b>Trusted</b>.</p>
+<p>When Google sign-in is offered, it will ask for two read-only scopes: <code>https://www.googleapis.com/auth/calendar.events.readonly</code> to read upcoming events, and <code>https://www.googleapis.com/auth/calendar.calendarlist.readonly</code> to find which calendars are yours. To allow it, go to the Admin console, then <b>Security</b>, <b>Access and data control</b>, <b>API controls</b>, <b>Manage Third-Party App Access</b>, add the app by client ID and set it to <b>Trusted</b>.</p>
 
 <h2 id="publisher">Publisher status</h2>
 <!-- TQ8: publisher status wording pending owner answer -->

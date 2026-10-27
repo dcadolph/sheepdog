@@ -13,13 +13,13 @@
 <main class="doc">
 <p class="small">Privacy policy</p>
 <h1>What sheepdog reads, and where it goes.</h1>
-<p class="eff">Effective date: October 22, 2026.</p>
+<p class="eff">Effective date: October 27, 2026.</p>
 <p>sheepdog is a macOS menu bar meeting alarm. It runs entirely on your Mac. It has no server, no account with its developer, no analytics and no tracking. Nothing it reads is sent to its developer or to anyone else.</p>
 <h2>What sheepdog reads</h2>
 <p><b>macOS Calendar.</b> With your permission, sheepdog reads upcoming events from the calendars macOS Calendar already knows about. This happens on your Mac through the system calendar store.</p>
 <p><b>Microsoft, if you sign in.</b> sheepdog asks for these Microsoft Graph permissions:</p>
 <ul><li><code>openid</code>, to sign you in.</li><li><code>email</code>, to show which account is signed in.</li><li><code>Calendars.Read</code>, to read your upcoming events.</li><li><code>offline_access</code>, to stay signed in without asking again.</li></ul>
-<p><b>Google, if you sign in.</b> sheepdog asks for the <code>calendar.readonly</code> scope, to read your calendars and upcoming events.</p>
+<p><b>Google, if you sign in.</b> sheepdog asks for two read-only scopes: <code>calendar.events.readonly</code>, to read your upcoming events, and <code>calendar.calendarlist.readonly</code>, to read your calendar list and find the calendars that are yours.</p>
 <p>From each event sheepdog reads the title, start and end times, whether it is all day, canceled or marked free, your response, the organizer and attendees, the location, the online meeting link, the description and the link that opens the event in its calendar. It reads the description and location only to find the link that joins the meeting. From Google it also reads your calendar list, to find the calendars that are yours.</p>
 <p>sheepdog only reads. It never creates, changes or deletes an event.</p>
 <h2>Where it goes</h2>

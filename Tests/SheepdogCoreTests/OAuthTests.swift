@@ -65,7 +65,7 @@ let authorizationURLCases: [AuthorizationURLCase] = [
             "client_id": "g-client",
             "response_type": "code",
             "redirect_uri": "http://127.0.0.1:51234",
-            "scope": "https://www.googleapis.com/auth/calendar.readonly",
+            "scope": "https://www.googleapis.com/auth/calendar.events.readonly https://www.googleapis.com/auth/calendar.calendarlist.readonly",
             "state": "st",
             "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
             "code_challenge_method": "S256",
@@ -245,8 +245,8 @@ let callbackCases: [CallbackCase] = [
     ),
     CallbackCase( // Test 1: Google adds scope and authuser.
         name: "google extras",
-        request: "GET /?state=st&code=4/0Ab&scope=https://www.googleapis.com/auth/calendar.readonly&authuser=0 HTTP/1.1\r\n\r\n",
-        wantTarget: "/?state=st&code=4/0Ab&scope=https://www.googleapis.com/auth/calendar.readonly&authuser=0",
+        request: "GET /?state=st&code=4/0Ab&scope=https://www.googleapis.com/auth/calendar.events.readonly&authuser=0 HTTP/1.1\r\n\r\n",
+        wantTarget: "/?state=st&code=4/0Ab&scope=https://www.googleapis.com/auth/calendar.events.readonly&authuser=0",
         wantCode: "4/0Ab", want: nil
     ),
     CallbackCase( // Test 2: A favicon request is not the redirect.

@@ -3,7 +3,7 @@ import Testing
 
 @testable import SheepdogCore
 
-// googleClient serves the calendar list, the primary calendar's events, an empty owned calendar and the profile.
+// googleClient serves the calendar list, the primary calendar's events and an empty owned calendar.
 // Any other calendar gets a 404, so reading a calendar the user does not own fails the test.
 func googleClient() -> MockClient {
     MockClient { request, _ in
@@ -17,9 +17,6 @@ func googleClient() -> MockClient {
         }
         if url.hasPrefix("\(base)/calendars/team-oncall%23x%40group.calendar.google.com/events?") {
             return .json(#"{"items": []}"#)
-        }
-        if url == "\(base)/calendars/primary" {
-            return .ok("google-primary.json")
         }
         return .json("{}", status: 404)
     }
@@ -146,10 +143,18 @@ func googleClient() -> MockClient {
     }
 }
 
-// testGoogleProfile checks that the primary calendar id is the account address.
+// testGoogleProfile checks that the primary calendar list entry's id is the account address.
+// googleClient answers calendars/primary with a 404, so reading it fails the test.
 @Test func testGoogleProfile() async throws {
     let got = try await GoogleCalendar.profile(client: googleClient(), accessToken: "tok")
     #expect(got == "me@example.com")
+}
+
+// testGoogleProfileNoPrimary checks that a calendar list with no primary entry yields no address.
+@Test func testGoogleProfileNoPrimary() async throws {
+    let client = MockClient { _, _ in .json(#"{"items": [{"id": "other@example.com", "accessRole": "owner"}]}"#) }
+    let got = try await GoogleCalendar.profile(client: client, accessToken: "tok")
+    #expect(got == nil)
 }
 
 // testGoogleStatus checks every responseStatus value.

@@ -207,7 +207,7 @@ func testSignInComplete(test: SignInCase) async {
         if isTokenRequest(request) {
             return tokenReply
         }
-        return .ok("google-primary.json")
+        return .ok("google-calendars.json")
     }
     do {
         let got = try await SignIn.complete(

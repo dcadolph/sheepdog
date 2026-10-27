@@ -86,7 +86,10 @@ public struct OAuthProvider: Sendable, Equatable {
             clientSecret: clientSecret,
             authorizeURL: URL(string: "https://accounts.google.com/o/oauth2/v2/auth")!,
             tokenURL: URL(string: "https://oauth2.googleapis.com/token")!,
-            scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+            scopes: [
+                "https://www.googleapis.com/auth/calendar.events.readonly",
+                "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+            ],
             redirectHost: "127.0.0.1",
             extraParameters: [
                 URLQueryItem(name: "access_type", value: "offline"),

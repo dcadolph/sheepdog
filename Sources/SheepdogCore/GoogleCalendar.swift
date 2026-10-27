@@ -35,11 +35,6 @@ public enum GoogleCalendar {
         return bearerRequest(components.url!, accessToken: accessToken)
     }
 
-    // profileRequest asks for the primary calendar, whose id is the account's address.
-    public static func profileRequest(accessToken: String) -> URLRequest {
-        bearerRequest(URL(string: "\(base)/calendars/primary")!, accessToken: accessToken)
-    }
-
     // fetch reads every calendar the user owns and maps its events in the window to entries.
     public static func fetch(client: HTTPClient, accessToken: String, from: Date, to: Date) async throws -> [CalendarEntry] {
         var entries: [CalendarEntry] = []
@@ -67,15 +62,19 @@ public enum GoogleCalendar {
         return entries
     }
 
-    // profile returns the account's address.
+    // profile returns the account's address, the id of the primary calendar list entry.
+    // It reads the calendar list rather than calendars/primary, so the calendarlist.readonly scope is enough.
     public static func profile(client: HTTPClient, accessToken: String) async throws -> String? {
-        let (data, status) = try await client.send(profileRequest(accessToken: accessToken))
-        try checkStatus(status)
-        return try decode(Calendar.self, from: data).id
+        try await list(client: client, accessToken: accessToken).first { $0.primary == true }?.id
     }
 
     // calendars returns the calendars whose events are the user's own meetings.
     static func calendars(client: HTTPClient, accessToken: String) async throws -> [Calendar] {
+        owned(try await list(client: client, accessToken: accessToken))
+    }
+
+    // list returns every entry in the user's calendar list.
+    static func list(client: HTTPClient, accessToken: String) async throws -> [Calendar] {
         var all: [Calendar] = []
         var pageToken: String?
         for _ in 0..<maxPages {
@@ -85,7 +84,7 @@ public enum GoogleCalendar {
             all += page.items
             pageToken = page.nextPageToken
             if pageToken == nil {
-                return owned(all)
+                return all
             }
         }
         throw RemoteError.tooManyPages
