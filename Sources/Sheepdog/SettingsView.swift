@@ -41,8 +41,6 @@ struct SettingsView: View {
     let onAllowAccess: () -> Void
     // facts is what Tug saw when the Calendars tab last looked.
     @State private var facts: SetupFacts?
-    // openURL opens System Settings at Internet Accounts.
-    @Environment(\.openURL) private var openURL
     // leadsText is the editable warning leads, in minutes, separated by commas.
     @State private var leadsText = ""
     // backupError is the last export or import failure, shown under the backup buttons.
@@ -274,25 +272,15 @@ struct SettingsView: View {
     // calendarsTab holds the calendar sources, the Slack channels and which events alert.
     private var calendarsTab: some View {
         Form {
-            whatTugSees
-            Section {
-                Toggle("Use calendars from macOS Calendar", isOn: $store.settings.useMacCalendar)
-                    .onChange(of: store.settings.useMacCalendar) {
-                        onSourcesChanged()
-                        facts = setupFacts()
-                    }
-                ForEach(AccountKind.allCases) { kind in
-                    AccountRow(kind: kind, accounts: accounts)
-                }
-            } header: {
-                Text("Calendars")
-            } footer: {
-                Text("Microsoft and Google sign in in your browser. iCloud needs an app-specific password from account.apple.com. Other CalDAV servers, such as Fastmail or Nextcloud, need their address and your password. Sheepdog only reads your calendars, and keeps every sign-in in your Keychain.")
-                    .foregroundStyle(.secondary)
-            }
-            .sheet(item: Binding(get: { accounts.passwordPrompt }, set: { accounts.passwordPrompt = $0 })) { kind in
-                PasswordSignInSheet(kind: kind, accounts: accounts)
-            }
+            CalendarSourcesView(
+                store: store,
+                accounts: accounts,
+                facts: $facts,
+                setupFacts: setupFacts,
+                onSourcesChanged: onSourcesChanged,
+                onAllowAccess: onAllowAccess,
+                kinds: AccountKind.allCases
+            )
             Section {
                 ForEach($store.settings.slackChannels) { $channel in
                     let id = channel.id
@@ -322,78 +310,6 @@ struct SettingsView: View {
             }
         }
         .onChange(of: accounts.states) { facts = setupFacts() }
-    }
-
-    // whatTugSees lists the macOS Calendar accounts Tug reads and the hints about missing ones.
-    @ViewBuilder private var whatTugSees: some View {
-        Section {
-            let facts = facts ?? setupFacts()
-            ForEach(Array(facts.sources.enumerated()), id: \.offset) { _, source in
-                LabeledContent(Self.sourceLabel(source), value: Self.calendarCount(source.calendarCount))
-            }
-            if facts.sources.isEmpty && facts.macCalendarOn && facts.macCalendarAccess == .granted {
-                Text("macOS Calendar has no calendars.")
-                    .foregroundStyle(.secondary)
-            }
-            if !facts.macCalendarOn {
-                Text("Tug isn't reading macOS Calendar.")
-                    .foregroundStyle(.secondary)
-            }
-            ForEach(CalendarSetup.hints(facts), id: \.self) { hint in
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(hint.message)
-                            .font(.caption)
-                            .fixedSize(horizontal: false, vertical: true)
-                        if let detail = hint.detail {
-                            Text(detail)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    Spacer()
-                    if hint.action == .allowAccess {
-                        Button("Allow calendar access…", action: onAllowAccess)
-                            .controlSize(.small)
-                    } else if hint.detail != nil {
-                        Button("Open Internet Accounts") { openURL(AccountRow.internetAccounts) }
-                            .controlSize(.small)
-                    }
-                }
-            }
-            Button("Check again") { self.facts = setupFacts() }
-        } header: {
-            Text("What Tug sees")
-        } footer: {
-            Text("These are the accounts in macOS Calendar. To add a work calendar, connect it below or add the account in System Settings, Internet Accounts.")
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    // sourceLabel names a source, adding its own title when the user named it.
-    private static func sourceLabel(_ source: SetupSource) -> String {
-        let name: String
-        switch source.kind {
-        case .local:
-            name = "On My Mac"
-        case .icloud:
-            name = "iCloud"
-        case .exchange:
-            name = "Exchange"
-        case .google:
-            name = "Google"
-        case .caldav:
-            name = "CalDAV"
-        case .other:
-            return source.title.isEmpty ? "Other" : source.title
-        }
-        return source.title.isEmpty || source.title == name ? name : "\(name) (\(source.title))"
-    }
-
-    // calendarCount says how many calendars a source holds.
-    private static func calendarCount(_ count: Int) -> String {
-        count == 1 ? "1 calendar" : "\(count) calendars"
     }
 
     // alertsTab holds the warnings, the takeover and snooze limits.
@@ -494,21 +410,9 @@ struct SettingsView: View {
     private var hoursTab: some View {
         Form {
             Section {
-                Toggle("Only bark during working hours", isOn: $store.settings.workingHours.enabled)
-                Group {
-                    DatePicker("Start", selection: shiftMinutes(\.start), displayedComponents: .hourAndMinute)
-                    DatePicker("End", selection: shiftMinutes(\.end), displayedComponents: .hourAndMinute)
-                    LabeledContent("Days") {
-                        HStack {
-                            ForEach(Self.weekdayOrder, id: \.self) { day in
-                                Toggle(Calendar.current.veryShortWeekdaySymbols[day - 1], isOn: weekday(day))
-                                    .toggleStyle(.checkbox)
-                            }
-                        }
-                    }
-                    Picker("Outside working hours", selection: $store.settings.workingHours.outside) {
-                        ForEach(OffHours.allCases) { Text($0.label).tag($0) }
-                    }
+                WorkingHoursFields(store: store)
+                Picker("Outside working hours", selection: $store.settings.workingHours.outside) {
+                    ForEach(OffHours.allCases) { Text($0.label).tag($0) }
                 }
                 .disabled(!store.settings.workingHours.enabled)
             } header: {
@@ -519,43 +423,6 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-    }
-
-    // weekdayOrder lists Calendar weekday numbers starting from the locale's first day of the week.
-    private static let weekdayOrder: [Int] = {
-        let first = Calendar.current.firstWeekday
-        return (0..<7).map { (first - 1 + $0) % 7 + 1 }
-    }()
-
-    // shiftMinutes binds a time picker to a working hours field held in minutes after midnight.
-    private func shiftMinutes(_ field: WritableKeyPath<WorkingHours, Int>) -> Binding<Date> {
-        Binding(
-            get: {
-                let minutes = store.settings.workingHours[keyPath: field]
-                return Calendar.current.date(bySettingHour: minutes / 60, minute: minutes % 60, second: 0, of: Date())
-                    ?? Date()
-            },
-            set: { date in
-                let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
-                store.settings.workingHours[keyPath: field] = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
-            }
-        )
-    }
-
-    // weekday binds a checkbox to whether a shift can start on that Calendar weekday.
-    private func weekday(_ day: Int) -> Binding<Bool> {
-        Binding(
-            get: { store.settings.workingHours.weekdays.contains(day) },
-            set: { checked in
-                var days = Set(store.settings.workingHours.weekdays)
-                if checked {
-                    days.insert(day)
-                } else {
-                    days.remove(day)
-                }
-                store.settings.workingHours.weekdays = days.sorted()
-            }
-        )
     }
 
     // joinPicker chooses whether one provider's meeting links open in its app or the browser.
