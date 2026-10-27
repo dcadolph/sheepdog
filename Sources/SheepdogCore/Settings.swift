@@ -66,6 +66,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var showOutfits: Bool = true
     // HolidayTunes reports whether Tug's barks play as a holiday tune while an outfit is worn.
     public var holidayTunes: Bool = true
+    // JoinOpens chooses whether each provider's links open in its app or the browser.
+    public var joinOpens: JoinOpens = JoinOpens()
     // CheckForUpdates reports whether Sheepdog asks GitHub once a day for a newer release.
     public var checkForUpdates: Bool = true
     // WorkingHours limits barking to shifts on chosen weekdays.
@@ -104,6 +106,7 @@ public struct AlertSettings: Sendable, Codable, Equatable {
             ?? defaults.customColors
         showOutfits = try container.decodeIfPresent(Bool.self, forKey: .showOutfits) ?? defaults.showOutfits
         holidayTunes = try container.decodeIfPresent(Bool.self, forKey: .holidayTunes) ?? defaults.holidayTunes
+        joinOpens = try container.decodeIfPresent(JoinOpens.self, forKey: .joinOpens) ?? defaults.joinOpens
         checkForUpdates = try container.decodeIfPresent(Bool.self, forKey: .checkForUpdates)
             ?? defaults.checkForUpdates
         workingHours = try container.decodeIfPresent(WorkingHours.self, forKey: .workingHours)

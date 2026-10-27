@@ -131,3 +131,37 @@ func testSettingsBackupDecode(test: BackupDecodeCase) {
     #expect(got.holidayTunes == false)
     #expect(got == settings)
 }
+
+// testSettingsBackupMissingJoinOpens checks that an export without joinOpens imports with the
+// defaults and every other field intact.
+@Test func testSettingsBackupMissingJoinOpens() throws {
+    let json = #"{"app":"Sheepdog","version":1,"exported":"2026-10-23T18:00:00Z","settings":{"theme":"rubie","maxSnoozes":7}}"#
+    let got = try SettingsBackup.decode(Data(json.utf8))
+    var want = AlertSettings()
+    want.theme = .rubie
+    want.maxSnoozes = 7
+    #expect(got.joinOpens == JoinOpens())
+    #expect(got == want)
+}
+
+// testSettingsBackupJoinOpensUnknownValue checks that an unknown raw value falls back for that
+// field only.
+@Test func testSettingsBackupJoinOpensUnknownValue() throws {
+    let json = #"{"app":"Sheepdog","version":1,"exported":"2026-10-23T18:00:00Z","settings":{"joinOpens":{"teams":"browser","zoom":"spaceship","webex":"browser","slack":"browser"}}}"#
+    let got = try SettingsBackup.decode(Data(json.utf8))
+    #expect(got.joinOpens.teams == .browser)
+    #expect(got.joinOpens.zoom == .app)
+    #expect(got.joinOpens.webex == .browser)
+    #expect(got.joinOpens.slack == .browser)
+}
+
+// testSettingsBackupJoinOpensRoundTrip checks that non-default choices survive export and import.
+@Test func testSettingsBackupJoinOpensRoundTrip() throws {
+    var settings = AlertSettings()
+    settings.joinOpens.zoom = .browser
+    settings.joinOpens.slack = .browser
+    let data = try SettingsBackup.encode(settings, exported: Date(timeIntervalSince1970: 1_792_000_000))
+    let got = try SettingsBackup.decode(data)
+    #expect(got.joinOpens == settings.joinOpens)
+    #expect(got == settings)
+}
