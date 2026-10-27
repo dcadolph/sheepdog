@@ -2,8 +2,9 @@
 
 <h1 align="center">Using sheepdog</h1>
 
-sheepdog reads every calendar in macOS Calendar, including Google and Exchange, and escalates in
-three steps as each meeting gets closer. Each step is described below in the order it happens.
+sheepdog signs in to Microsoft and Google directly, reads every other calendar in macOS Calendar,
+and escalates in three steps as each meeting gets closer. Each step is described below in the
+order it happens.
 
 ## The countdown pill
 
@@ -146,7 +147,7 @@ only when the alarm sound is one of Tug's, and the warning chime stays a single 
 
 | Feature       | What it does                                                               |
 |---------------|----------------------------------------------------------------------------|
-| Calendars     | Reads every calendar in macOS Calendar, including Google and Exchange.     |
+| Calendars     | Signs in to Microsoft and Google, and reads the rest from macOS Calendar.  |
 | Join links    | Finds Teams, Zoom, Google Meet, Webex and Slack links in the event.        |
 | Let them know | Copies a running late or can't make it line and opens your Slack channel.  |
 | Volume        | Unmutes and raises the volume while the alarm plays, then puts it back.    |
