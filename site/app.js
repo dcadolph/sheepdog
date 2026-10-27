@@ -5,12 +5,15 @@
   // collar ("orig" keeps the drawing's own collar).
   var themes = [
     ["Wolf", "#0f1012", "#0f1012", "#ffffff", "#aaa59b", "#f3e3b8", "#ff7361", "orig"],
-    ["Black Diamond", "#0e0d0a", "#1a1812", "#fff8e6", "#b3a88a", "#d4af37", "#ff7361", "#2a2a2a"],
-    ["Golden Spark", "#0b100c", "#142019", "#fff6d8", "#b0a57f", "#e8b923", "#ff7361", "#2f9e4f"],
+    ["Black Diamond", "#0c0c0c", "#1c1c1c", "#ffffff", "#b5b5b5", "#f5c518", "#ff7361", "#2a2a2a"],
+    ["Golden Spark", "#0c2a18", "#143a24", "#fff6d8", "#a9c7a3", "#f2c230", "#ff8a75", "#2f9e4f"],
     ["Rubie", "#f4f1ee", "#fbf9f7", "#111111", "#5a5552", "#111111", "#b3261e", "#c8102e"],
-    ["Lightning", "#0a0d1a", "#131a30", "#fffbe0", "#b3ad8a", "#ffd400", "#ff7361", "#2457e6"],
+    ["Lightning", "#0a0d1a", "#131a30", "#fffbe0", "#b3ad8a", "#4f8bff", "#ff7361", "#ffd400"],
     ["Thunder", "#07141a", "#0e222b", "#e6fbff", "#8fb8c2", "#5fd4e6", "#ff7361", "#1f3fbf"],
-    ["Strawhat", "#13100c", "#211c15", "#f7efe2", "#ad9f88", "#d9c7a3", "#ff7361", "#d22b2b"]
+    ["Strawhat", "#13100c", "#211c15", "#f7efe2", "#ad9f88", "#d9c7a3", "#ff7361", "#d22b2b"],
+    ["Grapes", "#16081f", "#261236", "#f7eeff", "#c3a9db", "#c77dff", "#ff8a75", "#7b2cbf"],
+    ["Bubblegum", "#1a0a12", "#2c1222", "#fff0f6", "#d6a6be", "#ff5fa2", "#ffb347", "#d6336c"],
+    ["Berserker", "#1a0f08", "#2c1b10", "#fff1e0", "#cfa98a", "#ff8c1a", "#ff6b6b", "#5c3317"]
   ];
 
   function lum(hex) {
