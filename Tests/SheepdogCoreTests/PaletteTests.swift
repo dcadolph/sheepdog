@@ -35,17 +35,17 @@ func expectReadable(_ p: Palette, _ comment: String = "", sourceLocation: Source
     #expect(palette("#d6282f").onAccent == .white)
     #expect(palette("#b04cc8").onAccent == .black)
     #expect(palette("#d6282f").accentText == text)
-    #expect(ThemeName.wolf.palette.onAccent == ThemeName.wolf.palette.background)
+    #expect(ThemeName.jax.palette.onAccent == ThemeName.jax.palette.background)
     #expect(ThemeName.rubie.palette.onAccent == ThemeName.rubie.palette.background)
-    #expect(ThemeName.wolf.palette.accentText == ThemeName.wolf.palette.accent)
+    #expect(ThemeName.jax.palette.accentText == ThemeName.jax.palette.accent)
 }
 
-// testThemeCollars checks that only Wolf keeps the drawing's collar and that every other collar differs.
+// testThemeCollars checks that only Jax keeps the drawing's collar and that every other collar differs.
 @Test func testThemeCollars() {
     #expect(ThemeName.presets.count == 12)
     #expect(ThemeName.allCases.count == 13)
-    #expect(ThemeName.wolf.palette.collar == nil)
-    let collars = ThemeName.presets.filter { $0 != .wolf }.compactMap(\.palette.collar)
+    #expect(ThemeName.jax.palette.collar == nil)
+    let collars = ThemeName.presets.filter { $0 != .jax }.compactMap(\.palette.collar)
     #expect(collars.count == ThemeName.presets.count - 1)
     for (i, a) in collars.enumerated() {
         for b in collars[(i + 1)...] {
@@ -71,19 +71,19 @@ func expectReadable(_ p: Palette, _ comment: String = "", sourceLocation: Source
 
 // testThemeSetting checks the default, a round trip, and that an unknown or removed theme keeps the rest.
 @Test func testThemeSetting() throws {
-    #expect(AlertSettings().theme == .wolf)
+    #expect(AlertSettings().theme == .jax)
     var settings = AlertSettings()
     settings.theme = .blackDiamond
     let data = try JSONEncoder().encode(settings)
     #expect(try JSONDecoder().decode(AlertSettings.self, from: data).theme == .blackDiamond)
     let unknown = #"{"theme":"plaid","maxSnoozes":4}"#
     let got = try JSONDecoder().decode(AlertSettings.self, from: Data(unknown.utf8))
-    #expect(got.theme == .wolf)
+    #expect(got.theme == .jax)
     #expect(got.maxSnoozes == 4)
-    for removed in ["copper", "harbor", "rose"] {
+    for removed in ["copper", "harbor", "wolf", "bubblegum"] {
         let json = #"{"theme":"\#(removed)","maxSnoozes":3}"#
         let kept = try JSONDecoder().decode(AlertSettings.self, from: Data(json.utf8))
-        #expect(kept.theme == .wolf)
+        #expect(kept.theme == .jax)
         #expect(kept.maxSnoozes == 3)
     }
 }
@@ -131,8 +131,8 @@ func expectReadable(_ p: Palette, _ comment: String = "", sourceLocation: Source
 // testCustomColors checks the defaults, the hex round trip, the bad-hex fallback and seeding from a preset,
 // which carries the picked colors through unchanged while the rest is derived.
 @Test func testCustomColors() {
-    #expect(CustomColors().palette.background == ThemeName.wolf.palette.background)
-    #expect(CustomColors().palette.accent == ThemeName.wolf.palette.accent)
+    #expect(CustomColors().palette.background == ThemeName.jax.palette.background)
+    #expect(CustomColors().palette.accent == ThemeName.jax.palette.accent)
     #expect(CustomColors().palette.collar == nil)
     #expect(ThemeName.custom.palette == CustomColors().palette)
     expectReadable(ThemeName.custom.palette)
@@ -148,7 +148,7 @@ func expectReadable(_ p: Palette, _ comment: String = "", sourceLocation: Source
     #expect(seeded.palette.late == ThemeName.lightning.palette.late)
     #expect(seeded.palette.collar == ThemeName.lightning.palette.collar)
     #expect(seeded.collar == "#ffd400")
-    #expect(CustomColors.seeded(from: .wolf).collar == nil)
+    #expect(CustomColors.seeded(from: .jax).collar == nil)
     for theme in ThemeName.presets {
         #expect(CustomColors.seeded(from: theme).resolved.adjusted.isEmpty, "\(theme)")
     }

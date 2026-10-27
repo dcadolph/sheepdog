@@ -85,7 +85,7 @@ public struct Palette: Sendable, Equatable {
 // ThemeName is a collar for Tug. Each one colors his collar and the alert surfaces. The custom collar
 // takes its colors from AlertSettings.customColors.
 public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
-    case wolf
+    case jax
     case blackDiamond
     case goldenSpark
     case rubie
@@ -93,7 +93,7 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     case thunder
     case strawhat
     case grapes
-    case bubblegum
+    case rose
     case berserker
     case pickleJuice
     case trunk
@@ -108,7 +108,7 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     // label is the theme's user-facing name.
     public var label: String {
         switch self {
-        case .wolf: return "Wolf"
+        case .jax: return "Jax"
         case .blackDiamond: return "Black Diamond"
         case .goldenSpark: return "Golden Spark"
         case .rubie: return "Rubie"
@@ -116,7 +116,7 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
         case .thunder: return "Thunder"
         case .strawhat: return "Strawhat"
         case .grapes: return "Grapes"
-        case .bubblegum: return "Bubblegum"
+        case .rose: return "Rose"
         case .berserker: return "Berserker"
         case .pickleJuice: return "PickleJuice"
         case .trunk: return "Trunk"
@@ -128,7 +128,7 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     // custom it is the default custom colors; AlertSettings.palette gives the user's own.
     public var palette: Palette {
         switch self {
-        case .wolf:
+        case .jax:
             return Self.make(nil, "#0f1012", "#0f1012", "#ffffff", "#aaa59b", "#f3e3b8", "#ff7361")
         case .blackDiamond:
             return Self.make("#2a2a2a", "#0c0c0c", "#1c1c1c", "#ffffff", "#b5b5b5", "#f5c518", "#ff7361")
@@ -144,7 +144,7 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
             return Self.make("#d22b2b", "#13100c", "#211c15", "#f7efe2", "#ad9f88", "#d9c7a3", "#ff7361")
         case .grapes:
             return Self.make("#7b2cbf", "#16081f", "#261236", "#f7eeff", "#c3a9db", "#c77dff", "#ff8a75")
-        case .bubblegum:
+        case .rose:
             return Self.make("#d6336c", "#1a0a12", "#2c1222", "#fff0f6", "#d6a6be", "#ff5fa2", "#ffb347")
         case .berserker:
             return Self.make("#5c3317", "#1a0f08", "#2c1b10", "#fff1e0", "#cfa98a", "#ff8c1a", "#ff6b6b")

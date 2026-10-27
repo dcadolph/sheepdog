@@ -27,7 +27,7 @@ public struct CustomColors: Sendable, Codable, Equatable {
         public var adjusted: Set<Slot>
     }
 
-    // init creates the defaults, which are Wolf's colors.
+    // init creates the defaults, which are Jax's colors.
     public init() {}
 
     // init creates custom colors from hex strings.

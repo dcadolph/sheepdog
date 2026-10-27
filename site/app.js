@@ -4,7 +4,7 @@
   // Collars mirror Sources/SheepdogCore/Palette.swift: name, bg, surface, text, muted, accent, late,
   // collar ("orig" keeps the drawing's own collar).
   var themes = [
-    ["Wolf", "#0f1012", "#0f1012", "#ffffff", "#aaa59b", "#f3e3b8", "#ff7361", "orig"],
+    ["Jax", "#0f1012", "#0f1012", "#ffffff", "#aaa59b", "#f3e3b8", "#ff7361", "orig"],
     ["Black Diamond", "#0c0c0c", "#1c1c1c", "#ffffff", "#b5b5b5", "#f5c518", "#ff7361", "#2a2a2a"],
     ["Golden Spark", "#0c2a18", "#143a24", "#fff6d8", "#a9c7a3", "#f2c230", "#ff8a75", "#2f9e4f"],
     ["Rubie", "#f4f1ee", "#fbf9f7", "#111111", "#5a5552", "#111111", "#b3261e", "#c8102e"],
@@ -12,7 +12,7 @@
     ["Thunder", "#07141a", "#0e222b", "#e6fbff", "#8fb8c2", "#5fd4e6", "#ff7361", "#1f3fbf"],
     ["Strawhat", "#13100c", "#211c15", "#f7efe2", "#ad9f88", "#d9c7a3", "#ff7361", "#d22b2b"],
     ["Grapes", "#16081f", "#261236", "#f7eeff", "#c3a9db", "#c77dff", "#ff8a75", "#7b2cbf"],
-    ["Bubblegum", "#1a0a12", "#2c1222", "#fff0f6", "#d6a6be", "#ff5fa2", "#ffb347", "#d6336c"],
+    ["Rose", "#1a0a12", "#2c1222", "#fff0f6", "#d6a6be", "#ff5fa2", "#ffb347", "#d6336c"],
     ["Berserker", "#1a0f08", "#2c1b10", "#fff1e0", "#cfa98a", "#ff8c1a", "#ff6b6b", "#5c3317"],
     ["PickleJuice", "#10130a", "#1c2112", "#f4ffe0", "#b4c29a", "#c6f432", "#ff7361", "#8fd400"],
     ["Trunk", "#f7ecd6", "#fff8ea", "#14181c", "#5c564a", "#7a4b1e", "#b3261e", "#ff8c42"]
