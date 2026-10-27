@@ -100,7 +100,7 @@ public protocol AccountSession: Actor {
 
 // SignIn finishes a browser sign-in once the redirect has delivered a code.
 public enum SignIn {
-    // complete exchanges the code for tokens and looks up the account's address.
+    // complete exchanges the code for tokens and finds the account's address.
     public static func complete(
         provider: OAuthProvider, code: String, pkce: PKCE, redirectURI: String, client: HTTPClient, now: Date
     ) async throws -> AccountRecord {
@@ -113,7 +113,7 @@ public enum SignIn {
         let address: String?
         switch provider.kind {
         case .microsoft:
-            address = try await GraphCalendar.profile(client: client, accessToken: tokens.accessToken)
+            address = IDToken.email(tokens.idToken)
         case .google:
             address = try await GoogleCalendar.profile(client: client, accessToken: tokens.accessToken)
         case .icloud, .caldav:

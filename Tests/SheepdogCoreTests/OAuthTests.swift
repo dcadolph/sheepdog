@@ -49,7 +49,7 @@ let authorizationURLCases: [AuthorizationURLCase] = [
             "client_id": "ms-client",
             "response_type": "code",
             "redirect_uri": "http://localhost:51234",
-            "scope": "offline_access User.Read Calendars.Read",
+            "scope": "openid email offline_access Calendars.Read",
             "state": "st",
             "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
             "code_challenge_method": "S256",
@@ -128,7 +128,7 @@ let tokenRequestCases: [TokenRequestCase] = {
             request: microsoft.refreshRequest(refreshToken: "r"),
             wantURL: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
             wantBody: "client_id=ms-client&grant_type=refresh_token&refresh_token=r"
-                + "&scope=offline_access%20User.Read%20Calendars.Read"
+                + "&scope=openid%20email%20offline_access%20Calendars.Read"
         ),
         TokenRequestCase( // Test 3: Google refresh sends no scope.
             name: "google refresh",
@@ -293,7 +293,7 @@ let callbackCases: [CallbackCase] = [
             + "+has+not+consented.+Trace+ID%3A+abc&state=st",
         wantCode: nil, want: .refused(.adminApproval), kind: .microsoft
     ),
-    CallbackCase( // Test 10: A redirect with an empty code is refused without a sentence from the URL.
+    CallbackCase( // Test 10: An empty code is refused with a fixed code.
         name: "empty code",
         request: "GET /?code=&state=st HTTP/1.1\r\n\r\n",
         wantTarget: "/?code=&state=st", wantCode: nil, want: .refused(.other(code: "no_code"))
@@ -309,10 +309,33 @@ func testCallback(test: CallbackCase) {
         return
     }
     do {
-        let got = try AuthorizationCallback.code(fromTarget: target, expectedState: "st", kind: test.kind)
+        let got = try AuthorizationCallback.code(
+            fromTarget: target, expectedState: "st", kind: test.kind
+        )
         #expect(test.want == nil)
         #expect(got == test.wantCode)
     } catch {
         #expect(error as? AuthError == test.want)
+    }
+}
+
+// testIDTokenEmail checks the email claim, the fallback and malformed tokens.
+@Test func testIDTokenEmail() {
+    let cases: [(String?, String?)] = [
+        ("e30.eyJlbWFpbCI6Im1lQGV4YW1wbGUuY29tIn0.sig", "me@example.com"), // Test 0: Email claim.
+        // Test 1: Fallback to preferred_username.
+        ("e30.eyJwcmVmZXJyZWRfdXNlcm5hbWUiOiJ1cG5AZXhhbXBsZS5jb20ifQ.sig", "upn@example.com"),
+        ("e30.eyJzdWIiOiJhYmMifQ.sig", nil), // Test 2: Neither claim.
+        ("e30.e30.sig", nil), // Test 3: Empty claims.
+        ("e30.eyJlbWFpbCI6.sig", nil), // Test 4: Truncated payload.
+        ("e30.a.sig", nil), // Test 5: Bad base64 length.
+        ("e30.!!!!.sig", nil), // Test 6: Bad base64 characters.
+        ("e30.eyJlbWFpbCI6Im1lQGV4YW1wbGUuY29tIn0=.sig", nil), // Test 7: Padded payload.
+        ("not-a-jwt", nil), // Test 8: Not three parts.
+        ("", nil), // Test 9: Empty.
+        (nil, nil), // Test 10: Absent.
+    ]
+    for (token, want) in cases {
+        #expect(IDToken.email(token) == want, "\(token ?? "nil")")
     }
 }

@@ -25,11 +25,6 @@ public enum GraphCalendar {
         return pageRequest(components.url!, accessToken: accessToken)
     }
 
-    // profileRequest asks for the signed-in user's addresses.
-    public static func profileRequest(accessToken: String) -> URLRequest {
-        bearerRequest(URL(string: "https://graph.microsoft.com/v1.0/me?$select=mail,userPrincipalName")!, accessToken: accessToken)
-    }
-
     // pageRequest builds a calendarView request for a first or next page.
     static func pageRequest(_ url: URL, accessToken: String) -> URLRequest {
         var request = bearerRequest(url, accessToken: accessToken)
@@ -54,16 +49,6 @@ public enum GraphCalendar {
             request = pageRequest(next, accessToken: accessToken)
         }
         throw RemoteError.tooManyPages
-    }
-
-    // profile returns the signed-in user's mail address, or the sign-in name when there is no mailbox address.
-    public static func profile(client: HTTPClient, accessToken: String) async throws -> String? {
-        let (data, status) = try await client.send(profileRequest(accessToken: accessToken))
-        try checkStatus(status)
-        guard let me = try? JSONDecoder().decode(Profile.self, from: data) else {
-            throw RemoteError.decode
-        }
-        return me.mail ?? me.userPrincipalName
     }
 
     // decodePage reads one calendarView page.
@@ -242,13 +227,5 @@ public enum GraphCalendar {
     struct Body: Decodable {
         // Content is the description text.
         let content: String?
-    }
-
-    // Profile is the subset of the user resource Sheepdog reads.
-    struct Profile: Decodable {
-        // Mail is the primary mail address.
-        let mail: String?
-        // UserPrincipalName is the sign-in name.
-        let userPrincipalName: String?
     }
 }

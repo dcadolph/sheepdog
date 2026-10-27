@@ -7,7 +7,7 @@ import Testing
 let graphNext = "https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=2026-10-22T14:00:00Z"
     + "&endDateTime=2026-10-23T02:00:00Z&$skip=4"
 
-// graphClient serves the two calendarView pages and the profile.
+// graphClient serves the two calendarView pages.
 func graphClient() -> MockClient {
     MockClient { request, _ in
         let url = request.url?.absoluteString ?? ""
@@ -16,9 +16,6 @@ func graphClient() -> MockClient {
         }
         if url.hasPrefix("https://graph.microsoft.com/v1.0/me/calendarView") {
             return .ok("graph-page1.json")
-        }
-        if url.hasPrefix("https://graph.microsoft.com/v1.0/me?") {
-            return .ok("graph-me.json")
         }
         return .json("{}", status: 404)
     }
@@ -149,14 +146,6 @@ func testGraphFetchErrors(test: GraphErrorCase) async {
     await #expect(throws: test.want) {
         _ = try await GraphCalendar.fetch(client: client, accessToken: "tok", from: Date(), to: Date(), selfAddress: nil)
     }
-}
-
-// testGraphProfile checks that the sign-in name stands in for a missing mail address.
-@Test func testGraphProfile() async throws {
-    let client = graphClient()
-    let got = try await GraphCalendar.profile(client: client, accessToken: "tok")
-    #expect(got == "me@example.com")
-    #expect(client.requests.first?.url?.absoluteString == "https://graph.microsoft.com/v1.0/me?$select=mail,userPrincipalName")
 }
 
 // testGraphStatus checks every response value.

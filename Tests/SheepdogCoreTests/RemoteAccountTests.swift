@@ -153,28 +153,44 @@ struct SignInCase: Sendable, CustomTestStringConvertible {
 
 // signInCases covers both providers, a missing refresh token and a refused code.
 let signInCases: [SignInCase] = [
-    SignInCase( // Test 0: Microsoft looks up the address in Graph.
-        name: "microsoft",
+    SignInCase( // Test 0: Microsoft reads the address from the email claim.
+        name: "microsoft email",
         provider: .microsoft(clientID: "ms"),
-        tokenReply: .ok("token-ok.json"),
+        tokenReply: .ok("token-id-email.json"),
         wantResult: AccountRecord(kind: .microsoft, address: "me@example.com", refreshToken: "refresh-1"),
         want: nil
     ),
-    SignInCase( // Test 1: Google uses the primary calendar id.
+    SignInCase( // Test 1: Microsoft falls back to preferred_username.
+        name: "microsoft username",
+        provider: .microsoft(clientID: "ms"),
+        tokenReply: .ok("token-id-upn.json"),
+        wantResult: AccountRecord(
+            kind: .microsoft, address: "upn@example.com", refreshToken: "refresh-1"
+        ),
+        want: nil
+    ),
+    SignInCase( // Test 2: Microsoft with neither claim still connects.
+        name: "microsoft no address",
+        provider: .microsoft(clientID: "ms"),
+        tokenReply: .ok("token-id-none.json"),
+        wantResult: AccountRecord(kind: .microsoft, address: nil, refreshToken: "refresh-1"),
+        want: nil
+    ),
+    SignInCase( // Test 3: Google uses the primary calendar id.
         name: "google",
         provider: .google(clientID: "g", clientSecret: "s"),
         tokenReply: .ok("token-ok.json"),
         wantResult: AccountRecord(kind: .google, address: "me@example.com", refreshToken: "refresh-1"),
         want: nil
     ),
-    SignInCase( // Test 2: No refresh token means the account could not stay signed in.
+    SignInCase( // Test 4: No refresh token means the account could not stay signed in.
         name: "no refresh token",
         provider: .google(clientID: "g", clientSecret: "s"),
         tokenReply: .ok("token-no-refresh.json"),
         wantResult: nil,
         want: .noRefreshToken
     ),
-    SignInCase( // Test 3: A refused code.
+    SignInCase( // Test 5: A refused code.
         name: "refused",
         provider: .microsoft(clientID: "ms"),
         tokenReply: MockResponse(body: fixture("token-invalid-grant.json"), status: 400),
@@ -190,9 +206,6 @@ func testSignInComplete(test: SignInCase) async {
     let client = MockClient { request, _ in
         if isTokenRequest(request) {
             return tokenReply
-        }
-        if request.url?.host == "graph.microsoft.com" {
-            return .ok("graph-me.json")
         }
         return .ok("google-primary.json")
     }

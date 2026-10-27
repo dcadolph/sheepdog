@@ -1,1 +1,1 @@
-{"token_type": "Bearer", "scope": "Calendars.Read User.Read", "expires_in": 3599, "access_token": "access-1", "refresh_token": "refresh-1"}
+{"token_type": "Bearer", "scope": "openid email offline_access Calendars.Read", "expires_in": 3599, "access_token": "access-1", "refresh_token": "refresh-1"}

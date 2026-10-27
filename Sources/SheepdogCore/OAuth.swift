@@ -72,7 +72,7 @@ public struct OAuthProvider: Sendable, Equatable {
             clientSecret: nil,
             authorizeURL: URL(string: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize")!,
             tokenURL: URL(string: "https://login.microsoftonline.com/common/oauth2/v2.0/token")!,
-            scopes: ["offline_access", "User.Read", "Calendars.Read"],
+            scopes: ["openid", "email", "offline_access", "Calendars.Read"],
             redirectHost: "localhost",
             extraParameters: [URLQueryItem(name: "prompt", value: "select_account")]
         )
@@ -169,12 +169,15 @@ public struct TokenSet: Sendable, Equatable {
     public var refreshToken: String?
     // ExpiresAt is when the access token stops working.
     public var expiresAt: Date
+    // IDToken is the signed identity token, when the response included one.
+    public var idToken: String?
 
     // init creates a token set.
-    public init(accessToken: String, refreshToken: String?, expiresAt: Date) {
+    public init(accessToken: String, refreshToken: String?, expiresAt: Date, idToken: String? = nil) {
         self.accessToken = accessToken
         self.refreshToken = refreshToken
         self.expiresAt = expiresAt
+        self.idToken = idToken
     }
 
     // decode reads a token endpoint response, mapping OAuth errors to AuthError.
@@ -192,7 +195,8 @@ public struct TokenSet: Sendable, Equatable {
         return TokenSet(
             accessToken: body.accessToken,
             refreshToken: body.refreshToken,
-            expiresAt: now.addingTimeInterval(TimeInterval(body.expiresIn ?? 3600))
+            expiresAt: now.addingTimeInterval(TimeInterval(body.expiresIn ?? 3600)),
+            idToken: body.idToken
         )
     }
 
@@ -209,9 +213,12 @@ public struct TokenSet: Sendable, Equatable {
         let refreshToken: String?
         // ExpiresIn is the access token lifetime in seconds.
         let expiresIn: Int?
+        // IDToken is the identity token, present when the openid scope was granted.
+        let idToken: String?
 
         // CodingKeys maps the snake case field names.
         enum CodingKeys: String, CodingKey {
+            case idToken = "id_token"
             case accessToken = "access_token"
             case refreshToken = "refresh_token"
             case expiresIn = "expires_in"
@@ -267,11 +274,56 @@ public enum AuthorizationCallback {
         }
         if let error {
             let description = value("error_description")?.replacingOccurrences(of: "+", with: " ")
-            throw AuthError.refused(SignInRefusal.classify(kind: kind, error: error, description: description))
+            let refusal = SignInRefusal.classify(kind: kind, error: error, description: description)
+            throw AuthError.refused(refusal)
         }
         guard let code, !code.isEmpty else {
             throw AuthError.refused(.other(code: "no_code"))
         }
         return code
+    }
+}
+
+// IDToken reads claims from an identity token for display.
+public enum IDToken {
+    // email returns the email claim, else preferred_username, else nil. The payload is decoded
+    // without a signature check because the token came from the token endpoint over TLS.
+    public static func email(_ token: String?) -> String? {
+        guard let token else {
+            return nil
+        }
+        let parts = token.split(separator: ".", omittingEmptySubsequences: false)
+        guard parts.count == 3, let data = base64URLDecode(String(parts[1])),
+              let claims = try? JSONDecoder().decode(Claims.self, from: data)
+        else {
+            return nil
+        }
+        return [claims.email, claims.preferredUsername].compactMap { $0 }.first { !$0.isEmpty }
+    }
+
+    // base64URLDecode decodes unpadded base64url text, or returns nil when it is malformed.
+    private static func base64URLDecode(_ text: String) -> Data? {
+        var base64 = text
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        guard base64.count % 4 != 1, !base64.contains("=") else {
+            return nil
+        }
+        base64 += String(repeating: "=", count: (4 - base64.count % 4) % 4)
+        return Data(base64Encoded: base64)
+    }
+
+    // Claims is the subset of identity token claims Sheepdog reads.
+    private struct Claims: Decodable {
+        // Email is the address claim.
+        let email: String?
+        // PreferredUsername is the sign-in name claim.
+        let preferredUsername: String?
+
+        // CodingKeys maps the snake case field names.
+        enum CodingKeys: String, CodingKey {
+            case email
+            case preferredUsername = "preferred_username"
+        }
     }
 }
