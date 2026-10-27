@@ -85,7 +85,8 @@ and then it asks once before trashing the disk image. The zip is still attached 
 Homebrew. It runs on Apple silicon and Intel Macs.
 
 The app is signed and notarized, so it opens like any other Mac app. Allow calendar access
-when macOS asks. Homebrew users can run `brew install --cask dcadolph/tap/sheepdog` instead.
+when macOS asks, and use **Set up calendars…** in the menu if a calendar is
+missing. Homebrew users can run `brew install --cask dcadolph/tap/sheepdog` instead.
 
 ### Verify the download
 

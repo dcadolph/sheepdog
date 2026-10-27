@@ -143,6 +143,13 @@ Through the Wood, and Jingle Bells. Easter has no tune. Every note is Tug's own 
 only when the alarm sound is one of Tug's, and the warning chime stays a single woof. Turn off
 **Bark holiday tunes** in Settings, Sound, to keep the plain bark.
 
+## Calendar setup
+
+On first run, right after the macOS Calendar answer, Tug shows a card if he can't see a calendar,
+sees Outlook but no Microsoft calendar, or has not seen a meeting in a week. Choose **Open Calendars settings**, **Later** or **Don't ask
+again**. **Set up calendars…** in Tug's menu opens the same place, and **What Tug sees** lists each
+calendar source with its calendar count and a **Check again** button.
+
 ## Settings and features
 
 | Feature       | What it does                                                               |
