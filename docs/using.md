@@ -20,7 +20,8 @@ pill, and the alarm still comes a minute before the start.
 A minute before the start, the alarm covers every display and Tug starts barking. The ring
 around Tug empties as the start gets closer and turns red once the meeting has started.
 
-- **Join now** opens the meeting link, straight into the Teams or Zoom app for those links.
+- **Join now** opens the meeting link in the app or the browser, whichever you pick for that
+  service in Settings, Alerts, Join. Google Meet has no Mac app, so it always opens in the browser.
   Events with no link say **I'll attend**.
 - **Snooze** drops back to the countdown for a minute, or 30 seconds once the meeting has
   started. Each meeting gets two snoozes.
@@ -147,7 +148,7 @@ only when the alarm sound is one of Tug's, and the warning chime stays a single 
 | Feature       | What it does                                                               |
 |---------------|----------------------------------------------------------------------------|
 | Calendars     | Reads every calendar in macOS Calendar, including Google and Exchange.     |
-| Join links    | Finds Teams, Zoom, Google Meet, Webex and Slack links in the event.        |
+| Join links    | Finds Teams, Zoom, Meet, Webex and Slack links. Each opens where you pick. |
 | Let them know | Copies a running late or can't make it line and opens your Slack channel.  |
 | Volume        | Unmutes and raises the volume while the alarm plays, then puts it back.    |
 | Speakers      | Plays through headphones, built-in speakers, or both at once.              |
