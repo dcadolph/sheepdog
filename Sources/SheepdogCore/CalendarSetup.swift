@@ -122,6 +122,17 @@ public enum SetupHint: String, Sendable, Codable, Equatable {
         }
     }
 
+    // detail is the way around a blocked direct sign-in, for hints about a missing account.
+    public var detail: String? {
+        switch self {
+        case .nothingConnected, .outlookWithoutMicrosoft:
+            return "If your company blocks direct sign-in, add the account in System Settings, "
+                + "Internet Accounts, and Tug reads it through macOS Calendar."
+        case .noAccess, .quietWeek:
+            return nil
+        }
+    }
+
     // action is the one action the hint offers.
     public var action: ActionKind {
         switch self {

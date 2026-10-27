@@ -22,6 +22,12 @@ struct SetupCardView: View {
                         .font(.system(size: 15, weight: .semibold, design: .rounded))
                         .foregroundStyle(Theme.text)
                         .fixedSize(horizontal: false, vertical: true)
+                    if let detail = top.detail {
+                        Text(detail)
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(Theme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     ForEach(model.setupHints.dropFirst(), id: \.self) { hint in
                         Text(hint.message)
                             .font(.system(size: 12, weight: .medium, design: .rounded))

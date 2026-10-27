@@ -96,7 +96,7 @@ func testSetupHints(test: SetupCase) {
     #expect(CalendarSetup.hints(test.facts) == test.want)
 }
 
-// testSetupHintActions checks the message and action of each hint.
+// testSetupHintActions checks the message, detail and action of each hint.
 @Test func testSetupHintActions() {
     #expect(SetupHint.noAccess.action == .allowAccess)
     #expect(SetupHint.nothingConnected.action == .openCalendars)
@@ -105,6 +105,10 @@ func testSetupHints(test: SetupCase) {
     #expect(SetupHint.noAccess.message == "Tug can't see macOS Calendar.")
     #expect(SetupHint.nothingConnected.message == "Tug doesn't see any calendar yet.")
     #expect(SetupHint.quietWeek.message.hasPrefix("Tug hasn't seen a meeting in a week."))
+    #expect(SetupHint.outlookWithoutMicrosoft.detail?.contains("Internet Accounts") == true)
+    #expect(SetupHint.nothingConnected.detail?.contains("Internet Accounts") == true)
+    #expect(SetupHint.noAccess.detail == nil)
+    #expect(SetupHint.quietWeek.detail == nil)
 }
 
 // SetupNudgeCase is one nudge history and whether the user is due a notice after it.

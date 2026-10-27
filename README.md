@@ -86,7 +86,8 @@ Homebrew. It runs on Apple silicon and Intel Macs.
 
 The app is signed and notarized, so it opens like any other Mac app. Allow calendar access
 when macOS asks, and use **Set up calendars…** in the menu if a calendar is
-missing. Homebrew users can run `brew install --cask dcadolph/tap/sheepdog` instead.
+missing. If your company blocks direct sign-in, add the work account in System Settings,
+Internet Accounts, and Sheepdog reads it through macOS Calendar. Homebrew users can run `brew install --cask dcadolph/tap/sheepdog` instead.
 
 ### Verify the download
 

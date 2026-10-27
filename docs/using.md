@@ -150,6 +150,11 @@ sees Outlook but no Microsoft calendar, or has not seen a meeting in a week. Cho
 again**. **Set up calendars…** in Tug's menu opens the same place, and **What Tug sees** lists each
 calendar source with its calendar count and a **Check again** button.
 
+If your company blocks direct sign-in, add the work account in System Settings, Internet Accounts,
+with Calendars turned on, where your company allows that. Tug reads it through macOS Calendar, so
+he needs no approval of his own. The card and **What Tug sees** say so too, with an **Open
+Internet Accounts** button.
+
 ## Settings and features
 
 | Feature       | What it does                                                               |

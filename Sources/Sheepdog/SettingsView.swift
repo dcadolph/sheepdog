@@ -41,6 +41,8 @@ struct SettingsView: View {
     let onAllowAccess: () -> Void
     // facts is what Tug saw when the Calendars tab last looked.
     @State private var facts: SetupFacts?
+    // openURL opens System Settings at Internet Accounts.
+    @Environment(\.openURL) private var openURL
     // leadsText is the editable warning leads, in minutes, separated by commas.
     @State private var leadsText = ""
     // backupError is the last export or import failure, shown under the backup buttons.
@@ -339,12 +341,23 @@ struct SettingsView: View {
             }
             ForEach(CalendarSetup.hints(facts), id: \.self) { hint in
                 HStack {
-                    Text(hint.message)
-                        .font(.caption)
-                        .fixedSize(horizontal: false, vertical: true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(hint.message)
+                            .font(.caption)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if let detail = hint.detail {
+                            Text(detail)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
                     Spacer()
                     if hint.action == .allowAccess {
                         Button("Allow calendar access…", action: onAllowAccess)
+                            .controlSize(.small)
+                    } else if hint.detail != nil {
+                        Button("Open Internet Accounts") { openURL(AccountRow.internetAccounts) }
                             .controlSize(.small)
                     }
                 }
@@ -718,7 +731,7 @@ struct AccountRow: View {
     // adminsPage is the site page that tells an IT admin how to approve Sheepdog.
     private static let adminsPage = URL(string: "https://macsheepdog.com/admins")!
     // internetAccounts opens System Settings at Internet Accounts.
-    private static let internetAccounts = URL(
+    static let internetAccounts = URL(
         string: "x-apple.systempreferences:com.apple.Internet-Accounts-Settings.extension"
     )!
 
