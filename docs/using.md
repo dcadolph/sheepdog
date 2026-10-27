@@ -143,12 +143,26 @@ Through the Wood, and Jingle Bells. Easter has no tune. Every note is Tug's own 
 only when the alarm sound is one of Tug's, and the warning chime stays a single woof. Turn off
 **Bark holiday tunes** in Settings, Sound, to keep the plain bark.
 
-## Calendar setup
+## First run
 
-On first run, right after the macOS Calendar answer, Tug shows a card if he can't see a calendar,
-sees Outlook but no Microsoft calendar, or has not seen a meeting in a week. Choose **Open Calendars settings**, **Later** or **Don't ask
-again**. **Set up calendars…** in Tug's menu opens the same place, and **What Tug sees** lists each
-calendar source with its calendar count and a **Check again** button.
+On a new install the **Set up Sheepdog** window walks through five steps.
+
+1. **Welcome** says why Tug reads your calendars. Click **Allow calendar access** and macOS asks,
+   or click **I don't use macOS Calendar** to skip it.
+2. **Connect calendars** shows **What Tug sees** and lets you connect Microsoft 365, iCloud or
+   another CalDAV server.
+3. **When should Tug bark?** sets working hours, which start off, and the **Warn at** minutes.
+4. **Tug dresses up** has **Dress Tug up for holidays** and **Bark holiday tunes**, both on.
+5. **Done** has **Start Sheepdog at login** and **Test the alarm**.
+
+Closing the window counts as finished, so it shows once. An upgrade from an earlier version shows
+only the last two steps, titled "What's new: Tug dresses up". **Set up Sheepdog…** in Tug's menu
+reopens the window at **Connect calendars**.
+
+Later, Tug shows a card if he can't see a calendar, sees Outlook but no Microsoft calendar, or has
+not seen a meeting in a week. Choose **Open Calendars settings**, **Later** or **Don't ask
+again**. **What Tug sees**, in the Calendars tab, lists each calendar source with its calendar
+count and a **Check again** button.
 
 If your company blocks direct sign-in, add the work account in System Settings, Internet Accounts,
 with Calendars turned on, where your company allows that. Tug reads it through macOS Calendar, so

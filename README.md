@@ -84,9 +84,9 @@ ejects the disk image, and moves it to the Trash. Dragging Sheepdog onto Applica
 and then it asks once before trashing the disk image. The zip is still attached for scripts and
 Homebrew. It runs on Apple silicon and Intel Macs.
 
-The app is signed and notarized, so it opens like any other Mac app. Allow calendar access
-when macOS asks, and use **Set up calendars…** in the menu if a calendar is
-missing. If your company blocks direct sign-in, add the work account in System Settings,
+The app is signed and notarized, so it opens like any other Mac app. The first launch walks
+through calendar access, connecting calendars, when Tug barks and whether he dresses up, and
+**Set up Sheepdog…** in the menu reopens it. If your company blocks direct sign-in, add the work account in System Settings,
 Internet Accounts, and Sheepdog reads it through macOS Calendar. Homebrew users can run `brew install --cask dcadolph/tap/sheepdog` instead.
 
 ### Verify the download
