@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body>
+    <m:GetItemResponse xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+      <m:ResponseMessages>
+        <m:GetItemResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:Items>
+            <t:CalendarItem>
+              <t:ItemId Id="AAMkAD-standup+1/occ=" ChangeKey="DwAAABYA1"/>
+              <t:Subject>Standup</t:Subject>
+              <t:Body BodyType="Text" IsTruncated="false">Daily standup. Dial in: +1 555 0100</t:Body>
+              <t:WebClientReadFormQueryString>https://mail.example.com/owa/?ItemID=AAMkAD-standup&amp;exvsurl=1&amp;viewmodel=CalendarItemDetails</t:WebClientReadFormQueryString>
+              <t:UID>040000008200E00074C5B7101A82E00800000000standup</t:UID>
+              <t:Start>2026-10-22T14:30:00Z</t:Start>
+              <t:End>2026-10-22T14:45:00Z</t:End>
+              <t:IsAllDayEvent>false</t:IsAllDayEvent>
+              <t:LegacyFreeBusyStatus>Busy</t:LegacyFreeBusyStatus>
+              <t:Location>Teams</t:Location>
+              <t:IsCancelled>false</t:IsCancelled>
+              <t:Organizer><t:Mailbox><t:Name>Pat Lee</t:Name><t:EmailAddress>pat@example.com</t:EmailAddress><t:RoutingType>SMTP</t:RoutingType></t:Mailbox></t:Organizer>
+              <t:RequiredAttendees>
+                <t:Attendee><t:Mailbox><t:Name>Pat Lee</t:Name><t:EmailAddress>pat@example.com</t:EmailAddress><t:RoutingType>SMTP</t:RoutingType></t:Mailbox><t:ResponseType>Organizer</t:ResponseType></t:Attendee>
+                <t:Attendee><t:Mailbox><t:Name>Me</t:Name><t:EmailAddress>Me@Example.com</t:EmailAddress><t:RoutingType>SMTP</t:RoutingType></t:Mailbox><t:ResponseType>Accept</t:ResponseType></t:Attendee>
+                <t:Attendee><t:Mailbox><t:Name>Sam Ortiz</t:Name><t:EmailAddress>sam@example.com</t:EmailAddress><t:RoutingType>SMTP</t:RoutingType></t:Mailbox><t:ResponseType>Unknown</t:ResponseType></t:Attendee>
+              </t:RequiredAttendees>
+              <t:OptionalAttendees>
+                <t:Attendee><t:Mailbox><t:Name>Kim Wu</t:Name><t:EmailAddress>kim@example.com</t:EmailAddress><t:RoutingType>SMTP</t:RoutingType></t:Mailbox></t:Attendee>
+              </t:OptionalAttendees>
+              <t:MyResponseType>Accept</t:MyResponseType>
+              <t:JoinOnlineMeetingUrl>https://teams.microsoft.com/l/meetup-join/19%3ameeting_standup%40thread.v2/0?context=%7b%22Tid%22%3a%22t1%22%7d</t:JoinOnlineMeetingUrl>
+            </t:CalendarItem>
+          </m:Items>
+        </m:GetItemResponseMessage>
+        <m:GetItemResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:Items>
+            <t:CalendarItem>
+              <t:ItemId Id="AAMkAD-review" ChangeKey="DwAAABYA2"/>
+              <t:Subject>Design review &amp; Q&lt;4&gt; plan</t:Subject>
+              <t:Body BodyType="Text" IsTruncated="false">________________________________________________________________________________
+Microsoft Teams meeting
+Join on your computer, mobile app or room device
+Click here to join the meeting&lt;https://teams.microsoft.com/l/meetup-join/19%3ameeting_review%40thread.v2/0?context=%7b%22Tid%22%3a%22t1%22%7d&gt;
+Meeting ID: 123 456 789
+________________________________________________________________________________</t:Body>
+              <t:UID>040000008200E00074C5B7101A82E00800000000review</t:UID>
+              <t:Start>2026-10-22T19:00:00Z</t:Start>
+              <t:End>2026-10-22T20:00:00Z</t:End>
+              <t:IsAllDayEvent>false</t:IsAllDayEvent>
+              <t:LegacyFreeBusyStatus>Tentative</t:LegacyFreeBusyStatus>
+              <t:IsCancelled>false</t:IsCancelled>
+              <t:Organizer><t:Mailbox><t:Name>Sam Ortiz</t:Name><t:EmailAddress>sam@example.com</t:EmailAddress><t:RoutingType>SMTP</t:RoutingType></t:Mailbox></t:Organizer>
+              <t:RequiredAttendees>
+                <t:Attendee><t:Mailbox><t:Name>Me</t:Name><t:EmailAddress>me@example.com</t:EmailAddress><t:RoutingType>SMTP</t:RoutingType></t:Mailbox></t:Attendee>
+              </t:RequiredAttendees>
+              <t:MyResponseType>Tentative</t:MyResponseType>
+            </t:CalendarItem>
+          </m:Items>
+        </m:GetItemResponseMessage>
+        <m:GetItemResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:Items>
+            <t:CalendarItem>
+              <t:ItemId Id="AAMkAD-offsite" ChangeKey="DwAAABYA4"/>
+              <t:Subject>Offsite</t:Subject>
+              <t:Body BodyType="Text" IsTruncated="false"></t:Body>
+              <t:UID>040000008200E00074C5B7101A82E00800000000offsite</t:UID>
+              <t:Start>2026-10-22T05:00:00Z</t:Start>
+              <t:End>2026-10-23T05:00:00Z</t:End>
+              <t:IsAllDayEvent>true</t:IsAllDayEvent>
+              <t:LegacyFreeBusyStatus>Free</t:LegacyFreeBusyStatus>
+              <t:Location>   </t:Location>
+              <t:IsCancelled>false</t:IsCancelled>
+              <t:Organizer><t:Mailbox><t:Name>Me</t:Name><t:EmailAddress>/o=ExchangeLabs/ou=Exchange Administrative Group/cn=Recipients/cn=me</t:EmailAddress><t:RoutingType>EX</t:RoutingType></t:Mailbox></t:Organizer>
+              <t:MyResponseType>Organizer</t:MyResponseType>
+            </t:CalendarItem>
+          </m:Items>
+        </m:GetItemResponseMessage>
+        <m:GetItemResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:Items>
+            <t:CalendarItem>
+              <t:ItemId Id="AAMkAD-canceled" ChangeKey="DwAAABYA3"/>
+              <t:Subject>Canceled: Vendor sync</t:Subject>
+              <t:UID>040000008200E00074C5B7101A82E00800000000canceled</t:UID>
+              <t:Start>2026-10-22T20:00:00Z</t:Start>
+              <t:End>2026-10-22T20:30:00Z</t:End>
+              <t:IsAllDayEvent>false</t:IsAllDayEvent>
+              <t:LegacyFreeBusyStatus>Free</t:LegacyFreeBusyStatus>
+              <t:IsCancelled>true</t:IsCancelled>
+              <t:MyResponseType>Accept</t:MyResponseType>
+            </t:CalendarItem>
+          </m:Items>
+        </m:GetItemResponseMessage>
+        <m:GetItemResponseMessage ResponseClass="Error">
+          <m:MessageText>The specified object was not found in the store., The process failed to get the correct properties.</m:MessageText>
+          <m:ResponseCode>ErrorItemNotFound</m:ResponseCode>
+          <m:DescriptiveLinkKey>0</m:DescriptiveLinkKey>
+          <m:Items/>
+        </m:GetItemResponseMessage>
+        <m:GetItemResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:Items>
+            <t:CalendarItem>
+              <t:ItemId Id="AAMkAD-oneonone" ChangeKey="DwAAABYA6"/>
+              <t:Subject>1:1</t:Subject>
+              <t:Body BodyType="Text" IsTruncated="false">Zoom: https://example.zoom.us/j/123456789?pwd=abc</t:Body>
+              <t:Start>2026-10-22T22:00:00.0000000Z</t:Start>
+              <t:End>2026-10-22T22:30:00.0000000Z</t:End>
+              <t:IsAllDayEvent>false</t:IsAllDayEvent>
+              <t:LegacyFreeBusyStatus>Busy</t:LegacyFreeBusyStatus>
+              <t:Location>Room 4 (Zoom)</t:Location>
+              <t:IsCancelled>false</t:IsCancelled>
+              <t:Organizer><t:Mailbox><t:Name>Kim Wu</t:Name><t:EmailAddress>kim@example.com</t:EmailAddress><t:RoutingType>SMTP</t:RoutingType></t:Mailbox></t:Organizer>
+              <t:RequiredAttendees>
+                <t:Attendee><t:Mailbox><t:Name>Me</t:Name><t:EmailAddress>/o=ExchangeLabs/ou=Exchange Administrative Group/cn=Recipients/cn=me</t:EmailAddress><t:RoutingType>EX</t:RoutingType></t:Mailbox></t:Attendee>
+              </t:RequiredAttendees>
+              <t:MyResponseType>NoResponseReceived</t:MyResponseType>
+            </t:CalendarItem>
+          </m:Items>
+        </m:GetItemResponseMessage>
+      </m:ResponseMessages>
+    </m:GetItemResponse>
+  </s:Body>
+</s:Envelope>

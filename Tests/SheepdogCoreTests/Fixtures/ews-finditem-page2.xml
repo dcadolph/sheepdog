@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+  <s:Body>
+    <m:FindItemResponse xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+      <m:ResponseMessages>
+        <m:FindItemResponseMessage ResponseClass="Success">
+          <m:ResponseCode>NoError</m:ResponseCode>
+          <m:RootFolder TotalItemsInView="5" IncludesLastItemInRange="true">
+            <t:Items>
+              <t:CalendarItem>
+                <t:ItemId Id="AAMkAD-offsite" ChangeKey="DwAAABYA4"/>
+                <t:Start>2026-10-22T05:00:00Z</t:Start>
+              </t:CalendarItem>
+              <t:CalendarItem>
+                <t:ItemId Id="AAMkAD-review" ChangeKey="DwAAABYA2"/>
+                <t:Start>2026-10-22T19:00:00Z</t:Start>
+              </t:CalendarItem>
+              <t:CalendarItem>
+                <t:ItemId Id="AAMkAD-canceled" ChangeKey="DwAAABYA3"/>
+                <t:Start>2026-10-22T20:00:00Z</t:Start>
+              </t:CalendarItem>
+              <t:CalendarItem>
+                <t:ItemId Id="AAMkAD-gone" ChangeKey="DwAAABYA5"/>
+                <t:Start>2026-10-22T21:00:00Z</t:Start>
+              </t:CalendarItem>
+              <t:CalendarItem>
+                <t:ItemId Id="AAMkAD-oneonone" ChangeKey="DwAAABYA6"/>
+                <t:Start>2026-10-22T22:00:00Z</t:Start>
+              </t:CalendarItem>
+            </t:Items>
+          </m:RootFolder>
+        </m:FindItemResponseMessage>
+      </m:ResponseMessages>
+    </m:FindItemResponse>
+  </s:Body>
+</s:Envelope>
