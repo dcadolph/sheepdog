@@ -7,8 +7,8 @@ import SheepdogCore
 final class StatusItemController: NSObject, NSMenuDelegate {
     // coordinator supplies meetings and actions.
     private let coordinator: Coordinator
-    // openSettings shows the settings window.
-    private let openSettings: () -> Void
+    // openSettings shows the settings window on a tab, or on the last one shown when nil.
+    private let openSettings: (SettingsTab?) -> Void
     // item is the menu bar status item.
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     // timeFormatter renders meeting start times in the menu.
@@ -20,7 +20,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     }()
 
     // init builds the status item.
-    init(coordinator: Coordinator, openSettings: @escaping () -> Void) {
+    init(coordinator: Coordinator, openSettings: @escaping (SettingsTab?) -> Void) {
         self.coordinator = coordinator
         self.openSettings = openSettings
         super.init()
@@ -139,7 +139,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         }
         if !settings.useMacCalendar && !coordinator.accounts.hasAccounts {
             menu.addItem(action(
-                "Connect a calendar…", #selector(showSettings),
+                "Connect a calendar…", #selector(showCalendars),
                 tip: "Opens settings to connect a calendar for Tug to watch."
             ))
             menu.addItem(.separator())
@@ -147,7 +147,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         for kind in AccountKind.allCases {
             if case .needsSignIn = coordinator.accounts.states[kind] {
                 menu.addItem(action(
-                    "Sign in to \(kind.label) again…", #selector(showSettings),
+                    "Sign in to \(kind.label) again…", #selector(showCalendars),
                     tip: "Tug lost access to your \(kind.label) calendar. Opens settings to sign in again."
                 ))
                 menu.addItem(.separator())
@@ -194,6 +194,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(action(
             "Check for Updates…", #selector(checkForUpdates),
             tip: "Asks GitHub now whether a newer Sheepdog is out."
+        ))
+        menu.addItem(action(
+            "Set up calendars…", #selector(showCalendars),
+            tip: "Shows which calendars Tug sees and helps you connect the ones he doesn't."
         ))
         menu.addItem(action(
             "Settings…", #selector(showSettings), key: ",",
@@ -385,11 +389,21 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     // showSettings opens the settings window.
     @objc private func showSettings() {
-        openSettings()
+        openSettings(nil)
+    }
+
+    // showCalendars opens the settings window on the Calendars tab.
+    @objc private func showCalendars() {
+        openSettings(.calendars)
     }
 
     // openPrivacy opens the calendar privacy pane in System Settings.
     @objc private func openPrivacy() {
+        Self.openCalendarPrivacy()
+    }
+
+    // openCalendarPrivacy opens the calendar privacy pane in System Settings.
+    static func openCalendarPrivacy() {
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars") {
             NSWorkspace.shared.open(url)
         }

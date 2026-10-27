@@ -1,6 +1,8 @@
 import AppKit
 import SwiftUI
 
+import SheepdogCore
+
 // AppDelegate starts Sheepdog and owns its long-lived objects.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -18,6 +20,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: StatusItemController?
     // settingsWindow is created on first open and reused.
     private var settingsWindow: NSWindow?
+    // settingsNavigation selects the settings tab, so the menu can open a given one.
+    private let settingsNavigation = SettingsNavigation()
 
     // applicationDidFinishLaunching builds the menu bar item and starts the loop. The install offer comes
     // before the hand-off so a newer copy opened from a disk image replaces a running one instead of
@@ -30,8 +34,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.mainMenu = Self.makeMainMenu()
         loginItem.configureOnFirstLaunch()
         let coordinator = Coordinator(settingsStore: settingsStore, accounts: accounts)
-        let statusItem = StatusItemController(coordinator: coordinator) { [weak self] in
-            self?.showSettings()
+        let statusItem = StatusItemController(coordinator: coordinator) { [weak self] tab in
+            self?.showSettings(tab: tab)
         }
         coordinator.onTick = { [weak statusItem] in statusItem?.update() }
         self.coordinator = coordinator
@@ -62,15 +66,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
-    // showSettings opens the settings window and brings it forward.
-    private func showSettings() {
+    // showSettings opens the settings window on a tab, or on the last tab shown when tab is nil, and
+    // brings it forward.
+    private func showSettings(tab: SettingsTab? = nil) {
+        if let tab {
+            settingsNavigation.tab = tab
+        }
         if settingsWindow == nil {
             let view = SettingsView(
                 store: settingsStore,
+                navigation: settingsNavigation,
                 loginItem: loginItem,
                 accounts: accounts,
                 onSourcesChanged: { [weak self] in self?.coordinator?.refresh() },
-                onTestAlarm: { [weak self] in self?.coordinator?.testAlarm() }
+                onTestAlarm: { [weak self] in self?.coordinator?.testAlarm() },
+                setupFacts: { [weak self] in self?.coordinator?.setupFacts() ?? SetupFacts(now: Date()) },
+                onAllowAccess: { StatusItemController.openCalendarPrivacy() }
             )
             let window = NSWindow(contentViewController: NSHostingController(rootView: view))
             window.title = "Sheepdog Settings"

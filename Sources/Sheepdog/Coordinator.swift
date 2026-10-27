@@ -96,6 +96,12 @@ final class Coordinator {
 
     // settings is a shortcut to the live settings.
     private var settings: AlertSettings { settingsStore.settings }
+    // firstRunKey is the user defaults key holding when this Mac first ran Sheepdog. It is not part of
+    // the settings backup.
+    private static let firstRunKey = "setupFirstRun"
+    // lastMeetingKey is the user defaults key holding when Tug last saw a real meeting. It is not part
+    // of the settings backup.
+    private static let lastMeetingKey = "setupLastMeetingSeen"
 
     // init wires the model actions and monitors.
     init(settingsStore: SettingsStore, accounts: Accounts) {
@@ -126,6 +132,9 @@ final class Coordinator {
 
     // start asks for calendar access when macOS Calendar is in use, reads the accounts and begins ticking.
     func start() {
+        if UserDefaults.standard.object(forKey: Self.firstRunKey) == nil {
+            UserDefaults.standard.set(Date(), forKey: Self.firstRunKey)
+        }
         mic.start()
         requestCalendarAccessIfNeeded()
         accounts.refresh(force: true)
@@ -269,7 +278,62 @@ final class Coordinator {
             .sorted { $0.start < $1.start }
         let known = Set((meetings + testMeetings).map(\.id))
         states = states.filter { known.contains($0.key) }
+        noteMeetingSeen(now: now)
         tick()
+    }
+
+    // noteMeetingSeen records that Tug sees a real meeting, at most once an hour, for the quiet week
+    // hint.
+    private func noteMeetingSeen(now: Date) {
+        guard !meetings.isEmpty else {
+            return
+        }
+        let defaults = UserDefaults.standard
+        let last = defaults.object(forKey: Self.lastMeetingKey) as? Date
+        if last.map({ now.timeIntervalSince($0) >= 3600 || now < $0 }) ?? true {
+            defaults.set(now, forKey: Self.lastMeetingKey)
+        }
+    }
+
+    // setupFacts gathers what the calendar setup hints look at. Installed apps are found by bundle id
+    // through Launch Services, which reads nothing from those apps and asks for no permission.
+    func setupFacts(now: Date = Date()) -> SetupFacts {
+        let access: SetupAccess
+        switch calendar.access {
+        case .granted:
+            access = .granted
+        case .denied:
+            access = .denied
+        case .unknown:
+            access = .unknown
+        }
+        var available: Set<AccountKind> = []
+        var connected: Set<AccountKind> = []
+        for kind in AccountKind.allCases {
+            switch accounts.states[kind] ?? .notConfigured {
+            case .notConfigured:
+                continue
+            case .connected, .needsSignIn:
+                connected.insert(kind)
+            case .signedOut, .signingIn:
+                break
+            }
+            available.insert(kind)
+        }
+        let defaults = UserDefaults.standard
+        return SetupFacts(
+            macCalendarOn: settings.useMacCalendar,
+            macCalendarAccess: access,
+            sources: settings.useMacCalendar ? calendar.sources() : [],
+            availableKinds: available,
+            connectedKinds: connected,
+            installedApps: CalendarSetup.microsoftApps.filter {
+                NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0) != nil
+            },
+            lastMeetingSeen: defaults.object(forKey: Self.lastMeetingKey) as? Date,
+            firstRun: defaults.object(forKey: Self.firstRunKey) as? Date,
+            now: now
+        )
     }
 
     // testAlarm adds a fake meeting that starts in 45 seconds, which triggers the takeover at once. During a

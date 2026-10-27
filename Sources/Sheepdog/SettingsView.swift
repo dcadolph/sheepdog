@@ -3,10 +3,30 @@ import UniformTypeIdentifiers
 
 import SheepdogCore
 
+// SettingsTab names a tab of the settings window.
+enum SettingsTab: Hashable {
+    case general
+    case calendars
+    case alerts
+    case sound
+    case hours
+    case look
+}
+
+// SettingsNavigation holds which settings tab is showing, so the menu can open the window on a tab.
+@MainActor
+@Observable
+final class SettingsNavigation {
+    // tab is the tab showing.
+    var tab: SettingsTab = .general
+}
+
 // SettingsView edits every AlertSettings field.
 struct SettingsView: View {
     // store holds the live settings.
     @Bindable var store: SettingsStore
+    // navigation selects the tab showing.
+    @Bindable var navigation: SettingsNavigation
     // loginItem controls starting Sheepdog at login.
     let loginItem: LoginItem
     // accounts holds the calendar sign-ins.
@@ -15,6 +35,12 @@ struct SettingsView: View {
     let onSourcesChanged: () -> Void
     // onTestAlarm runs a full takeover with a fake meeting.
     let onTestAlarm: () -> Void
+    // setupFacts gathers what Tug sees, for the What Tug sees section.
+    let setupFacts: () -> SetupFacts
+    // onAllowAccess opens Calendar privacy settings.
+    let onAllowAccess: () -> Void
+    // facts is what Tug saw when the Calendars tab last looked.
+    @State private var facts: SetupFacts?
     // leadsText is the editable warning leads, in minutes, separated by commas.
     @State private var leadsText = ""
     // backupError is the last export or import failure, shown under the backup buttons.
@@ -28,19 +54,25 @@ struct SettingsView: View {
     // body lays out the settings tabs above the buttons every tab shares.
     var body: some View {
         VStack(spacing: 0) {
-            TabView {
+            TabView(selection: $navigation.tab) {
                 generalTab
                     .tabItem { Label("General", systemImage: "gearshape") }
+                    .tag(SettingsTab.general)
                 calendarsTab
                     .tabItem { Label("Calendars", systemImage: "calendar") }
+                    .tag(SettingsTab.calendars)
                 alertsTab
                     .tabItem { Label("Alerts", systemImage: "bell") }
+                    .tag(SettingsTab.alerts)
                 soundTab
                     .tabItem { Label("Sound", systemImage: "speaker.wave.2") }
+                    .tag(SettingsTab.sound)
                 hoursTab
                     .tabItem { Label("Hours", systemImage: "clock") }
+                    .tag(SettingsTab.hours)
                 lookTab
                     .tabItem { Label("Look", systemImage: "paintpalette") }
+                    .tag(SettingsTab.look)
             }
             .padding([.top, .horizontal])
             HStack {
@@ -240,9 +272,13 @@ struct SettingsView: View {
     // calendarsTab holds the calendar sources, the Slack channels and which events alert.
     private var calendarsTab: some View {
         Form {
+            whatTugSees
             Section {
                 Toggle("Use calendars from macOS Calendar", isOn: $store.settings.useMacCalendar)
-                    .onChange(of: store.settings.useMacCalendar) { onSourcesChanged() }
+                    .onChange(of: store.settings.useMacCalendar) {
+                        onSourcesChanged()
+                        facts = setupFacts()
+                    }
                 ForEach(AccountKind.allCases) { kind in
                     AccountRow(kind: kind, accounts: accounts)
                 }
@@ -277,6 +313,73 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .onAppear { facts = setupFacts() }
+        .onChange(of: navigation.tab) {
+            if navigation.tab == .calendars {
+                facts = setupFacts()
+            }
+        }
+    }
+
+    // whatTugSees lists the macOS Calendar accounts Tug reads and the hints about missing ones.
+    @ViewBuilder private var whatTugSees: some View {
+        Section {
+            let facts = facts ?? setupFacts()
+            ForEach(Array(facts.sources.enumerated()), id: \.offset) { _, source in
+                LabeledContent(Self.sourceLabel(source), value: Self.calendarCount(source.calendarCount))
+            }
+            if facts.sources.isEmpty && facts.macCalendarOn && facts.macCalendarAccess == .granted {
+                Text("macOS Calendar has no calendars.")
+                    .foregroundStyle(.secondary)
+            }
+            if !facts.macCalendarOn {
+                Text("Tug isn't reading macOS Calendar.")
+                    .foregroundStyle(.secondary)
+            }
+            ForEach(CalendarSetup.hints(facts), id: \.self) { hint in
+                HStack {
+                    Text(hint.message)
+                        .font(.caption)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer()
+                    if hint.action == .allowAccess {
+                        Button("Allow calendar access…", action: onAllowAccess)
+                            .controlSize(.small)
+                    }
+                }
+            }
+            Button("Check again") { self.facts = setupFacts() }
+        } header: {
+            Text("What Tug sees")
+        } footer: {
+            Text("These are the accounts in macOS Calendar. To add a work calendar, connect it below or add the account in System Settings, Internet Accounts.")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    // sourceLabel names a source, adding its own title when the user named it.
+    private static func sourceLabel(_ source: SetupSource) -> String {
+        let name: String
+        switch source.kind {
+        case .local:
+            name = "On My Mac"
+        case .icloud:
+            name = "iCloud"
+        case .exchange:
+            name = "Exchange"
+        case .google:
+            name = "Google"
+        case .caldav:
+            name = "CalDAV"
+        case .other:
+            return source.title.isEmpty ? "Other" : source.title
+        }
+        return source.title.isEmpty || source.title == name ? name : "\(name) (\(source.title))"
+    }
+
+    // calendarCount says how many calendars a source holds.
+    private static func calendarCount(_ count: Int) -> String {
+        count == 1 ? "1 calendar" : "\(count) calendars"
     }
 
     // alertsTab holds the warnings, the takeover and snooze limits.

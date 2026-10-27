@@ -63,6 +63,54 @@ final class CalendarProvider {
         return store.events(matching: predicate).map(Self.entry)
     }
 
+    // sources lists the accounts macOS Calendar has, each with its count of event calendars. It reads
+    // nothing before access is granted, so it never triggers a prompt.
+    func sources() -> [SetupSource] {
+        guard access == .granted else {
+            return []
+        }
+        var counts: [String: Int] = [:]
+        var byID: [String: EKSource] = [:]
+        for calendar in store.calendars(for: .event) {
+            guard let source = calendar.source else {
+                continue
+            }
+            counts[source.sourceIdentifier, default: 0] += 1
+            byID[source.sourceIdentifier] = source
+        }
+        return byID.compactMap { id, source in
+            Self.kind(source).map {
+                SetupSource(kind: $0, title: source.title, calendarCount: counts[id] ?? 0)
+            }
+        }
+        .sorted { (Self.order($0.kind), $0.title) < (Self.order($1.kind), $1.title) }
+    }
+
+    // order ranks source kinds for display, accounts with meetings first and this Mac last.
+    private static func order(_ kind: SetupSource.Kind) -> Int {
+        [.exchange, .google, .icloud, .caldav, .other, .local].firstIndex(of: kind) ?? 0
+    }
+
+    // kind maps an EventKit source to a setup kind, or nil for the birthdays source, which holds no
+    // meetings.
+    private static func kind(_ source: EKSource) -> SetupSource.Kind? {
+        switch source.sourceType {
+        case .local:
+            return .local
+        case .mobileMe:
+            return .icloud
+        case .exchange:
+            return .exchange
+        case .calDAV:
+            let title = source.title.lowercased()
+            return title.contains("google") || title.contains("gmail") ? .google : .caldav
+        case .birthdays:
+            return nil
+        default:
+            return .other
+        }
+    }
+
     // currentAccess maps the system authorization status to Access.
     private static func currentAccess() -> Access {
         switch EKEventStore.authorizationStatus(for: .event) {
