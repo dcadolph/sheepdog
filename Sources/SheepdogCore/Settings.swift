@@ -62,6 +62,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var theme: ThemeName = .wolf
     // ShowOutfits reports whether Tug dresses up for holidays.
     public var showOutfits: Bool = true
+    // HolidayTunes reports whether Tug's barks play as a holiday tune while an outfit is worn.
+    public var holidayTunes: Bool = true
     // CheckForUpdates reports whether Sheepdog asks GitHub once a day for a newer release.
     public var checkForUpdates: Bool = true
     // WorkingHours limits barking to shifts on chosen weekdays.
@@ -97,6 +99,7 @@ public struct AlertSettings: Sendable, Codable, Equatable {
         // An unknown theme, e.g. one from a newer build, falls back instead of failing every setting.
         theme = (try? container.decodeIfPresent(ThemeName.self, forKey: .theme)) ?? defaults.theme
         showOutfits = try container.decodeIfPresent(Bool.self, forKey: .showOutfits) ?? defaults.showOutfits
+        holidayTunes = try container.decodeIfPresent(Bool.self, forKey: .holidayTunes) ?? defaults.holidayTunes
         checkForUpdates = try container.decodeIfPresent(Bool.self, forKey: .checkForUpdates)
             ?? defaults.checkForUpdates
         workingHours = try container.decodeIfPresent(WorkingHours.self, forKey: .workingHours)
