@@ -34,6 +34,8 @@ final class Coordinator {
     private(set) var meetings: [Meeting] = []
     // testMeetings are fake meetings created by Test the alarm.
     private var testMeetings: [Meeting] = []
+    // silentTests holds the ids of test meetings made during a nap, which alarm without sound.
+    private var silentTests: Set<String> = []
     // states records what the user did per meeting id.
     private var states: [String: MeetingState] = [:]
     // lastTick is when the previous tick ran, for detecting warning crossings.
@@ -202,18 +204,23 @@ final class Coordinator {
         tick()
     }
 
-    // testAlarm adds a fake meeting that starts in 45 seconds, which triggers the takeover at once.
+    // testAlarm adds a fake meeting that starts in 45 seconds, which triggers the takeover at once. During a
+    // nap the test shows the alarm without sound, since a nap never makes noise.
     func testAlarm() {
         let start = Date().addingTimeInterval(45)
         let link = JoinLinkFinder.find(in: "https://meet.google.com/abc-defg-hij")
+        let silent = isNapping(now: Date())
         let meeting = Meeting(
             id: "test-\(Int(start.timeIntervalSince1970))",
-            title: "Test alarm",
+            title: silent ? "Test alarm (silent, Tug is napping)" : "Test alarm",
             start: start,
             end: start.addingTimeInterval(600),
             link: link
         )
         testMeetings.append(meeting)
+        if silent {
+            silentTests.insert(meeting.id)
+        }
         tick()
     }
 
@@ -229,6 +236,7 @@ final class Coordinator {
             return
         }
         testMeetings.removeAll { Escalation.isExpired($0, settings: settings, now: now) || states[$0.id]?.resolution != nil }
+        silentTests.formIntersection(testMeetings.map(\.id))
         if napUntil != nil && !isNapping(now: now) {
             setNap(nil)
         }
@@ -289,7 +297,7 @@ final class Coordinator {
                 commitDraft()
             }
             windows.showTakeover()
-            if state.quieted {
+            if state.quieted || silentTests.contains(active.meeting.id) {
                 sounds.stopAlarm()
             } else {
                 sounds.startAlarm(
@@ -307,7 +315,7 @@ final class Coordinator {
             } else {
                 windows.hidePill()
             }
-            if chime {
+            if chime && !silentTests.contains(active.meeting.id) {
                 sounds.chime(settings: settings)
             }
         case .idle:
