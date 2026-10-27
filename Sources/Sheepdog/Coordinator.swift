@@ -87,6 +87,9 @@ final class Coordinator {
     private var setupCardOpen = false
     // onShowCalendars opens Settings on the Calendars tab.
     var onShowCalendars: (() -> Void)?
+    // setupFlowOpen reports that the setup window is pending or showing. It holds the macOS Calendar
+    // prompt until the user asks for it and keeps the cards off the window.
+    var setupFlowOpen = false
     // updater installs the update when the user presses Update now.
     private let updater = Updater()
     // fromHomebrew reports that Homebrew manages this install.
@@ -272,7 +275,7 @@ final class Coordinator {
 
     // requestCalendarAccessIfNeeded asks for macOS Calendar access once, when that source is on.
     func requestCalendarAccessIfNeeded() {
-        guard settings.useMacCalendar, calendar.access == .unknown, !requestingAccess else {
+        guard settings.useMacCalendar, calendar.access == .unknown, !requestingAccess, !setupFlowOpen else {
             return
         }
         requestingAccess = true
@@ -281,6 +284,37 @@ final class Coordinator {
             requestingAccess = false
             refresh()
         }
+    }
+
+    // requestCalendarAccess asks for macOS Calendar access from the setup window and reports whether it
+    // was granted. It asks only once; later calls report the answer already given.
+    func requestCalendarAccess() async -> Bool {
+        if calendar.access == .unknown && !requestingAccess {
+            requestingAccess = true
+            _ = await calendar.requestAccess()
+            requestingAccess = false
+            refresh()
+        }
+        return calendar.access == .granted
+    }
+
+    // calendarAccessGranted reports whether macOS Calendar access is granted.
+    var calendarAccessGranted: Bool {
+        calendar.access == .granted
+    }
+
+    // isAlerting reports that a countdown, the takeover or the hand-back card is up, so the setup window waits.
+    var isAlerting: Bool {
+        (active.map { $0.stage != .idle } ?? false) || windows.isShowingTakeover || model.handBack != nil
+    }
+
+    // finishSetupFlow records that the setup window closed, counts the setup card as shown so it does not
+    // follow straight after, and asks for macOS Calendar access if the window never did.
+    func finishSetupFlow() {
+        setupFlowOpen = false
+        setupNudge.shown(now: Date())
+        saveSetupNudge()
+        refresh()
     }
 
     // refresh rereads macOS Calendar, merges the account events and drops state for meetings that are gone.
@@ -809,7 +843,7 @@ final class Coordinator {
         nudge.see(update.tag, now: now)
         let alerting = active.map { $0.stage != .idle } ?? false
         let blocked = alerting || windows.isShowingTakeover || mic.isRunning || model.handBack != nil
-            || setupCardOpen || settings.workingHours.isOffDuty(now: now, calendar: .current)
+            || setupCardOpen || setupFlowOpen || settings.workingHours.isOffDuty(now: now, calendar: .current)
         if !updateCardOpen && nudge.due(now: now, blocked: blocked) {
             nudge.shown(now: now)
             updateCardOpen = true
@@ -875,7 +909,7 @@ final class Coordinator {
         }
         let alerting = active.map { $0.stage != .idle } ?? false
         let blocked = alerting || windows.isShowingTakeover || mic.isRunning || model.handBack != nil
-            || updateCardOpen || isNapping(now: now)
+            || updateCardOpen || setupFlowOpen || isNapping(now: now)
             || settings.workingHours.isOffDuty(now: now, calendar: .current)
         if !setupCardOpen && setupNudge.due(now: now, blocked: blocked) {
             setupCardOpen = true

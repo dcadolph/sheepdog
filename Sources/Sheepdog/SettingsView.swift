@@ -493,16 +493,24 @@ struct SettingsView: View {
 
     // applyLeads parses the leads text and saves it when every value is a valid minute count.
     private func applyLeads() {
-        let parts = leadsText.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        if let leads = Self.parseLeads(leadsText) {
+            store.settings.warningLeads = leads
+        }
+    }
+
+    // parseLeads reads a comma separated minute list as leads in seconds, longest first, or nil when any
+    // value is not a minute count from just above 0 to 120.
+    static func parseLeads(_ text: String) -> [TimeInterval]? {
+        let parts = text.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
         let minutes = parts.compactMap(Double.init)
         guard minutes.count == parts.count, minutes.allSatisfy({ $0 > 0 && $0 <= 120 }) else {
-            return
+            return nil
         }
-        store.settings.warningLeads = minutes.map { $0 * 60 }.sorted(by: >)
+        return minutes.map { $0 * 60 }.sorted(by: >)
     }
 
     // format renders leads in seconds as a comma separated minute list.
-    private static func format(_ leads: [TimeInterval]) -> String {
+    static func format(_ leads: [TimeInterval]) -> String {
         leads.map { lead in
             let minutes = lead / 60
             return minutes == minutes.rounded() ? String(Int(minutes)) : String(minutes)

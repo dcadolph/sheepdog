@@ -42,6 +42,21 @@ final class LoginItem {
         refresh()
     }
 
+    // finishSetup applies the setup window's choice and records that the first-launch registration has run,
+    // so a later launch does not register it again behind the user's back.
+    func finishSetup(enabled: Bool) {
+        refresh()
+        if enabled != (isEnabled || needsApproval) {
+            setEnabled(enabled)
+        }
+        UserDefaults.standard.set(true, forKey: Self.configuredKey)
+    }
+
+    // hasConfigured reports whether the first-launch registration has run on this Mac.
+    static var hasConfigured: Bool {
+        UserDefaults.standard.bool(forKey: configuredKey)
+    }
+
     // setEnabled registers or unregisters the login item.
     func setEnabled(_ enabled: Bool) {
         do {

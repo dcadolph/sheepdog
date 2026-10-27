@@ -9,6 +9,8 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let coordinator: Coordinator
     // openSettings shows the settings window on a tab, or on the last one shown when nil.
     private let openSettings: (SettingsTab?) -> Void
+    // onSetUp opens the "Set up Sheepdog" window.
+    var onSetUp: (() -> Void)?
     // item is the menu bar status item.
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     // timeFormatter renders meeting start times in the menu.
@@ -196,8 +198,8 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             tip: "Asks GitHub now whether a newer Sheepdog is out."
         ))
         menu.addItem(action(
-            "Set up calendars…", #selector(showCalendars),
-            tip: "Shows which calendars Tug sees and helps you connect the ones he doesn't."
+            "Set up Sheepdog…", #selector(showSetup),
+            tip: "Shows which calendars Tug sees, helps you connect the ones he doesn't, and sets when he barks."
         ))
         menu.addItem(action(
             "Settings…", #selector(showSettings), key: ",",
@@ -395,6 +397,11 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     // showCalendars opens the settings window on the Calendars tab.
     @objc private func showCalendars() {
         openSettings(.calendars)
+    }
+
+    // showSetup opens the "Set up Sheepdog" window.
+    @objc private func showSetup() {
+        onSetUp?()
     }
 
     // openPrivacy opens the calendar privacy pane in System Settings.

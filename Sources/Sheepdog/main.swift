@@ -18,6 +18,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var coordinator: Coordinator?
     // statusItem is the menu bar controller.
     private var statusItem: StatusItemController?
+    // setupWindow is the "Set up Sheepdog" window.
+    private var setupWindow: SetupWindow?
     // settingsWindow is created on first open and reused.
     private var settingsWindow: NSWindow?
     // settingsNavigation selects the settings tab, so the menu can open a given one.
@@ -32,15 +34,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         installer.offerTrash()
         NSApp.mainMenu = Self.makeMainMenu()
-        loginItem.configureOnFirstLaunch()
         let coordinator = Coordinator(settingsStore: settingsStore, accounts: accounts)
+        let setupWindow = SetupWindow(
+            store: settingsStore, accounts: accounts, loginItem: loginItem, coordinator: coordinator,
+            onAllowAccess: { StatusItemController.openCalendarPrivacy() }
+        )
+        if !setupWindow.prepare() {
+            loginItem.configureOnFirstLaunch()
+        }
         let statusItem = StatusItemController(coordinator: coordinator) { [weak self] tab in
             self?.showSettings(tab: tab)
         }
-        coordinator.onTick = { [weak statusItem] in statusItem?.update() }
+        statusItem.onSetUp = { [weak setupWindow] in setupWindow?.reopen() }
+        coordinator.onTick = { [weak statusItem, weak setupWindow] in
+            statusItem?.update()
+            setupWindow?.showIfPending()
+        }
         coordinator.onShowCalendars = { [weak self] in self?.showSettings(tab: .calendars) }
         self.coordinator = coordinator
         self.statusItem = statusItem
+        self.setupWindow = setupWindow
         coordinator.start()
     }
 
