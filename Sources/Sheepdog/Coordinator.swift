@@ -74,6 +74,19 @@ final class Coordinator {
     // updateCardOpen reports that the update card was shown and not yet answered. A blocked card hides
     // and comes back when the way is clear.
     private var updateCardOpen = false
+    // setupNudgeKey is the user defaults key holding the setup card's schedule.
+    private static let setupNudgeKey = "setupNudge"
+    // setupNudge is when the setup card last showed and whether it was silenced. It is not part of the
+    // settings backup.
+    private var setupNudge: SetupNudge = UserDefaults.standard.data(forKey: Coordinator.setupNudgeKey)
+        .flatMap { try? JSONDecoder().decode(SetupNudge.self, from: $0) } ?? SetupNudge()
+    // setupHints are the calendar setup hints from the last refresh.
+    private var setupHints: [SetupHint] = []
+    // setupCardOpen reports that the setup card was shown and not yet answered. A blocked card hides
+    // and comes back when the way is clear.
+    private var setupCardOpen = false
+    // onShowCalendars opens Settings on the Calendars tab.
+    var onShowCalendars: (() -> Void)?
     // updater installs the update when the user presses Update now.
     private let updater = Updater()
     // fromHomebrew reports that Homebrew manages this install.
@@ -124,6 +137,9 @@ final class Coordinator {
         model.onOpenUpdate = { [weak self] in self?.openUpdate() }
         model.onRemindUpdate = { [weak self] in self?.closeUpdateCard() }
         model.onSkipUpdate = { [weak self] in self?.skipUpdate() }
+        model.onOpenSetup = { [weak self] in self?.openSetup() }
+        model.onLaterSetup = { [weak self] in self?.answerSetup(silence: false) }
+        model.onSilenceSetup = { [weak self] in self?.answerSetup(silence: true) }
         model.updateCanInstall = Updater.canUpdate
         calendar.onChange = { [weak self] in self?.refresh() }
         accounts.onChange = { [weak self] in self?.refresh() }
@@ -279,7 +295,22 @@ final class Coordinator {
         let known = Set((meetings + testMeetings).map(\.id))
         states = states.filter { known.contains($0.key) }
         noteMeetingSeen(now: now)
+        checkSetup(now: now)
         tick()
+    }
+
+    // checkSetup rereads the calendar setup hints. It waits for the macOS Calendar answer, so the card
+    // never shows before the permission prompt is settled.
+    private func checkSetup(now: Date) {
+        guard !requestingAccess, !(settings.useMacCalendar && calendar.access == .unknown) else {
+            return
+        }
+        setupHints = CalendarSetup.hints(setupFacts(now: now))
+        let before = setupNudge
+        setupNudge.see(hints: setupHints)
+        if setupNudge != before {
+            saveSetupNudge()
+        }
     }
 
     // noteMeetingSeen records that Tug sees a real meeting, at most once an hour, for the quiet week
@@ -395,6 +426,7 @@ final class Coordinator {
         render(now: now, chime: chime)
         renderHandBack()
         renderUpdateCard(now: now)
+        renderSetupCard(now: now)
         onTick?()
     }
 
@@ -777,7 +809,7 @@ final class Coordinator {
         nudge.see(update.tag, now: now)
         let alerting = active.map { $0.stage != .idle } ?? false
         let blocked = alerting || windows.isShowingTakeover || mic.isRunning || model.handBack != nil
-            || settings.workingHours.isOffDuty(now: now, calendar: .current)
+            || setupCardOpen || settings.workingHours.isOffDuty(now: now, calendar: .current)
         if !updateCardOpen && nudge.due(now: now, blocked: blocked) {
             nudge.shown(now: now)
             updateCardOpen = true
@@ -831,6 +863,60 @@ final class Coordinator {
         updateCardOpen = false
         model.updateVersion = nil
         windows.hideUpdate()
+    }
+
+    // renderSetupCard shows the setup card when it is due, and keeps an open card hidden while a
+    // countdown, the takeover, a call, a nap, off hours, the hand-back card or the update card is in
+    // the way.
+    private func renderSetupCard(now: Date) {
+        guard !setupHints.isEmpty else {
+            closeSetupCard()
+            return
+        }
+        let alerting = active.map { $0.stage != .idle } ?? false
+        let blocked = alerting || windows.isShowingTakeover || mic.isRunning || model.handBack != nil
+            || updateCardOpen || isNapping(now: now)
+            || settings.workingHours.isOffDuty(now: now, calendar: .current)
+        if !setupCardOpen && setupNudge.due(now: now, blocked: blocked) {
+            setupCardOpen = true
+        }
+        model.setupHints = setupCardOpen ? setupHints : []
+        if setupCardOpen && !blocked {
+            windows.showSetup()
+        } else {
+            windows.hideSetup()
+        }
+    }
+
+    // openSetup opens Settings on the Calendars tab and counts the card as shown.
+    private func openSetup() {
+        answerSetup(silence: false)
+        onShowCalendars?()
+    }
+
+    // answerSetup puts the setup card away, until its next reminder or, when silence is set, for good.
+    private func answerSetup(silence: Bool) {
+        if silence {
+            setupNudge.silence()
+        } else {
+            setupNudge.shown(now: Date())
+        }
+        saveSetupNudge()
+        closeSetupCard()
+    }
+
+    // closeSetupCard hides the setup card.
+    private func closeSetupCard() {
+        setupCardOpen = false
+        model.setupHints = []
+        windows.hideSetup()
+    }
+
+    // saveSetupNudge keeps the setup card's schedule across restarts.
+    private func saveSetupNudge() {
+        if let data = try? JSONEncoder().encode(setupNudge) {
+            UserDefaults.standard.set(data, forKey: Self.setupNudgeKey)
+        }
     }
 
     // saveNudge keeps the update card's schedule across restarts.

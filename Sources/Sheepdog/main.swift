@@ -38,6 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.showSettings(tab: tab)
         }
         coordinator.onTick = { [weak statusItem] in statusItem?.update() }
+        coordinator.onShowCalendars = { [weak self] in self?.showSettings(tab: .calendars) }
         self.coordinator = coordinator
         self.statusItem = statusItem
         coordinator.start()

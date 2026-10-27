@@ -38,6 +38,8 @@ final class AlertModel {
     var teamChannel = 0
     // updateVersion is the newer version the update card names, or nil while the card is closed.
     var updateVersion: String?
+    // setupHints are the calendar setup hints the setup card shows, empty while the card is closed.
+    var setupHints: [SetupHint] = []
     // updateCanInstall reports that this copy can install the update itself, so the card offers
     // Update now instead of the release page.
     var updateCanInstall = false
@@ -81,6 +83,12 @@ final class AlertModel {
     var onRemindUpdate: () -> Void = {}
     // onSkipUpdate is called when the user skips the update's version.
     var onSkipUpdate: () -> Void = {}
+    // onOpenSetup is called when the user opens the Calendars settings from the setup card.
+    var onOpenSetup: () -> Void = {}
+    // onLaterSetup is called when the user asks to be reminded about calendar setup later.
+    var onLaterSetup: () -> Void = {}
+    // onSilenceSetup is called when the user stops the setup card for good.
+    var onSilenceSetup: () -> Void = {}
 
     // hasStarted reports whether the meeting's start has passed.
     var hasStarted: Bool {
