@@ -25,12 +25,14 @@ final class SettingsStore {
         }
     }
 
-    // reset restores the defaults and keeps the Slack channels, theme, outfit switch and holiday tunes switch,
+    // reset restores the defaults and keeps the Slack channels, theme, custom colors, outfit switch and holiday
+    // tunes switch,
     // which are setup rather than tuning.
     func reset() {
         var fresh = AlertSettings()
         fresh.slackChannels = settings.slackChannels
         fresh.theme = settings.theme
+        fresh.customColors = settings.customColors
         fresh.showOutfits = settings.showOutfits
         fresh.holidayTunes = settings.holidayTunes
         settings = fresh

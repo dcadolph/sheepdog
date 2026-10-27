@@ -50,3 +50,15 @@ extension Color {
         self.init(red: rgb.red, green: rgb.green, blue: rgb.blue)
     }
 }
+
+extension RGB {
+    // init converts a SwiftUI color to sRGB, or returns nil when it has no color space.
+    init?(_ color: Color) {
+        guard let converted = NSColor(color).usingColorSpace(.sRGB) else {
+            return nil
+        }
+        self.init(
+            red: converted.redComponent, green: converted.greenComponent, blue: converted.blueComponent
+        )
+    }
+}

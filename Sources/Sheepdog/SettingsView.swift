@@ -31,6 +31,8 @@ struct SettingsView: View {
             TabView {
                 generalTab
                     .tabItem { Label("General", systemImage: "gearshape") }
+                lookTab
+                    .tabItem { Label("Look", systemImage: "paintpalette") }
                 calendarsTab
                     .tabItem { Label("Calendars", systemImage: "calendar") }
                 alertsTab
@@ -58,7 +60,7 @@ struct SettingsView: View {
         }
     }
 
-    // generalTab holds the app header, login and update options, the theme and the backup buttons.
+    // generalTab holds the app header, login and update options and the backup buttons.
     private var generalTab: some View {
         Form {
             Section {
@@ -98,29 +100,6 @@ struct SettingsView: View {
             }
             Section {
                 HStack {
-                    Picker("Tug's collar", selection: $store.settings.theme) {
-                        ForEach(ThemeName.allCases) { theme in
-                            Text(theme == AlertSettings().theme ? "\(theme.label) (default)" : theme.label).tag(theme)
-                        }
-                    }
-                    TugImage(
-                        name: "tug-head", palette: store.settings.theme.palette,
-                        outfit: Theme.dressed(store.settings)
-                    )
-                    .frame(width: 32, height: 32)
-                    .clipShape(Circle())
-                }
-                Toggle("Dress Tug up for holidays", isOn: $store.settings.showOutfits)
-            } header: {
-                Text("Look")
-            } footer: {
-                Text("The collar also colors the alarm, the countdown and the hold-my-place card. "
-                    + "Around New Year's, Valentine's Day, St. Patrick's Day, Easter, Halloween, "
-                    + "Thanksgiving and Christmas, Tug wears an outfit. Use Test the alarm to see it.")
-                    .foregroundStyle(.secondary)
-            }
-            Section {
-                HStack {
                     Button("Export settings…", action: exportSettings)
                     Button("Import settings…", action: importSettings)
                 }
@@ -137,6 +116,125 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    // lookTab holds Tug's collar, the custom colors and the holiday outfit switch.
+    private var lookTab: some View {
+        Form {
+            Section {
+                HStack {
+                    Picker("Tug's collar", selection: $store.settings.theme) {
+                        ForEach(ThemeName.presets) { theme in
+                            Text(theme == AlertSettings().theme ? "\(theme.label) (default)" : theme.label).tag(theme)
+                        }
+                        Divider()
+                        Text(ThemeName.custom.label).tag(ThemeName.custom)
+                    }
+                    TugImage(name: "tug-head", palette: store.settings.palette, outfit: Theme.dressed(store.settings))
+                        .frame(width: 32, height: 32)
+                        .clipShape(Circle())
+                }
+                Toggle("Dress Tug up for holidays", isOn: $store.settings.showOutfits)
+            } header: {
+                Text("Look")
+            } footer: {
+                Text("The collar also colors the alarm, the countdown and the hold-my-place card. "
+                    + "Around New Year's, Valentine's Day, St. Patrick's Day, Easter, Halloween, "
+                    + "Thanksgiving and Christmas, Tug wears an outfit. Use Test the alarm to see it.")
+                    .foregroundStyle(.secondary)
+            }
+            if store.settings.theme == .custom {
+                customSection
+            }
+        }
+        .formStyle(.grouped)
+    }
+
+    // customSection edits the picked colors of the Custom collar and shows which ones were adjusted.
+    private var customSection: some View {
+        let resolved = store.settings.customColors.resolved
+        return Section {
+            Picker("Start from", selection: Binding<ThemeName?>(
+                get: { nil },
+                set: { if let theme = $0 { store.settings.customColors = CustomColors.seeded(from: theme) } }
+            )) {
+                Text("Choose a collar…").tag(ThemeName?.none)
+                ForEach(ThemeName.presets) { theme in
+                    Text(theme.label).tag(ThemeName?.some(theme))
+                }
+            }
+            colorRow("Background", hex: $store.settings.customColors.background,
+                     adjusted: resolved.adjusted.contains(.background))
+            colorRow("Ring and buttons", hex: $store.settings.customColors.accent,
+                     adjusted: resolved.adjusted.contains(.accent))
+            optionalColorRow("Collar", off: "Tug's own collar", hex: $store.settings.customColors.collar,
+                             fallback: "#588d9c", adjusted: false)
+            optionalColorRow("Already started", off: "Picked for the background", hex: $store.settings.customColors.late,
+                             fallback: resolved.palette.late.hex, adjusted: resolved.adjusted.contains(.late))
+        } header: {
+            Text("Custom colors")
+        } footer: {
+            Text("Pick two to four colors and Tug works out the rest so the text stays readable. "
+                + "The color panel takes a hex value or a drag around the wheel.")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    // colorRow is a color picker bound to a hex string, with a note when the app moved the color.
+    private func colorRow(_ title: String, hex: Binding<String>, adjusted: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ColorPicker(title, selection: Self.colorBinding(hex), supportsOpacity: false)
+            if adjusted {
+                Text("Adjusted so the text stays readable.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    // optionalColorRow is a color picker with a switch that leaves the color unset.
+    private func optionalColorRow(
+        _ title: String, off: String, hex: Binding<String?>, fallback: String, adjusted: Bool
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Toggle(isOn: Binding(
+                    get: { hex.wrappedValue != nil },
+                    set: { hex.wrappedValue = $0 ? fallback : nil }
+                )) {
+                    Text(title)
+                }
+                .toggleStyle(.checkbox)
+                Spacer()
+                if hex.wrappedValue == nil {
+                    Text(off)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ColorPicker("", selection: Self.colorBinding(Binding(
+                        get: { hex.wrappedValue ?? fallback },
+                        set: { hex.wrappedValue = $0 }
+                    )), supportsOpacity: false)
+                    .labelsHidden()
+                }
+            }
+            if adjusted {
+                Text("Adjusted so the text stays readable.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    // colorBinding converts a hex string binding to the Color binding a ColorPicker wants.
+    private static func colorBinding(_ hex: Binding<String>) -> Binding<Color> {
+        Binding(
+            get: { Color(RGB(hex: hex.wrappedValue) ?? RGB(hex: "#0f1012")!) },
+            set: { color in
+                if let rgb = RGB(color) {
+                    hex.wrappedValue = rgb.hex
+                }
+            }
+        )
     }
 
     // calendarsTab holds the calendar sources, the Slack channels and which events alert.

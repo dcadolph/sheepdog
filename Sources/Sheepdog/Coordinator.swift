@@ -220,7 +220,7 @@ final class Coordinator {
     // tick advances the alert state once.
     private func tick() {
         let now = Date()
-        Theme.palette = settings.theme.palette
+        Theme.palette = settings.palette
         Theme.outfit = Theme.dressed(settings, on: now)
         accounts.refreshIfDue(now: now)
         checkForUpdateIfDue(now: now)
