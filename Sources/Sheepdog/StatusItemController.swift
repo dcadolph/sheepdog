@@ -192,6 +192,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             "Refresh calendars", #selector(refresh), tip: "Refreshes the connection to every calendar Tug is watching."
         ))
         menu.addItem(action(
+            "Check for Updates…", #selector(checkForUpdates),
+            tip: "Asks GitHub now whether a newer Sheepdog is out."
+        ))
+        menu.addItem(action(
             "Settings…", #selector(showSettings), key: ",",
             tip: "Choose which calendars Tug watches, when he barks and how loud."
         ))
@@ -347,6 +351,11 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     // wake ends Tug's nap.
     @objc private func wake() {
         coordinator.wake()
+    }
+
+    // checkForUpdates asks GitHub for a newer release right away.
+    @objc private func checkForUpdates() {
+        coordinator.checkForUpdateNow()
     }
 
     // openUpdate opens the newer release's page in the browser.

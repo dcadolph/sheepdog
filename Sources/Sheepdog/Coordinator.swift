@@ -165,6 +165,77 @@ final class Coordinator {
         }
     }
 
+    // checkForUpdateNow asks GitHub for the latest release at once, whatever the schedule or the automatic
+    // check setting says, and answers in a dialog.
+    func checkForUpdateNow() {
+        guard !checkingUpdate, let current = Self.runningVersion else {
+            return
+        }
+        UserDefaults.standard.set(Date(), forKey: Self.updateCheckedKey)
+        checkingUpdate = true
+        Task { [weak self] in
+            let checker = UpdateChecker(client: URLSessionClient(), current: current)
+            do {
+                let found = try await checker.check()
+                self?.finishUpdateCheck(found)
+                self?.reportUpdateCheck(found)
+            } catch {
+                self?.finishUpdateCheck(nil, failure: error)
+                self?.reportUpdateCheck(nil, failed: true)
+            }
+        }
+    }
+
+    // reportUpdateCheck tells the user what a check they asked for found, and installs a newer release when
+    // they choose to.
+    private func reportUpdateCheck(_ found: ReleaseInfo?, failed: Bool = false) {
+        let running = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        NSApp.activate()
+        let alert = NSAlert()
+        guard let found else {
+            alert.messageText = failed ? "Couldn't reach GitHub." : "Sheepdog \(running) is the latest."
+            alert.informativeText = failed
+                ? "Check your connection and try again later."
+                : "Tug is already on the newest version."
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
+            return
+        }
+        let version = found.tag.hasPrefix("v") ? String(found.tag.dropFirst()) : found.tag
+        let installs = Updater.canUpdate
+        alert.messageText = "Sheepdog \(version) is available."
+        alert.informativeText = installs
+            ? "You have \(running). Sheepdog updates itself and starts again."
+            : "You have \(running). The release page has the download."
+        alert.addButton(withTitle: installs ? "Update Now" : "View Release")
+        alert.addButton(withTitle: "Later")
+        guard alert.runModal() == .alertFirstButtonReturn else {
+            return
+        }
+        guard installs else {
+            NSWorkspace.shared.open(found.page)
+            return
+        }
+        Task { [weak self] in
+            do {
+                try await self?.installRelease(found)
+            } catch {
+                self?.log.error("update install failed: \(String(describing: error), privacy: .public)")
+                NSWorkspace.shared.open(found.page)
+            }
+        }
+    }
+
+    // installRelease installs a release through Homebrew when Homebrew manages this copy and from the
+    // release's disk image otherwise.
+    private func installRelease(_ release: ReleaseInfo) async throws {
+        if Self.fromHomebrew {
+            try await updater.brew()
+        } else {
+            try await updater.install(tag: release.tag)
+        }
+    }
+
     // finishUpdateCheck keeps the release a check found, or clears it when there is none.
     private func finishUpdateCheck(_ found: ReleaseInfo?, failure: Error? = nil) {
         checkingUpdate = false
@@ -665,13 +736,9 @@ final class Coordinator {
             return
         }
         model.updateBusy = true
-        Task { [weak self, updater] in
+        Task { [weak self] in
             do {
-                if Self.fromHomebrew {
-                    try await updater.brew()
-                } else {
-                    try await updater.install(tag: update.tag)
-                }
+                try await self?.installRelease(update)
             } catch {
                 self?.log.error("update install failed: \(String(describing: error), privacy: .public)")
                 self?.model.updateFailed = true
