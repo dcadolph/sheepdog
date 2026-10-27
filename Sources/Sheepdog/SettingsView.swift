@@ -9,7 +9,7 @@ struct SettingsView: View {
     @Bindable var store: SettingsStore
     // loginItem controls starting Sheepdog at login.
     let loginItem: LoginItem
-    // accounts holds the Microsoft and Google sign-ins.
+    // accounts holds the calendar sign-ins.
     let accounts: Accounts
     // onSourcesChanged rereads the calendars after a source is turned on or off.
     let onSourcesChanged: () -> Void
@@ -249,8 +249,11 @@ struct SettingsView: View {
             } header: {
                 Text("Calendars")
             } footer: {
-                Text("Sign-in happens in your browser. Sheepdog only reads your calendars, and keeps the sign-in in your Keychain.")
+                Text("Microsoft and Google sign in in your browser. iCloud needs an app-specific password from account.apple.com. Sheepdog only reads your calendars, and keeps every sign-in in your Keychain.")
                     .foregroundStyle(.secondary)
+            }
+            .sheet(item: Binding(get: { accounts.passwordPrompt }, set: { accounts.passwordPrompt = $0 })) { kind in
+                PasswordSignInSheet(kind: kind, accounts: accounts)
             }
             Section {
                 ForEach($store.settings.slackChannels) { $channel in
@@ -567,7 +570,7 @@ struct AccountRow: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(kind.label)
-                    Text(Self.status(state))
+                    Text(Self.status(state, kind: kind))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -579,7 +582,9 @@ struct AccountRow: View {
                     Button("Connect…") { accounts.connect(kind) }
                 case .signingIn:
                     ProgressView().controlSize(.small)
-                    Button("Cancel") { accounts.cancelSignIn(kind) }
+                    if !kind.usesPassword {
+                        Button("Cancel") { accounts.cancelSignIn(kind) }
+                    }
                 case .connected:
                     Button("Disconnect") { accounts.disconnect(kind) }
                 case .needsSignIn:
@@ -596,18 +601,105 @@ struct AccountRow: View {
     }
 
     // status describes a state in a few words.
-    private static func status(_ state: AccountState) -> String {
+    private static func status(_ state: AccountState, kind: AccountKind) -> String {
         switch state {
         case .notConfigured:
             return "Not available in this build"
         case .signedOut:
             return "Not connected"
         case .signingIn:
-            return "Finish signing in in your browser"
+            return kind.usesPassword ? "Checking the password" : "Finish signing in in your browser"
         case .connected(let address):
             return address.map { "Connected as \($0)" } ?? "Connected"
         case .needsSignIn(let address):
             return address.map { "\($0) needs you to sign in again" } ?? "Needs you to sign in again"
+        }
+    }
+}
+
+// PasswordSignInSheet asks for a password service's user name and password and connects only when they work.
+struct PasswordSignInSheet: View {
+    // kind is the service.
+    let kind: AccountKind
+    // accounts checks and saves the sign-in.
+    let accounts: Accounts
+    // username is the typed user name.
+    @State private var username = ""
+    // password is the typed password, cleared once the check finishes.
+    @State private var password = ""
+    // problem is why the last attempt failed.
+    @State private var problem: String?
+    // checking reports an attempt in progress.
+    @State private var checking = false
+
+    // body lays out the fields, the hint and the buttons.
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Connect \(kind.label)")
+                .font(.headline)
+            Form {
+                TextField(Self.usernameLabel(kind), text: $username)
+                    .textContentType(.username)
+                SecureField(Self.passwordLabel(kind), text: $password)
+                    .textContentType(.password)
+            }
+            .disabled(checking)
+            Text(Self.hint(kind))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            if let problem {
+                Text(problem)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            HStack {
+                if checking {
+                    ProgressView().controlSize(.small)
+                }
+                Spacer()
+                Button("Cancel", role: .cancel) { accounts.passwordPrompt = nil }
+                    .keyboardShortcut(.cancelAction)
+                Button("Connect", action: connect)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(checking || username.trimmingCharacters(in: .whitespaces).isEmpty || password.isEmpty)
+            }
+        }
+        .padding(20)
+        .frame(width: 420)
+    }
+
+    // connect checks the credentials and closes the sheet when they work.
+    private func connect() {
+        checking = true
+        problem = nil
+        let name = username.trimmingCharacters(in: .whitespaces)
+        let secret = password
+        Task {
+            problem = await accounts.connectPassword(kind, username: name, password: secret)
+            password = ""
+            checking = false
+        }
+    }
+
+    // usernameLabel names the user name field.
+    private static func usernameLabel(_ kind: AccountKind) -> String {
+        kind == .icloud ? "Apple ID" : "User name"
+    }
+
+    // passwordLabel names the password field.
+    private static func passwordLabel(_ kind: AccountKind) -> String {
+        kind == .icloud ? "App-specific password" : "Password"
+    }
+
+    // hint tells the user where the password comes from.
+    private static func hint(_ kind: AccountKind) -> String {
+        switch kind {
+        case .icloud:
+            return "Make an app-specific password at account.apple.com, under Sign-In and Security. Your Apple ID password will not work here. Sheepdog only reads your calendars and keeps the password in your Keychain."
+        default:
+            return "Sheepdog only reads your calendars and keeps the password in your Keychain."
         }
     }
 }

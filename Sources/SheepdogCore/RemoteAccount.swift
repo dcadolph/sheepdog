@@ -2,24 +2,100 @@ import Foundation
 
 // AccountRecord is what Sheepdog stores in the Keychain for one signed-in account.
 public struct AccountRecord: Sendable, Codable, Equatable, CustomStringConvertible {
+    // Credential is the secret that keeps an account signed in. It is only ever written to the Keychain.
+    public enum Credential: Sendable, Equatable, CustomStringConvertible {
+        // refreshToken renews access tokens for a browser sign-in.
+        case refreshToken(String)
+        // password signs in to a server with a user name and password, such as an app-specific password.
+        case password(server: URL, username: String, password: String)
+
+        // description names the form with every secret redacted.
+        public var description: String {
+            switch self {
+            case .refreshToken:
+                return "refreshToken(<redacted>)"
+            case .password(let server, let username, _):
+                return "password(server: \(server.absoluteString), username: \(username), password: <redacted>)"
+            }
+        }
+    }
+
     // Kind is the service.
     public var kind: AccountKind
     // Address is the account's mail address, shown in settings.
     public var address: String?
-    // RefreshToken keeps the account signed in. It is secret and only ever written to the Keychain.
-    public var refreshToken: String
+    // Credential keeps the account signed in.
+    public var credential: Credential
 
     // init creates a record.
-    public init(kind: AccountKind, address: String?, refreshToken: String) {
+    public init(kind: AccountKind, address: String?, credential: Credential) {
         self.kind = kind
         self.address = address
-        self.refreshToken = refreshToken
+        self.credential = credential
     }
 
-    // description identifies the account with the refresh token redacted, so logging a record never leaks it.
-    public var description: String {
-        "AccountRecord(kind: \(kind.rawValue), address: \(address ?? "nil"), refreshToken: <redacted>)"
+    // init creates a record for a browser sign-in.
+    public init(kind: AccountKind, address: String?, refreshToken: String) {
+        self.init(kind: kind, address: address, credential: .refreshToken(refreshToken))
     }
+
+    // refreshToken returns the refresh token of a browser sign-in.
+    public var refreshToken: String? {
+        if case .refreshToken(let token) = credential {
+            return token
+        }
+        return nil
+    }
+
+    // description identifies the account with the credential redacted, so logging a record never leaks it.
+    public var description: String {
+        "AccountRecord(kind: \(kind.rawValue), address: \(address ?? "nil"), credential: \(credential))"
+    }
+
+    // CodingKeys are the flat JSON keys. A browser sign-in has refreshToken, a password sign-in has the other three.
+    enum CodingKeys: String, CodingKey {
+        case kind, address, refreshToken, server, username, password
+    }
+
+    // init decodes a record from either credential form.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try container.decode(AccountKind.self, forKey: .kind)
+        address = try container.decodeIfPresent(String.self, forKey: .address)
+        if let token = try container.decodeIfPresent(String.self, forKey: .refreshToken) {
+            credential = .refreshToken(token)
+        } else {
+            credential = .password(
+                server: try container.decode(URL.self, forKey: .server),
+                username: try container.decode(String.self, forKey: .username),
+                password: try container.decode(String.self, forKey: .password)
+            )
+        }
+    }
+
+    // encode writes the record with the keys of its credential form.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(kind, forKey: .kind)
+        try container.encodeIfPresent(address, forKey: .address)
+        switch credential {
+        case .refreshToken(let token):
+            try container.encode(token, forKey: .refreshToken)
+        case .password(let server, let username, let password):
+            try container.encode(server, forKey: .server)
+            try container.encode(username, forKey: .username)
+            try container.encode(password, forKey: .password)
+        }
+    }
+}
+
+// AccountSession reads one connected account's events.
+public protocol AccountSession: Actor {
+    // record is the stored account.
+    var record: AccountRecord { get }
+
+    // entries reads events in the window.
+    func entries(from: Date, to: Date) async throws -> [CalendarEntry]
 }
 
 // SignIn finishes a browser sign-in once the redirect has delivered a code.
@@ -40,13 +116,15 @@ public enum SignIn {
             address = try await GraphCalendar.profile(client: client, accessToken: tokens.accessToken)
         case .google:
             address = try await GoogleCalendar.profile(client: client, accessToken: tokens.accessToken)
+        case .icloud:
+            throw AuthError.denied("\(provider.kind.label) does not sign in through the browser.")
         }
         return AccountRecord(kind: provider.kind, address: address, refreshToken: refreshToken)
     }
 }
 
 // RemoteAccount keeps one signed-in account's access token fresh and reads its events.
-public actor RemoteAccount {
+public actor RemoteAccount: AccountSession {
     // provider is the service and app registration.
     public let provider: OAuthProvider
     // record is the stored account, updated when the service rotates the refresh token.
@@ -94,11 +172,14 @@ public actor RemoteAccount {
         if let access, access.expiresAt.timeIntervalSince(now) > refreshMargin {
             return access.token
         }
-        let (data, status) = try await client.send(provider.refreshRequest(refreshToken: record.refreshToken))
+        guard let refreshToken = record.refreshToken else {
+            throw AuthError.reauthorize("This account has no refresh token.")
+        }
+        let (data, status) = try await client.send(provider.refreshRequest(refreshToken: refreshToken))
         let tokens = try TokenSet.decode(data, status: status, now: now)
         access = (tokens.accessToken, tokens.expiresAt)
-        if let rotated = tokens.refreshToken, !rotated.isEmpty, rotated != record.refreshToken {
-            record.refreshToken = rotated
+        if let rotated = tokens.refreshToken, !rotated.isEmpty, rotated != refreshToken {
+            record.credential = .refreshToken(rotated)
             onRecordChange(record)
         }
         return tokens.accessToken
@@ -113,6 +194,77 @@ public actor RemoteAccount {
             )
         case .google:
             return try await GoogleCalendar.fetch(client: client, accessToken: accessToken, from: from, to: to)
+        case .icloud:
+            throw AuthError.reauthorize("\(provider.kind.label) does not sign in through the browser.")
         }
+    }
+}
+
+// PasswordSignIn checks a user name and password against a server before anything is saved.
+public enum PasswordSignIn {
+    // complete runs discovery with the credentials and returns the record to store and what discovery found.
+    public static func complete(
+        kind: AccountKind, server: URL, username: String, password: String, client: HTTPClient
+    ) async throws -> (AccountRecord, CalDAVCalendar.Discovery) {
+        let discovery = try await CalDAVCalendar.discover(
+            client: client, base: server, username: username, password: password
+        )
+        let record = AccountRecord(
+            kind: kind, address: username, credential: .password(server: server, username: username, password: password)
+        )
+        return (record, discovery)
+    }
+}
+
+// PasswordSession reads a password account's events, finding its calendar home once and again after a rejection.
+public actor PasswordSession: AccountSession {
+    // record is the stored account.
+    public let record: AccountRecord
+
+    // client sends HTTP requests.
+    private let client: HTTPClient
+    // discovery is the account's calendar home, found on first read or handed over by sign-in.
+    private var discovery: CalDAVCalendar.Discovery?
+
+    // init creates a session, reusing a discovery from sign-in when there is one.
+    public init(record: AccountRecord, client: HTTPClient, discovery: CalDAVCalendar.Discovery? = nil) {
+        self.record = record
+        self.client = client
+        self.discovery = discovery
+    }
+
+    // entries reads events in the window. A rejection rediscovers and retries once, and a second asks for sign-in.
+    public func entries(from: Date, to: Date) async throws -> [CalendarEntry] {
+        guard case .password(let server, let username, let password) = record.credential else {
+            throw AuthError.reauthorize("This account has no password.")
+        }
+        do {
+            return try await read(server: server, username: username, password: password, from: from, to: to)
+        } catch RemoteError.unauthorized {
+            discovery = nil
+        }
+        do {
+            return try await read(server: server, username: username, password: password, from: from, to: to)
+        } catch RemoteError.unauthorized {
+            throw AuthError.reauthorize("The server no longer accepts the password.")
+        }
+    }
+
+    // read discovers the home when needed and reads the window.
+    private func read(
+        server: URL, username: String, password: String, from: Date, to: Date
+    ) async throws -> [CalendarEntry] {
+        let found: CalDAVCalendar.Discovery
+        if let discovery {
+            found = discovery
+        } else {
+            found = try await CalDAVCalendar.discover(
+                client: client, base: server, username: username, password: password
+            )
+            discovery = found
+        }
+        return try await CalDAVCalendar.fetch(
+            client: client, discovery: found, username: username, password: password, from: from, to: to
+        )
     }
 }

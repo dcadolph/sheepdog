@@ -220,3 +220,103 @@ func testSignInComplete(test: SignInCase) async {
         #expect(text.contains("<redacted>"))
     }
 }
+
+// testAccountRecordRedactsPassword checks that printing a password record never shows the password.
+@Test func testAccountRecordRedactsPassword() {
+    let record = AccountRecord(
+        kind: .icloud, address: "me@icloud.com",
+        credential: .password(server: CalDAVCalendar.iCloudURL, username: "me@icloud.com", password: "abcd-efgh-ijkl")
+    )
+    let texts = [String(describing: record), "\(record)", String(reflecting: [record]), "\(record.credential)"]
+    for text in texts {
+        #expect(!text.contains("abcd-efgh-ijkl"), "\(text)")
+        #expect(text.contains("<redacted>"))
+    }
+}
+
+// testAccountRecordCoding checks the Keychain payload: a stored browser sign-in keeps decoding, and a
+// password record round-trips.
+@Test func testAccountRecordCoding() throws {
+    let stored = Data(#"{"kind":"microsoft","address":"me@example.com","refreshToken":"r-1"}"#.utf8)
+    let decoded = try JSONDecoder().decode(AccountRecord.self, from: stored)
+    #expect(decoded == AccountRecord(kind: .microsoft, address: "me@example.com", refreshToken: "r-1"))
+    let encoded = try JSONSerialization.jsonObject(with: JSONEncoder().encode(decoded)) as? [String: String]
+    #expect(encoded == ["kind": "microsoft", "address": "me@example.com", "refreshToken": "r-1"])
+
+    let record = AccountRecord(
+        kind: .icloud, address: "me@icloud.com",
+        credential: .password(server: CalDAVCalendar.iCloudURL, username: "me@icloud.com", password: "pw")
+    )
+    #expect(try JSONDecoder().decode(AccountRecord.self, from: JSONEncoder().encode(record)) == record)
+}
+
+// testSettingsCarryNoCredentials checks that settings, which live in UserDefaults and in exports, have no
+// field that could hold a sign-in.
+@Test func testSettingsCarryNoCredentials() throws {
+    let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(AlertSettings())) as? [String: Any]
+    let keys = Set(json?.keys.map { $0.lowercased() } ?? [])
+    #expect(!keys.isEmpty)
+    #expect(keys.isDisjoint(with: ["password", "refreshtoken", "username", "credential", "server"]))
+}
+
+// testPasswordSignIn checks that sign-in runs discovery and builds the record to store.
+@Test func testPasswordSignIn() async throws {
+    let (record, discovery) = try await PasswordSignIn.complete(
+        kind: .icloud, server: caldavRoot, username: "Me@iCloud.com", password: "pw", client: caldavClient()
+    )
+    #expect(record == AccountRecord(
+        kind: .icloud, address: "Me@iCloud.com",
+        credential: .password(server: caldavRoot, username: "Me@iCloud.com", password: "pw")
+    ))
+    #expect(discovery == caldavDiscovery)
+}
+
+// testPasswordSignInRefused checks that a wrong password fails sign-in so nothing is saved.
+@Test func testPasswordSignInRefused() async {
+    let client = MockClient { _, _ in .json("", status: 401) }
+    await #expect(throws: RemoteError.unauthorized) {
+        _ = try await PasswordSignIn.complete(
+            kind: .icloud, server: caldavRoot, username: "me@icloud.com", password: "bad", client: client
+        )
+    }
+}
+
+// icloudRecord is a stored iCloud sign-in for session tests.
+let icloudRecord = AccountRecord(
+    kind: .icloud, address: "me@icloud.com",
+    credential: .password(server: caldavRoot, username: "me@icloud.com", password: "pw")
+)
+
+// testPasswordSessionReads checks that a session discovers once and reuses the home on the next read.
+@Test func testPasswordSessionReads() async throws {
+    let client = caldavClient()
+    let session = PasswordSession(record: icloudRecord, client: client)
+    let from = utc("2026-10-22T14:00:00Z"), to = utc("2026-10-23T02:00:00Z")
+    #expect(try await session.entries(from: from, to: to).count == 4)
+    let first = client.requests.count
+    #expect(try await session.entries(from: from, to: to).count == 4)
+    #expect(first == 5)
+    #expect(client.requests.count - first == 3)
+}
+
+// testPasswordSessionRetriesOnce checks that one rejection rediscovers and reads again.
+@Test func testPasswordSessionRetriesOnce() async throws {
+    let inner = caldavClient()
+    let client = MockClient { request, count in
+        count == 0 ? .json("", status: 401) : inner.reply(request)
+    }
+    let session = PasswordSession(record: icloudRecord, client: client, discovery: caldavDiscovery)
+    let got = try await session.entries(from: utc("2026-10-22T14:00:00Z"), to: utc("2026-10-23T02:00:00Z"))
+    #expect(got.count == 4)
+    #expect(client.requests.filter { $0.value(forHTTPHeaderField: "Depth") == "0" }.count == 2)
+}
+
+// testPasswordSessionNeedsSignIn checks that a second rejection asks for sign-in instead of retrying again.
+@Test func testPasswordSessionNeedsSignIn() async {
+    let client = MockClient { _, _ in .json("", status: 401) }
+    let session = PasswordSession(record: icloudRecord, client: client, discovery: caldavDiscovery)
+    await #expect(throws: AuthError.reauthorize("The server no longer accepts the password.")) {
+        _ = try await session.entries(from: utc("2026-10-22T14:00:00Z"), to: utc("2026-10-23T02:00:00Z"))
+    }
+    #expect(client.requests.count == 2)
+}

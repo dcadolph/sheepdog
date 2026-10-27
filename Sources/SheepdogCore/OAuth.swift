@@ -4,9 +4,30 @@ import Foundation
 public enum AccountKind: String, Sendable, Codable, CaseIterable, Identifiable {
     case microsoft
     case google
+    case icloud
 
     // id identifies the kind in lists.
     public var id: String { rawValue }
+
+    // usesPassword reports a service that signs in with a user name and password instead of the browser.
+    public var usesPassword: Bool {
+        switch self {
+        case .microsoft, .google:
+            return false
+        case .icloud:
+            return true
+        }
+    }
+
+    // server is the fixed address a password service signs in to, or nil when the user types one.
+    public var server: URL? {
+        switch self {
+        case .microsoft, .google:
+            return nil
+        case .icloud:
+            return CalDAVCalendar.iCloudURL
+        }
+    }
 
     // label is the service's user-facing name.
     public var label: String {
@@ -15,6 +36,8 @@ public enum AccountKind: String, Sendable, Codable, CaseIterable, Identifiable {
             return "Microsoft 365 or Outlook.com"
         case .google:
             return "Google"
+        case .icloud:
+            return "iCloud"
         }
     }
 }

@@ -11,7 +11,7 @@ enum AccountState: Equatable {
     case notConfigured
     // signedOut means no account is connected.
     case signedOut
-    // signingIn means the browser sign-in is in progress.
+    // signingIn means the browser sign-in or the password check is in progress.
     case signingIn
     // connected means events are being read, from the account with this address when known.
     case connected(String?)
@@ -19,7 +19,7 @@ enum AccountState: Equatable {
     case needsSignIn(String?)
 }
 
-// Accounts owns the Microsoft and Google sign-ins and the events last read from them.
+// Accounts owns the calendar sign-ins and the events last read from them.
 @MainActor
 @Observable
 final class Accounts {
@@ -27,13 +27,15 @@ final class Accounts {
     private(set) var states: [AccountKind: AccountState] = [:]
     // problems holds the last sign-in or read failure per service, for display.
     private(set) var problems: [AccountKind: String] = [:]
+    // passwordPrompt is the password service whose sign-in sheet is showing.
+    var passwordPrompt: AccountKind?
     // onChange is called when the cached events or the account list change.
     @ObservationIgnored var onChange: (() -> Void)?
 
     // providers are the services this build has client ids for.
     @ObservationIgnored private var providers: [AccountKind: OAuthProvider] = [:]
     // sessions are the connected accounts.
-    @ObservationIgnored private var sessions: [AccountKind: RemoteAccount] = [:]
+    @ObservationIgnored private var sessions: [AccountKind: any AccountSession] = [:]
     // cache holds the events last read per service. It is kept through failures so a lapsed
     // sign-in never silences meetings that were already known.
     @ObservationIgnored private var cache: [AccountKind: [CalendarEntry]] = [:]
@@ -65,7 +67,7 @@ final class Accounts {
             providers[.google] = .google(clientID: id, clientSecret: value("SheepdogGoogleClientSecret"))
         }
         for kind in AccountKind.allCases {
-            guard providers[kind] != nil else {
+            guard kind.usesPassword || providers[kind] != nil else {
                 states[kind] = .notConfigured
                 continue
             }
@@ -87,8 +89,13 @@ final class Accounts {
         !sessions.isEmpty
     }
 
-    // connect runs the browser sign-in for a service.
+    // connect runs the browser sign-in for a service, or shows the sign-in sheet for a password service.
     func connect(_ kind: AccountKind) {
+        if kind.usesPassword {
+            problems[kind] = nil
+            passwordPrompt = kind
+            return
+        }
         guard let provider = providers[kind], states[kind] != .signingIn else {
             return
         }
@@ -112,6 +119,31 @@ final class Accounts {
         }
     }
 
+    // connectPassword checks the credentials against the server and saves them only when they work. It
+    // returns a sentence for the sheet when they do not.
+    func connectPassword(_ kind: AccountKind, username: String, password: String) async -> String? {
+        guard kind.usesPassword, let server = kind.server, states[kind] != .signingIn else {
+            return nil
+        }
+        let previous = states[kind] ?? .signedOut
+        states[kind] = .signingIn
+        do {
+            let (record, discovery) = try await PasswordSignIn.complete(
+                kind: kind, server: server, username: username, password: password, client: client
+            )
+            try Keychain.save(record)
+            attach(record, discovery: discovery)
+            problems[kind] = nil
+            passwordPrompt = nil
+            refresh(force: true)
+            return nil
+        } catch {
+            log.error("sign-in failed: \(kind.rawValue, privacy: .public): \(String(describing: error), privacy: .public)")
+            states[kind] = previous
+            return Self.describe(error)
+        }
+    }
+
     // cancelSignIn abandons a sign-in in progress.
     func cancelSignIn(_ kind: AccountKind) {
         pending[kind]?.cancel()
@@ -123,7 +155,7 @@ final class Accounts {
         sessions[kind] = nil
         cache[kind] = nil
         problems[kind] = nil
-        states[kind] = providers[kind] == nil ? .notConfigured : .signedOut
+        states[kind] = kind.usesPassword || providers[kind] != nil ? .signedOut : .notConfigured
         onChange?()
     }
 
@@ -181,8 +213,13 @@ final class Accounts {
         )
     }
 
-    // attach starts a session for a stored record.
-    private func attach(_ record: AccountRecord) {
+    // attach starts a session for a stored record, reusing a password sign-in's discovery when given.
+    private func attach(_ record: AccountRecord, discovery: CalDAVCalendar.Discovery? = nil) {
+        if record.kind.usesPassword {
+            sessions[record.kind] = PasswordSession(record: record, client: client, discovery: discovery)
+            states[record.kind] = .connected(record.address)
+            return
+        }
         guard let provider = providers[record.kind] else {
             return
         }
@@ -210,6 +247,14 @@ final class Accounts {
             return "The sign-in response didn't match. Try connecting again."
         case LoopbackError.timeout:
             return "The browser didn't come back within five minutes."
+        case RemoteError.unauthorized:
+            return "The server didn't accept that user name and password."
+        case RemoteError.notCalDAV:
+            return "That server didn't answer as a CalDAV calendar."
+        case RemoteError.insecureURL:
+            return "The server asked for your password without encryption, so Sheepdog stopped."
+        case is KeychainError:
+            return "Sheepdog couldn't save the sign-in in your Keychain."
         case RemoteError.server(let status) where status == 403:
             return "Your organization blocked calendar access for Sheepdog."
         case RemoteError.server(let status):

@@ -54,6 +54,11 @@ final class MockClient: HTTPClient, @unchecked Sendable {
         lock.withLock { recorded }
     }
 
+    // reply returns the routed reply for a request without recording it.
+    func reply(_ request: URLRequest) -> MockResponse {
+        route(request, -1)
+    }
+
     // send records the request and returns the routed reply.
     func send(_ request: URLRequest) async throws -> (Data, Int) {
         let count = lock.withLock {
