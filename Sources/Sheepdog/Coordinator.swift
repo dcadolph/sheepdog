@@ -81,9 +81,6 @@ final class Coordinator {
     // runningVersion is this build's version, or nil outside the app bundle.
     private static let runningVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
         as? String).flatMap(ReleaseVersion.init)
-    // slackBundleID identifies the Slack desktop app.
-    private static let slackBundleID = "com.tinyspeck.slackmacgap"
-
     // availableUpdate is the newer release the last check found, or nil when there is none or checks are off.
     var availableUpdate: ReleaseInfo? {
         let defaults = UserDefaults.standard
@@ -431,14 +428,24 @@ final class Coordinator {
         resolveActive(.joined)
     }
 
-    // open launches a meeting link in its native app, falling back to the browser.
+    // open launches a meeting link in the app or the browser, as chosen for its provider in settings.
     func open(_ meeting: Meeting) {
         guard let link = meeting.link else {
             return
         }
         windows.forgetPreviousApp()
-        if !NSWorkspace.shared.open(link.native) {
-            NSWorkspace.shared.open(link.web)
+        switch link.route(settings.joinOpens.choice(for: link.provider)) {
+        case let .open(url, fallback):
+            if !NSWorkspace.shared.open(url), let fallback {
+                NSWorkspace.shared.open(fallback)
+            }
+        case let .handTo(bundleID, url, fallback):
+            guard let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
+                NSWorkspace.shared.open(fallback)
+                return
+            }
+            NSWorkspace.shared.open(
+                [url], withApplicationAt: app, configuration: NSWorkspace.OpenConfiguration())
         }
     }
 
@@ -491,7 +498,8 @@ final class Coordinator {
         if link.native != link.web, NSWorkspace.shared.open(link.native) {
             return
         }
-        guard let slack = NSWorkspace.shared.urlForApplication(withBundleIdentifier: Self.slackBundleID) else {
+        let slack = NSWorkspace.shared.urlForApplication(withBundleIdentifier: JoinLink.slackBundleID)
+        guard let slack else {
             NSWorkspace.shared.open(link.web)
             return
         }

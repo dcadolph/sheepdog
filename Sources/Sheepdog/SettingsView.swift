@@ -304,6 +304,13 @@ struct SettingsView: View {
                     step: 60
                 )
             }
+            Section("Join") {
+                joinPicker("Teams", selection: $store.settings.joinOpens.teams)
+                joinPicker("Zoom", selection: $store.settings.joinOpens.zoom)
+                joinPicker("Webex", selection: $store.settings.joinOpens.webex)
+                joinPicker("Slack huddles", selection: $store.settings.joinOpens.slack)
+                LabeledContent("Google Meet", value: "In the browser (Meet has no Mac app)")
+            }
             Section("Snooze") {
                 Stepper("Snoozes per meeting: \(store.settings.maxSnoozes)", value: $store.settings.maxSnoozes, in: 0...10)
                 Stepper(
@@ -429,6 +436,13 @@ struct SettingsView: View {
                 store.settings.workingHours.weekdays = days.sorted()
             }
         )
+    }
+
+    // joinPicker chooses whether one provider's meeting links open in its app or the browser.
+    private func joinPicker(_ title: String, selection: Binding<JoinOpen>) -> some View {
+        Picker(title, selection: selection) {
+            ForEach(JoinOpen.allCases, id: \.self) { Text($0.label).tag($0) }
+        }
     }
 
     // soundPicker offers Tug's barks above the macOS sounds, with a button to hear the pick.
