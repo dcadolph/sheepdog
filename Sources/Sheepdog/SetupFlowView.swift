@@ -218,7 +218,7 @@ struct SetupFlowView: View {
                 .fixedSize(horizontal: false, vertical: true)
             Toggle("Dress Tug up for holidays", isOn: $store.settings.showOutfits)
             Toggle("Bark holiday tunes", isOn: $store.settings.holidayTunes)
-            Text("Settings, Look and Sound, later.")
+            Text("You can change this any time in Settings, Look and Sound.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
