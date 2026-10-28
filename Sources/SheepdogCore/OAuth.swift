@@ -6,6 +6,7 @@ public enum AccountKind: String, Sendable, Codable, CaseIterable, Identifiable {
     case google
     case icloud
     case caldav
+    case exchange
 
     // id identifies the kind in lists.
     public var id: String { rawValue }
@@ -15,15 +16,21 @@ public enum AccountKind: String, Sendable, Codable, CaseIterable, Identifiable {
         switch self {
         case .microsoft, .google:
             return false
-        case .icloud, .caldav:
+        case .icloud, .caldav, .exchange:
             return true
         }
+    }
+
+    // answersChallenge reports a password service whose server asks for the password in a Basic or NTLM
+    // challenge, so its requests go through a client that holds the credential instead of carrying it.
+    public var answersChallenge: Bool {
+        self == .exchange
     }
 
     // server is the fixed address a password service signs in to, or nil when the user types one.
     public var server: URL? {
         switch self {
-        case .microsoft, .google, .caldav:
+        case .microsoft, .google, .caldav, .exchange:
             return nil
         case .icloud:
             return CalDAVCalendar.iCloudURL
@@ -41,6 +48,8 @@ public enum AccountKind: String, Sendable, Codable, CaseIterable, Identifiable {
             return "iCloud"
         case .caldav:
             return "Other CalDAV"
+        case .exchange:
+            return "Exchange on-prem (beta)"
         }
     }
 }

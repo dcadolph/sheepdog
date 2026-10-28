@@ -651,7 +651,7 @@ struct PasswordSignInSheet: View {
                 .font(.headline)
             Form {
                 if kind.server == nil {
-                    TextField("Server", text: $server, prompt: Text("https://caldav.example.com"))
+                    TextField("Server", text: $server, prompt: Text(Self.serverPrompt(kind)))
                         .textContentType(.URL)
                 }
                 TextField(Self.usernameLabel(kind), text: $username)
@@ -706,6 +706,11 @@ struct PasswordSignInSheet: View {
         }
     }
 
+    // serverPrompt shows the shape of the server address the service expects.
+    private static func serverPrompt(_ kind: AccountKind) -> String {
+        kind == .exchange ? "https://mail.example.com" : "https://caldav.example.com"
+    }
+
     // usernameLabel names the user name field.
     private static func usernameLabel(_ kind: AccountKind) -> String {
         kind == .icloud ? "Apple ID" : "User name"
@@ -721,6 +726,8 @@ struct PasswordSignInSheet: View {
         switch kind {
         case .caldav:
             return "Use the CalDAV address your provider gives, such as https://caldav.fastmail.com. Sheepdog finds your calendars from there, only reads them, and keeps the password in your Keychain."
+        case .exchange:
+            return "Use your Exchange server's address, such as https://mail.example.com. Sheepdog adds /EWS/Exchange.asmx when you give only the server, signs in with your user name or email and password, only reads your calendar, and keeps the password in your Keychain."
         case .icloud:
             return "Make an app-specific password at account.apple.com, under Sign-In and Security. Your Apple ID password will not work here. Sheepdog only reads your calendars and keeps the password in your Keychain."
         default:

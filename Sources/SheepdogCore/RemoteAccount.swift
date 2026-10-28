@@ -116,7 +116,7 @@ public enum SignIn {
             address = IDToken.email(tokens.idToken)
         case .google:
             address = try await GoogleCalendar.profile(client: client, accessToken: tokens.accessToken)
-        case .icloud, .caldav:
+        case .icloud, .caldav, .exchange:
             throw AuthError.refused(.other(code: "not_browser"))
         }
         return AccountRecord(kind: provider.kind, address: address, refreshToken: refreshToken)
@@ -194,7 +194,7 @@ public actor RemoteAccount: AccountSession {
             )
         case .google:
             return try await GoogleCalendar.fetch(client: client, accessToken: accessToken, from: from, to: to)
-        case .icloud, .caldav:
+        case .icloud, .caldav, .exchange:
             throw AuthError.reauthorize("\(provider.kind.label) does not sign in through the browser.")
         }
     }
@@ -225,10 +225,23 @@ public enum PasswordSignIn {
         }
     }
 
-    // complete runs discovery with the credentials and returns the record to store and what discovery found.
+    // complete checks the credentials and returns the record to store and what CalDAV discovery found. An
+    // Exchange server is checked by reading the next day of its calendar, through a client that answers the
+    // server's challenge, and has no discovery.
     public static func complete(
-        kind: AccountKind, server: URL, username: String, password: String, client: HTTPClient
-    ) async throws -> (AccountRecord, CalDAVCalendar.Discovery) {
+        kind: AccountKind, server: URL, username: String, password: String, client: HTTPClient, now: Date = Date()
+    ) async throws -> (AccountRecord, CalDAVCalendar.Discovery?) {
+        if kind == .exchange {
+            let endpoint = EWSCalendar.endpoint(server)
+            _ = try await EWSCalendar.occurrences(
+                client: client, server: endpoint, from: now, to: now.addingTimeInterval(24 * 60 * 60)
+            )
+            let record = AccountRecord(
+                kind: kind, address: username,
+                credential: .password(server: endpoint, username: username, password: password)
+            )
+            return (record, nil)
+        }
         let discovery = try await CalDAVCalendar.discover(
             client: client, base: server, username: username, password: password
         )
@@ -273,10 +286,14 @@ public actor PasswordSession: AccountSession {
         }
     }
 
-    // read discovers the home when needed and reads the window.
+    // read discovers the home when needed and reads the window. Exchange reads over EWS and has no home.
     private func read(
         server: URL, username: String, password: String, from: Date, to: Date
     ) async throws -> [CalendarEntry] {
+        if record.kind == .exchange {
+            let addresses = username.contains("@") ? [username] : []
+            return try await EWSCalendar.fetch(client: client, server: server, addresses: addresses, from: from, to: to)
+        }
         let found: CalDAVCalendar.Discovery
         if let discovery {
             found = discovery

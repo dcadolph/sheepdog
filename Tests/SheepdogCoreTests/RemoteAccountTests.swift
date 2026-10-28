@@ -294,6 +294,48 @@ func testSignInComplete(test: SignInCase) async {
     }
 }
 
+// testExchangeSignIn checks that Exchange sign-in reads the next day over EWS at the standard path and stores
+// that address.
+@Test func testExchangeSignIn() async throws {
+    let client = ewsClient()
+    let (record, discovery) = try await PasswordSignIn.complete(
+        kind: .exchange, server: URL(string: "https://mail.example.com")!, username: "me@example.com",
+        password: "pw", client: client, now: utc("2026-10-22T14:00:00Z")
+    )
+    #expect(record == AccountRecord(
+        kind: .exchange, address: "me@example.com",
+        credential: .password(server: ewsServer, username: "me@example.com", password: "pw")
+    ))
+    #expect(discovery == nil)
+    #expect(!client.requests.isEmpty)
+    #expect(client.requests.allSatisfy { $0.url == ewsServer && ewsOperation($0) == "FindItem" })
+    #expect(client.requests.allSatisfy { $0.value(forHTTPHeaderField: "Authorization") == nil })
+}
+
+// testExchangeSignInRefused checks that a refused Exchange password fails sign-in so nothing is saved.
+@Test func testExchangeSignInRefused() async {
+    let client = MockClient { _, _ in .json("", status: 401) }
+    await #expect(throws: RemoteError.unauthorized) {
+        _ = try await PasswordSignIn.complete(
+            kind: .exchange, server: ewsServer, username: "me@example.com", password: "bad", client: client
+        )
+    }
+}
+
+// testExchangeSessionReads checks that an Exchange session reads over EWS and never runs CalDAV discovery.
+@Test func testExchangeSessionReads() async throws {
+    let record = AccountRecord(
+        kind: .exchange, address: "me@example.com",
+        credential: .password(server: ewsServer, username: "me@example.com", password: "pw")
+    )
+    let client = ewsClient()
+    let session = PasswordSession(record: record, client: client)
+    let got = try await session.entries(from: utc("2026-10-22T14:00:00Z"), to: utc("2026-10-23T02:00:00Z"))
+    #expect(!got.isEmpty)
+    #expect(got.allSatisfy { $0.eventID.hasPrefix("ews:") })
+    #expect(client.requests.allSatisfy { $0.url == ewsServer && $0.httpMethod == "POST" })
+}
+
 // icloudRecord is a stored iCloud sign-in for session tests.
 let icloudRecord = AccountRecord(
     kind: .icloud, address: "me@icloud.com",
@@ -388,8 +430,9 @@ func testPasswordServerURL(test: ServerURLCase) {
 
 // testAccountKindOrder checks the order that drives the Calendars tab and entry precedence.
 @Test func testAccountKindOrder() {
-    #expect(AccountKind.allCases == [.microsoft, .google, .icloud, .caldav])
-    #expect(AccountKind.allCases.filter(\.usesPassword) == [.icloud, .caldav])
+    #expect(AccountKind.allCases == [.microsoft, .google, .icloud, .caldav, .exchange])
+    #expect(AccountKind.allCases.filter(\.usesPassword) == [.icloud, .caldav, .exchange])
+    #expect(AccountKind.allCases.filter(\.answersChallenge) == [.exchange])
     #expect(AccountKind.caldav.server == nil)
     #expect(AccountKind.icloud.server == CalDAVCalendar.iCloudURL)
 }

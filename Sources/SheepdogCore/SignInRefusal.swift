@@ -44,7 +44,7 @@ public enum SignInRefusal: Sendable, Equatable {
                 return .userDeclined
             }
             return .other(code: safeCode(error))
-        case .icloud, .caldav:
+        case .icloud, .caldav, .exchange:
             return .other(code: safeCode(error))
         }
     }

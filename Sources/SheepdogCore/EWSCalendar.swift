@@ -38,6 +38,17 @@ public enum EWSCalendar {
         }
     }
 
+    // endpoint returns the EWS address for a typed server. A bare host gets the standard /EWS/Exchange.asmx
+    // path, and any other path is kept as typed.
+    public static func endpoint(_ server: URL) -> URL {
+        guard server.path.isEmpty || server.path == "/" else {
+            return server
+        }
+        var components = URLComponents(url: server, resolvingAgainstBaseURL: false)
+        components?.path = "/EWS/Exchange.asmx"
+        return components?.url ?? server
+    }
+
     // findItemRequest asks the calendar folder for every occurrence that overlaps the window.
     public static func findItemRequest(server: URL, from: Date, to: Date) -> URLRequest {
         let view = #"MaxEntriesReturned="\#(pageSize)" StartDate="\#(stamp(from))" EndDate="\#(stamp(to))""#

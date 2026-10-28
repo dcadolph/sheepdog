@@ -153,7 +153,8 @@ final class Accounts {
         states[kind] = .signingIn
         do {
             let (record, discovery) = try await PasswordSignIn.complete(
-                kind: kind, server: server, username: username, password: password, client: client
+                kind: kind, server: server, username: username, password: password,
+                client: passwordClient(kind, server: server, username: username, password: password)
             )
             try Keychain.save(record)
             attach(record, discovery: discovery)
@@ -242,6 +243,10 @@ final class Accounts {
     // attach starts a session for a stored record, reusing a password sign-in's discovery when given.
     private func attach(_ record: AccountRecord, discovery: CalDAVCalendar.Discovery? = nil) {
         if record.kind.usesPassword {
+            var client: HTTPClient = self.client
+            if case .password(let server, let username, let password) = record.credential {
+                client = passwordClient(record.kind, server: server, username: username, password: password)
+            }
             sessions[record.kind] = PasswordSession(record: record, client: client, discovery: discovery)
             states[record.kind] = .connected(record.address)
             return
@@ -258,6 +263,12 @@ final class Accounts {
             }
         }
         states[record.kind] = .connected(record.address)
+    }
+
+    // passwordClient returns the client a password service's requests go through: one that answers only that
+    // server's challenge with the credential for a service that asks for one, and the shared client otherwise.
+    private func passwordClient(_ kind: AccountKind, server: URL, username: String, password: String) -> HTTPClient {
+        kind.answersChallenge ? URLSessionClient(server: server, username: username, password: password) : client
     }
 
     // describe turns an error into a short sentence for settings.

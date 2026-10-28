@@ -259,6 +259,15 @@ func testEWSFailures(test: EWSFailure) async {
     #expect(EWSCalendar.date("tomorrow") == nil)
 }
 
+// testEWSEndpoint checks that a bare server gets the standard EWS path and a typed path is kept.
+@Test func testEWSEndpoint() {
+    let url = { (text: String) in URL(string: text)! }
+    #expect(EWSCalendar.endpoint(url("https://mail.example.com")) == ewsServer)
+    #expect(EWSCalendar.endpoint(url("https://mail.example.com/")) == ewsServer)
+    #expect(EWSCalendar.endpoint(url("https://mail.example.com:8443")) == url("https://mail.example.com:8443/EWS/Exchange.asmx"))
+    #expect(EWSCalendar.endpoint(url("https://mail.example.com/ews/exchange.asmx")) == url("https://mail.example.com/ews/exchange.asmx"))
+}
+
 // CredentialCase is one challenge and how the delegate must answer it.
 struct CredentialCase: Sendable, CustomTestStringConvertible {
     // Name labels the case.
