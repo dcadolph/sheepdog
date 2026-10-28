@@ -149,8 +149,8 @@ On a new install the **Set up Sheepdog** window walks through five steps.
 
 1. **Welcome** says why Tug reads your calendars. Click **Allow calendar access** and macOS asks,
    or click **I don't use macOS Calendar** to skip it.
-2. **Connect calendars** shows **What Tug sees** and lets you connect Microsoft 365, iCloud or
-   another CalDAV server.
+2. **Connect calendars** shows **What Tug sees** and lets you connect Microsoft 365, iCloud,
+   Exchange on-prem or another CalDAV server.
 3. **When should Tug bark?** sets working hours, which start off, and the **Warn at** minutes.
 4. **Tug dresses up** has **Dress Tug up for holidays** and **Bark holiday tunes**, both off.
 5. **Done** has **Start Sheepdog at login** and **Test the alarm**.
@@ -169,8 +169,15 @@ Apple ID and an app-specific password. Make one at account.apple.com, under Sign
 with the same Apple ID that holds your iCloud calendars. Your Apple ID password will not work
 here, and a new app-specific password can take about a minute before iCloud accepts it. Other
 CalDAV asks for a server address such as https://caldav.fastmail.com, a user name and a password.
-Sheepdog only reads your calendars and keeps the password in your Keychain. A meeting that arrives
-both through macOS Calendar and a direct sign-in shows once.
+Sheepdog only reads your calendars and keeps the password in your Keychain.
+
+Exchange on-prem (beta) also signs in directly. It asks for a server address such as
+https://mail.example.com, a user name or email, and a password. When you give only the server,
+sheepdog adds /EWS/Exchange.asmx itself, and a full EWS path is kept as typed. The address must
+start with https://. Sheepdog connects over Exchange Web Services, only reads your calendars, and
+keeps the password in your Keychain.
+
+A meeting that arrives both through macOS Calendar and a direct sign-in shows once.
 
 If your company blocks direct sign-in, add the work account in System Settings, Internet Accounts,
 with Calendars turned on, where your company allows that. Tug reads it through macOS Calendar, so
