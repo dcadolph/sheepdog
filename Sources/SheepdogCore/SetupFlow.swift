@@ -49,6 +49,12 @@ public enum SetupFlow {
         return fresh ? SetupStep.allCases : [.dressUp, .done]
     }
 
+    // resetsHolidays reports whether this launch switches holiday outfits and tunes off once. Upgrades that have
+    // not finished the flow had them on by default, so they start off like a fresh install.
+    public static func resetsHolidays(fresh: Bool, record: SetupFlowRecord?) -> Bool {
+        !fresh && record?.completed == nil
+    }
+
     // reopenSteps returns the steps to show when the user reopens setup from settings.
     public static func reopenSteps(accessGranted: Bool, usesMacCalendar: Bool) -> [SetupStep] {
         if accessGranted || !usesMacCalendar {

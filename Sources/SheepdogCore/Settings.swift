@@ -63,9 +63,9 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     // CustomColors are the picked colors the custom theme derives its palette from.
     public var customColors = CustomColors()
     // ShowOutfits reports whether Tug dresses up for holidays.
-    public var showOutfits: Bool = true
+    public var showOutfits: Bool = false
     // HolidayTunes reports whether Tug's barks play as a holiday tune while an outfit is worn.
-    public var holidayTunes: Bool = true
+    public var holidayTunes: Bool = false
     // JoinOpens chooses whether each provider's links open in its app or the browser.
     public var joinOpens: JoinOpens = JoinOpens()
     // CheckForUpdates reports whether Sheepdog asks GitHub once a day for a newer release.

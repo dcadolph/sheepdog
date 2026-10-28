@@ -211,10 +211,10 @@ struct SetupFlowView: View {
         .padding(.horizontal, -20)
     }
 
-    // dressUpStep lets the user keep Tug plain before a holiday comes around.
+    // dressUpStep lets the user turn on Tug's outfits and holiday tunes before a holiday comes around.
     private var dressUpStep: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Tug likes to dress up to celebrate from time to time: a party hat on New Year's, a vampire cape on Halloween, a Santa hat in December, and he barks a holiday tune instead of the plain bark. If you'd rather he didn't, turn it off here.")
+            Text("Tug likes to dress up to celebrate from time to time: a party hat on New Year's, a vampire cape on Halloween, a Santa hat in December, and he can bark a holiday tune instead of the plain bark. He stays in his plain collar and plain bark unless you turn them on here.")
                 .fixedSize(horizontal: false, vertical: true)
             Toggle("Dress Tug up for holidays", isOn: $store.settings.showOutfits)
             Toggle("Bark holiday tunes", isOn: $store.settings.holidayTunes)

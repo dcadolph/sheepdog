@@ -87,7 +87,7 @@ func testSettingsBackupDecode(test: BackupDecodeCase) {
 }
 
 // testSettingsBackupMissingShowOutfits checks that an export without showOutfits imports with
-// outfits on and every other field intact.
+// outfits off and every other field intact.
 @Test func testSettingsBackupMissingShowOutfits() throws {
     let json = #"{"app":"Sheepdog","version":1,"exported":"2026-10-23T18:00:00Z","settings":{"theme":"rubie","maxSnoozes":7,"holdPlace":false}}"#
     let got = try SettingsBackup.decode(Data(json.utf8))
@@ -95,22 +95,22 @@ func testSettingsBackupDecode(test: BackupDecodeCase) {
     want.theme = .rubie
     want.maxSnoozes = 7
     want.holdPlace = false
-    #expect(got.showOutfits)
+    #expect(!got.showOutfits)
     #expect(got == want)
 }
 
-// testSettingsBackupShowOutfitsOffRoundTrip checks that turning outfits off survives export and import.
-@Test func testSettingsBackupShowOutfitsOffRoundTrip() throws {
+// testSettingsBackupShowOutfitsOnRoundTrip checks that turning outfits on survives export and import.
+@Test func testSettingsBackupShowOutfitsOnRoundTrip() throws {
     var settings = AlertSettings()
-    settings.showOutfits = false
+    settings.showOutfits = true
     let data = try SettingsBackup.encode(settings, exported: Date(timeIntervalSince1970: 1_792_000_000))
     let got = try SettingsBackup.decode(data)
-    #expect(got.showOutfits == false)
+    #expect(got.showOutfits)
     #expect(got == settings)
 }
 
 // testSettingsBackupMissingHolidayTunes checks that an export without holidayTunes imports with
-// tunes on and every other field intact.
+// tunes off and every other field intact.
 @Test func testSettingsBackupMissingHolidayTunes() throws {
     let json = #"{"app":"Sheepdog","version":1,"exported":"2026-10-23T18:00:00Z","settings":{"theme":"rubie","maxSnoozes":7,"holdPlace":false}}"#
     let got = try SettingsBackup.decode(Data(json.utf8))
@@ -118,17 +118,17 @@ func testSettingsBackupDecode(test: BackupDecodeCase) {
     want.theme = .rubie
     want.maxSnoozes = 7
     want.holdPlace = false
-    #expect(got.holidayTunes)
+    #expect(!got.holidayTunes)
     #expect(got == want)
 }
 
-// testSettingsBackupHolidayTunesOffRoundTrip checks that turning tunes off survives export and import.
-@Test func testSettingsBackupHolidayTunesOffRoundTrip() throws {
+// testSettingsBackupHolidayTunesOnRoundTrip checks that turning tunes on survives export and import.
+@Test func testSettingsBackupHolidayTunesOnRoundTrip() throws {
     var settings = AlertSettings()
-    settings.holidayTunes = false
+    settings.holidayTunes = true
     let data = try SettingsBackup.encode(settings, exported: Date(timeIntervalSince1970: 1_792_000_000))
     let got = try SettingsBackup.decode(data)
-    #expect(got.holidayTunes == false)
+    #expect(got.holidayTunes)
     #expect(got == settings)
 }
 

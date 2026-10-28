@@ -45,6 +45,10 @@ final class SetupWindow: NSObject, NSWindowDelegate {
     func prepare() -> Bool {
         let record = UserDefaults.standard.data(forKey: Self.recordKey)
             .flatMap { try? JSONDecoder().decode(SetupFlowRecord.self, from: $0) }
+        if SetupFlow.resetsHolidays(fresh: fresh, record: record) {
+            store.settings.showOutfits = false
+            store.settings.holidayTunes = false
+        }
         pending = SetupFlow.steps(fresh: fresh, record: record)
         coordinator.setupFlowOpen = !pending.isEmpty
         return !pending.isEmpty

@@ -108,6 +108,37 @@ func testSetupStartsAtLogin(test: SetupLoginCase) {
     #expect(got == test.want)
 }
 
+// SetupHolidaysCase is one launch state and whether it switches holiday outfits and tunes off.
+struct SetupHolidaysCase: Sendable, CustomTestStringConvertible {
+    // Name labels the case in test output.
+    let name: String
+    // Fresh is true when no settings are stored.
+    let fresh: Bool
+    // Record is the stored setup record, if any.
+    let record: SetupFlowRecord?
+    // Want is true when the launch switches them off.
+    let want: Bool
+
+    // testDescription labels the case in test output.
+    var testDescription: String { name }
+}
+
+// setupHolidaysCases cover fresh installs, upgrades, and completed or unfinished records.
+let setupHolidaysCases: [SetupHolidaysCase] = [
+    SetupHolidaysCase(name: "fresh no record", fresh: true, record: nil, want: false), // Test 0: Already off.
+    SetupHolidaysCase(name: "upgrade no record", fresh: false, record: nil, want: true), // Test 1: Once.
+    SetupHolidaysCase(name: "fresh completed", fresh: true, record: setupDone, want: false), // Test 2: Done.
+    SetupHolidaysCase(name: "upgrade completed", fresh: false, record: setupDone, want: false), // Test 3: Keeps choice.
+    SetupHolidaysCase(name: "fresh unfinished", fresh: true, record: setupUnfinished, want: false), // Test 4: Fresh.
+    SetupHolidaysCase(name: "upgrade unfinished", fresh: false, record: setupUnfinished, want: true), // Test 5: Like none.
+]
+
+// testSetupResetsHolidays checks which launches switch holiday outfits and tunes off.
+@Test(arguments: setupHolidaysCases)
+func testSetupResetsHolidays(test: SetupHolidaysCase) {
+    #expect(SetupFlow.resetsHolidays(fresh: test.fresh, record: test.record) == test.want)
+}
+
 // testSetupTitles checks the heading of every step.
 @Test
 func testSetupTitles() {
