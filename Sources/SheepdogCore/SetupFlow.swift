@@ -56,4 +56,10 @@ public enum SetupFlow {
         }
         return SetupStep.allCases
     }
+
+    // startsAtLogin returns the Done step's starting login choice. Only a fresh install that has not made
+    // the choice yet starts on, so a later reopen shows what the user picked instead of turning it back on.
+    public static func startsAtLogin(fresh: Bool, configured: Bool, enabled: Bool, needsApproval: Bool) -> Bool {
+        (fresh && !configured) || enabled || needsApproval
+    }
 }

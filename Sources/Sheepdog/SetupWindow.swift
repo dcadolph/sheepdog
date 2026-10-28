@@ -81,7 +81,12 @@ final class SetupWindow: NSObject, NSWindowDelegate {
         let state = SetupFlowState(
             steps: steps,
             upgrade: upgrade,
-            startAtLogin: fresh || loginItem.isEnabled || loginItem.needsApproval
+            startAtLogin: SetupFlow.startsAtLogin(
+                fresh: fresh,
+                configured: LoginItem.hasConfigured,
+                enabled: loginItem.isEnabled,
+                needsApproval: loginItem.needsApproval
+            )
         )
         let view = SetupFlowView(
             state: state,

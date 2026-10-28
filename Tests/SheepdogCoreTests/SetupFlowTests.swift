@@ -70,6 +70,44 @@ func testSetupReopen(test: SetupReopenCase) {
     #expect(got == test.want)
 }
 
+// SetupLoginCase is one login item state and the Done step's starting choice.
+struct SetupLoginCase: Sendable, CustomTestStringConvertible {
+    // Name labels the case in test output.
+    let name: String
+    // Fresh is true when no settings were stored at launch.
+    let fresh: Bool
+    // Configured is true when the login choice was already made on this Mac.
+    let configured: Bool
+    // Enabled is true when the login item is registered.
+    let enabled: Bool
+    // NeedsApproval is true when macOS waits on the user to approve the login item.
+    let needsApproval: Bool
+    // Want is the starting choice.
+    let want: Bool
+
+    // testDescription labels the case in test output.
+    var testDescription: String { name }
+}
+
+// setupLoginCases cover a first run, a reopen after either choice, and upgrades.
+let setupLoginCases: [SetupLoginCase] = [
+    SetupLoginCase(name: "fresh first run", fresh: true, configured: false, enabled: false, needsApproval: false, want: true), // Test 0: On.
+    SetupLoginCase(name: "fresh reopen after off", fresh: true, configured: true, enabled: false, needsApproval: false, want: false), // Test 1: Keeps off.
+    SetupLoginCase(name: "fresh reopen after on", fresh: true, configured: true, enabled: true, needsApproval: false, want: true), // Test 2: Keeps on.
+    SetupLoginCase(name: "fresh reopen pending", fresh: true, configured: true, enabled: false, needsApproval: true, want: true), // Test 3: Pending.
+    SetupLoginCase(name: "upgrade off", fresh: false, configured: true, enabled: false, needsApproval: false, want: false), // Test 4: Off.
+    SetupLoginCase(name: "upgrade on", fresh: false, configured: true, enabled: true, needsApproval: false, want: true), // Test 5: On.
+]
+
+// testSetupStartsAtLogin checks the Done step's starting login choice.
+@Test(arguments: setupLoginCases)
+func testSetupStartsAtLogin(test: SetupLoginCase) {
+    let got = SetupFlow.startsAtLogin(
+        fresh: test.fresh, configured: test.configured, enabled: test.enabled, needsApproval: test.needsApproval
+    )
+    #expect(got == test.want)
+}
+
 // testSetupTitles checks the heading of every step.
 @Test
 func testSetupTitles() {
