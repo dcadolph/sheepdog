@@ -61,14 +61,14 @@ heart headband for Valentine's Day (Feb 10 to 14), a green top hat for St. Patri
 17), bunny ears for Easter (the Saturday before through the Tuesday after), a vampire cape for
 Halloween (Oct 24 to 31), a turkey hat for Thanksgiving week (Monday to Sunday), and a Santa hat for
 Christmas (Dec 18 to 26). The outfit goes over any collar and shows on the alarm, the countdown
-pill, the hand-back card, Settings and the menu bar. Turn off **Dress Tug up for holidays** in
-Settings, Look, to keep him plain.
+pill, the hand-back card, Settings and the menu bar. Outfits start off. Turn on **Dress Tug up for
+holidays** in Settings, Look, or on the setup window's dress-up step.
 
 In the same days the alarm barks a holiday tune instead of the plain bark: Auld Lang Syne, Let Me
 Call You Sweetheart, The Irish Washerwoman, In the Hall of the Mountain King, Over the River and
 Through the Wood, and Jingle Bells. Easter has no tune. Every note is Tug's own woof. The tune plays
-only when the alarm sound is one of Tug's, and the warning chime stays a single woof. Turn off
-**Bark holiday tunes** in Settings, Sound, to keep the plain bark.
+only when the alarm sound is one of Tug's, and the warning chime stays a single woof. Tunes start
+off too. Turn on **Bark holiday tunes** in Settings, Sound, or on the same setup step.
 
 ## Requirements
 

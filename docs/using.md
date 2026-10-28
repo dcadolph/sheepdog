@@ -134,14 +134,14 @@ heart headband for Valentine's Day (Feb 10 to 14), a green top hat for St. Patri
 17), bunny ears for Easter (the Saturday before through the Tuesday after), a vampire cape for
 Halloween (Oct 24 to 31), a turkey hat for Thanksgiving week (Monday to Sunday), and a Santa hat for
 Christmas (Dec 18 to 26). The outfit goes over any collar and shows on the alarm, the countdown
-pill, the hand-back card, Settings and the menu bar. Turn off **Dress Tug up for holidays** in
-Settings, Look, to keep him plain.
+pill, the hand-back card, Settings and the menu bar. Outfits start off. Turn on **Dress Tug up for
+holidays** in Settings, Look, or on the setup window's dress-up step.
 
 In the same days the alarm barks a holiday tune instead of the plain bark: Auld Lang Syne, Let Me
 Call You Sweetheart, The Irish Washerwoman, In the Hall of the Mountain King, Over the River and
 Through the Wood, and Jingle Bells. Easter has no tune. Every note is Tug's own woof. The tune plays
-only when the alarm sound is one of Tug's, and the warning chime stays a single woof. Turn off
-**Bark holiday tunes** in Settings, Sound, to keep the plain bark.
+only when the alarm sound is one of Tug's, and the warning chime stays a single woof. Tunes start
+off too. Turn on **Bark holiday tunes** in Settings, Sound, or on the same setup step.
 
 ## First run
 
@@ -152,12 +152,12 @@ On a new install the **Set up Sheepdog** window walks through five steps.
 2. **Connect calendars** shows **What Tug sees** and lets you connect Microsoft 365, iCloud or
    another CalDAV server.
 3. **When should Tug bark?** sets working hours, which start off, and the **Warn at** minutes.
-4. **Tug dresses up** has **Dress Tug up for holidays** and **Bark holiday tunes**, both on.
+4. **Tug dresses up** has **Dress Tug up for holidays** and **Bark holiday tunes**, both off.
 5. **Done** has **Start Sheepdog at login** and **Test the alarm**.
 
-Closing the window counts as finished, so it shows once. An upgrade from an earlier version shows
-only the last two steps, titled "What's new: Tug dresses up". **Set up Sheepdog…** in Tug's menu
-reopens the window at **Connect calendars**.
+Closing the window counts as finished, so it shows once. An upgrade from an earlier version turns
+outfits and tunes off once and shows only the last two steps, titled "What's new: Tug dresses up".
+**Set up Sheepdog…** in Tug's menu reopens the window at **Connect calendars**.
 
 Later, Tug shows a card if he can't see a calendar, sees Outlook but no Microsoft calendar, or has
 not seen a meeting in a week. Choose **Open Calendars settings**, **Later** or **Don't ask
@@ -189,8 +189,8 @@ Internet Accounts** button.
 | Hover         | The glyph says what is next, and each menu item says what it does.         |
 | Backup        | Exports settings to a file and imports them on any Mac. Sign-ins stay out. |
 | Collar        | Twelve collars for Tug that also color the alarm, pill and hand-back card, or Custom. |
-| Outfits       | Holiday outfits for Tug. Dress Tug up for holidays turns them off.         |
-| Tunes         | Holiday tunes for the alarm, in barks. Bark holiday tunes turns them off.  |
+| Outfits       | Holiday outfits for Tug. Dress Tug up for holidays turns them on.          |
+| Tunes         | Holiday tunes for the alarm, in barks. Bark holiday tunes turns them on.   |
 | Updates       | Checks GitHub once a day for a newer release and offers to install it.     |
 
 When a direct sign-in is refused, the message says why and what to do next, and the
