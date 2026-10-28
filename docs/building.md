@@ -63,6 +63,8 @@ to the build:
 make app SHEEPDOG_MICROSOFT_CLIENT_ID=... SHEEPDOG_GOOGLE_CLIENT_ID=... SHEEPDOG_GOOGLE_CLIENT_SECRET=...
 ```
 
+iCloud and Other CalDAV sign-in need no client ID.
+
 A Microsoft registration needs four delegated permissions: `openid`, `email`, `offline_access` and
 `Calendars.Read`.
 

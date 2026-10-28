@@ -164,6 +164,14 @@ not seen a meeting in a week. Choose **Open Calendars settings**, **Later** or *
 again**. **What Tug sees**, in the Calendars tab, lists each calendar source with its calendar
 count and a **Check again** button.
 
+iCloud and Other CalDAV sign in directly from Settings, Calendars. The iCloud sheet asks for your
+Apple ID and an app-specific password. Make one at account.apple.com, under Sign-In and Security,
+with the same Apple ID that holds your iCloud calendars. Your Apple ID password will not work
+here, and a new app-specific password can take about a minute before iCloud accepts it. Other
+CalDAV asks for a server address such as https://caldav.fastmail.com, a user name and a password.
+Sheepdog only reads your calendars and keeps the password in your Keychain. A meeting that arrives
+both through macOS Calendar and a direct sign-in shows once.
+
 If your company blocks direct sign-in, add the work account in System Settings, Internet Accounts,
 with Calendars turned on, where your company allows that. Tug reads it through macOS Calendar, so
 he needs no approval of his own. The card and **What Tug sees** say so too, with an **Open
