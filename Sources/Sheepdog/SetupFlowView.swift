@@ -101,7 +101,7 @@ struct SetupFlowView: View {
             buttons
                 .padding(16)
         }
-        .frame(width: 560, height: 600)
+        .frame(width: 560, height: 790)
         .onAppear {
             leadsText = SettingsView.format(store.settings.warningLeads)
             facts = setupFacts()
