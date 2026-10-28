@@ -41,10 +41,16 @@ public struct URLSessionClient: HTTPClient {
         self.session = URLSession(configuration: .ephemeral, delegate: delegate, delegateQueue: nil)
     }
 
-    // send performs the request and reports a status of 0 for non-HTTP responses.
+    // send performs the request and reports a status of 0 for non-HTTP responses. A canceled authentication
+    // means the server refused the credentials, since CFNetwork cancels iCloud's 401 itself instead of
+    // returning it, so it is reported as unauthorized.
     public func send(_ request: URLRequest) async throws -> (Data, Int) {
-        let (data, response) = try await session.data(for: request)
-        return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
+        do {
+            let (data, response) = try await session.data(for: request)
+            return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
+        } catch URLError.userCancelledAuthentication {
+            throw RemoteError.unauthorized
+        }
     }
 }
 
