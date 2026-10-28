@@ -296,8 +296,8 @@ final class Accounts {
             return "Your organization blocked calendar access for Sheepdog."
         case RemoteError.server(let status):
             return "The calendar service returned an error (\(status))."
-        case is URLError:
-            return "Couldn't reach the calendar service."
+        case let error as URLError:
+            return ConnectionFailure.classify(error).message
         default:
             return "Something went wrong: \(error.localizedDescription)"
         }
