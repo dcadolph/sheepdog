@@ -37,7 +37,7 @@ struct CalendarSourcesView: View {
             Text("Calendars")
         } footer: {
             Text("Microsoft and Google sign in in your browser. iCloud needs an app-specific password from account.apple.com. Other CalDAV servers, such as Fastmail or Nextcloud, need their address and your password. Sheepdog only reads your calendars, and keeps every sign-in in your Keychain.")
-                .foregroundStyle(.secondary)
+                .formFooter()
         }
         .sheet(item: Binding(get: { accounts.passwordPrompt }, set: { accounts.passwordPrompt = $0 })) { kind in
             PasswordSignInSheet(kind: kind, accounts: accounts)
@@ -87,7 +87,7 @@ struct CalendarSourcesView: View {
             Text("What Tug sees")
         } footer: {
             Text("These are the accounts in macOS Calendar. To add a work calendar, connect it below or add the account in System Settings, Internet Accounts.")
-                .foregroundStyle(.secondary)
+                .formFooter()
         }
     }
 

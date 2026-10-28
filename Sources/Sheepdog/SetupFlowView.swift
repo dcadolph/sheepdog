@@ -204,7 +204,7 @@ struct SetupFlowView: View {
                 Text("Warnings")
             } footer: {
                 Text("You can change this any time in Settings, Hours and Alerts.")
-                    .foregroundStyle(.secondary)
+                    .formFooter()
             }
         }
         .formStyle(.grouped)

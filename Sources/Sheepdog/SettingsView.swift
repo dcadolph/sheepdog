@@ -144,7 +144,7 @@ struct SettingsView: View {
                 Text("Backup")
             } footer: {
                 Text("Saves your warnings, sounds, filters, working hours and Slack channels to a file you can import on any Mac. Sign-ins stay in your Keychain, so connect your calendars again after importing on a new Mac.")
-                    .foregroundStyle(.secondary)
+                    .formFooter()
             }
         }
         .formStyle(.grouped)
@@ -173,7 +173,7 @@ struct SettingsView: View {
                 Text("The collar also colors the alarm, the countdown and the hold-my-place card. "
                     + "Around New Year's, Valentine's Day, St. Patrick's Day, Easter, Halloween, "
                     + "Thanksgiving and Christmas, Tug wears an outfit. Use Test the alarm to see it.")
-                    .foregroundStyle(.secondary)
+                    .formFooter()
             }
             if store.settings.theme == .custom {
                 customSection
@@ -208,7 +208,7 @@ struct SettingsView: View {
         } footer: {
             Text("Pick two to four colors and Tug works out the rest so the text stays readable. "
                 + "The color panel takes a hex value or a drag around the wheel.")
-                .foregroundStyle(.secondary)
+                .formFooter()
         }
     }
 
@@ -295,7 +295,7 @@ struct SettingsView: View {
                 Text("Slack")
             } footer: {
                 Text("Let them know on the alarm copies a short message to your clipboard and opens the channel, so you can paste it. Use Copy link on a channel in Slack.")
-                    .foregroundStyle(.secondary)
+                    .formFooter()
             }
             Section("Which events alert") {
                 Toggle("Include tentative meetings", isOn: $store.settings.includeTentative)
@@ -400,7 +400,7 @@ struct SettingsView: View {
             } footer: {
                 Text("Around New Year's, Valentine's Day, St. Patrick's Day, Halloween, Thanksgiving and "
                     + "Christmas, Tug barks a tune for the alarm when the alarm sound is one of his barks.")
-                    .foregroundStyle(.secondary)
+                    .formFooter()
             }
         }
         .formStyle(.grouped)
@@ -419,7 +419,7 @@ struct SettingsView: View {
                 Text("Working hours")
             } footer: {
                 Text("A meeting that starts inside your hours alarms in full, even when it runs past the end. An end before the start is an overnight shift, which belongs to the day it starts. Test the alarm always works.")
-                    .foregroundStyle(.secondary)
+                    .formFooter()
             }
         }
         .formStyle(.grouped)
@@ -726,5 +726,15 @@ struct PasswordSignInSheet: View {
         default:
             return "Sheepdog only reads your calendars and keeps the password in your Keychain."
         }
+    }
+}
+
+extension View {
+    // formFooter styles a grouped form footer and keeps wrapped lines leading-aligned, since
+    // macOS right-aligns multi-line footers by default.
+    func formFooter() -> some View {
+        foregroundStyle(.secondary)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
