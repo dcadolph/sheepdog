@@ -201,6 +201,7 @@ Internet Accounts** button.
 | Menu bar      | Tug's glyph changes with the alert stage and the menu lists what is next.  |
 | Events        | Each meeting in the menu offers Join meeting and Open in Calendar.         |
 | Nap time      | Silences real meetings for 1 or 3 hours, until morning, or until woken.    |
+| Motion        | Tug lies down to nap, barks on waking and at launch, and leaps out on quit. |
 | Hours         | Keeps Tug quiet, or down to the countdown, outside your working hours.     |
 | Hover         | The glyph says what is next, and each menu item says what it does.         |
 | Backup        | Exports settings to a file and imports them on any Mac. Sign-ins stay out. |

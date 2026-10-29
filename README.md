@@ -71,6 +71,12 @@ Through the Wood, and Jingle Bells. Easter has no tune. Every note is Tug's own 
 only when the alarm sound is one of Tug's, and the warning chime stays a single woof. Tunes start
 off too. Turn on **Bark holiday tunes** in Settings, Sound, or on the same setup step.
 
+## Tug in the menu bar
+
+When Tug naps he lies down and settles with his chin on his paws, and now and then he looks up.
+Wake him and he hops up, wags and barks twice. He barks when Sheepdog opens, and on **Quit
+Sheepdog** he drops into a play bow and leaps out of the menu bar. Reduce Motion keeps him still.
+
 ## Requirements
 
 - macOS 14 or later
