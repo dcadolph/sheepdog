@@ -18,9 +18,9 @@
     ["MintChip", "#1a110b", "#2a1c13", "#effff8", "#b9c2b0", "#4ff0bf", "#ffb347", "#3fd9a8"],
     ["Rose", "#1a070b", "#2b0f16", "#fff0f0", "#d4a5ad", "#ff4d5e", "#ffb347", "#8b1a2b"],
     ["LondonFog", "#101418", "#1b2229", "#eef3f8", "#9eabb8", "#8fb4d9", "#ff7361", "#5b6b7b"],
-    ["Volcano Taffy", "#1c0e0c", "#2e1814", "#fff3ee", "#d6aa9c", "#ff7f50", "#ffd166", "#e85d3f"],
-    ["Gambit", "#150b1c", "#26152f", "#fbefff", "#c7a8d6", "#ff4fb0", "#ffb347", "#7a4a28"],
     ["Pale Nimbus", "#000000", "#141414", "#ffffff", "#a3a3a3", "#ffffff", "#ff7361", "#888888"],
+    ["Gambit", "#150b1c", "#26152f", "#fbefff", "#c7a8d6", "#ff4fb0", "#ffb347", "#7a4a28"],
+    ["Volcano Taffy", "#1c0e0c", "#2e1814", "#fff3ee", "#d6aa9c", "#ff7f50", "#ffd166", "#e85d3f"],
     ["DangerRoom", "#0b1f4d", "#15306e", "#fff8d6", "#b4c0e0", "#ffcc00", "#ff9a85", "#ffcc00"]
   ];
 
