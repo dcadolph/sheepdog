@@ -115,12 +115,12 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     public var label: String {
         switch self {
         case .jax: return "Jax"
-        case .blackDiamond: return "Black Diamond"
-        case .goldenSpark: return "Golden Spark"
+        case .blackDiamond: return "BlackDiamond"
+        case .goldenSpark: return "GoldenSpark"
         case .rubie: return "Rubie"
         case .lightning: return "Lightning"
         case .thunder: return "Thunder"
-        case .strawhat: return "Strawhat"
+        case .strawhat: return "StrawHat"
         case .bubblegum: return "Bubblegum"
         case .berserker: return "Berserker"
         case .pickleJuice: return "PickleJuice"
@@ -128,9 +128,9 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
         case .mintChip: return "MintChip"
         case .rose: return "Rose"
         case .londonFog: return "LondonFog"
-        case .volcanoTaffy: return "Volcano Taffy"
+        case .volcanoTaffy: return "VolcanoTaffy"
         case .gambit: return "Gambit"
-        case .paleNimbus: return "Pale Nimbus"
+        case .paleNimbus: return "PaleNimbus"
         case .dangerRoom: return "DangerRoom"
         case .custom: return "Custom"
         }
