@@ -41,20 +41,62 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private var shownOutfit: Outfit?
     // shownHover is the hover text currently set on the menu bar icon.
     private var shownHover = ""
+    // tugStage plays Tug's nap, wake or quit animation, nil when none is playing.
+    private var tugStage: TugStage?
+    // drawn reports whether update has run once, so the state found at launch is shown without an
+    // animation.
+    private var drawn = false
+    // napPose is the drawing Tug naps in: dozing just after he lies down, lying once he settles.
+    private var napPose = TugShape.lying
+    // napTimer settles Tug after he lies down and later has him look up now and then, nil while awake.
+    private var napTimer: Timer?
 
     // update refreshes the icon for the current stage and the countdown beside it.
     func update() {
         let stage = coordinator.active?.stage ?? .idle
         let napping = coordinator.isNapping() && stage == .idle
         let outfit = napping ? nil : Theme.outfit
-        if stage != shown || napping != shownNap || outfit != shownOutfit {
+        if tugStage == nil, stage != shown || napping != shownNap || outfit != shownOutfit {
+            let woke = drawn && shownNap && !napping && stage == .idle
+            let fell = drawn && !shownNap && napping
             shown = stage
             shownNap = napping
             shownOutfit = outfit
-            item.button?.image = napping
-                ? (Art.napGlyph() ?? Self.image(for: stage))
-                : Self.image(for: stage, outfit: outfit)
+            if fell {
+                napPose = .dozing
+            }
+            let image = napping
+                ? (Art.napGlyph(napPose) ?? Self.image(for: stage)) : Self.image(for: stage, outfit: outfit)
+            if !napping {
+                napTimer?.invalidate()
+                napTimer = nil
+                napPose = .lying
+            }
+            if woke, let image {
+                playChange(
+                    TugMotion.wake, seconds: TugMotion.wakeSeconds, from: .lying, to: .sitting, image: image,
+                    jump: TugFigure.wake
+                )
+            } else if fell, let image {
+                playChange(
+                    TugMotion.nap, seconds: TugMotion.napSeconds, from: .sitting, to: .dozing, image: image,
+                    jump: .zero
+                ) { [weak self] in
+                    self?.scheduleNapStep(after: 1.5)
+                }
+            } else {
+                item.button?.image = image
+                if napping, napTimer == nil {
+                    scheduleNapStep(after: Self.lookDelay())
+                }
+            }
         }
+        if !drawn {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.greetDelay) { [weak self] in
+                MainActor.assumeIsolated { self?.greet() }
+            }
+        }
+        drawn = true
         updateHover()
         guard let active = coordinator.active else {
             item.button?.title = ""
@@ -416,8 +458,146 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         }
     }
 
-    // quit exits the app.
+    // quit has Tug bow and leap out of the menu bar, then exits the app. A napping Tug springs from
+    // his nap straight into the bow. An animation still playing, or Reduce Motion, skips it.
     @objc private func quit() {
-        NSApp.terminate(nil)
+        guard tugStage == nil, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
+              let button = item.button, let image = button.image, let frame = button.window?.frame,
+              let rect = Self.imageRect(of: button)
+        else {
+            NSApp.terminate(nil)
+            return
+        }
+        var drawings = [TugShape.sitting: TugDrawing(image: image, rect: rect)]
+        for shape in [TugShape.bow, .leap] {
+            if let pose = Art.poseGlyph(shape) {
+                drawings[shape] = TugDrawing(image: pose, rect: CGRect(origin: rect.origin, size: pose.size))
+            }
+        }
+        let figure = TugFigure(drawings: drawings, wags: false, jump: TugFigure.exit)
+        button.image = Self.blank(image.size)
+        let stage = TugStage()
+        tugStage = stage
+        stage.play(
+            TugMotion.exit, seconds: TugMotion.exitSeconds, over: frame, figure: figure,
+            appearance: button.effectiveAppearance
+        ) {
+            NSApp.terminate(nil)
+        }
+    }
+
+    // playChange animates Tug in place from the drawing the icon shows, as shape from, into image, as
+    // shape to, keeping his head where it is, then sets image and runs then. Any drawing in extra is
+    // placed like image. Reduce Motion, or an icon not on screen, sets image at once.
+    private func playChange(
+        _ motion: @escaping @Sendable (Double) -> TugPose, seconds: Double, from: TugShape, to: TugShape,
+        image: NSImage, extra: [TugShape: NSImage] = [:], jump: CGVector, then: (() -> Void)? = nil
+    ) {
+        guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
+              let button = item.button, let shown = button.image, let frame = button.window?.frame,
+              let shownRect = Self.imageRect(of: button)
+        else {
+            item.button?.image = image
+            then?()
+            return
+        }
+        let place = { (drawing: NSImage) in
+            TugDrawing(image: drawing, rect: CGRect(
+                x: shownRect.maxX - drawing.size.width, y: shownRect.midY - drawing.size.height / 2,
+                width: drawing.size.width, height: drawing.size.height
+            ))
+        }
+        var drawings = extra.mapValues(place)
+        drawings[from] = TugDrawing(image: shown, rect: shownRect)
+        drawings[to] = place(image)
+        let figure = TugFigure(drawings: drawings, wags: to == .sitting, jump: jump)
+        button.image = Self.blank(shown.size)
+        let stage = TugStage()
+        tugStage = stage
+        stage.play(
+            motion, seconds: seconds, over: frame, figure: figure, appearance: button.effectiveAppearance
+        ) { [weak self] in
+            self?.tugStage = nil
+            self?.item.button?.image = image
+            self?.update()
+            then?()
+        }
+    }
+
+    // greetDelay is how long after launch Tug barks, so the menu bar has placed his icon first.
+    private static let greetDelay: TimeInterval = 0.8
+
+    // greet has Tug bark twice where he sits, once Sheepdog has opened. It does nothing if he has since
+    // started napping, a meeting is showing, or another animation plays.
+    private func greet() {
+        guard tugStage == nil, shown == .idle, !shownNap, let image = item.button?.image else {
+            return
+        }
+        playChange(
+            TugMotion.greet, seconds: TugMotion.greetSeconds, from: .sitting, to: .sitting, image: image,
+            jump: .zero
+        )
+    }
+
+    // lookDelay is how long Tug naps before he next looks up, a few minutes, varied so it never feels
+    // like a clock.
+    private static func lookDelay() -> TimeInterval {
+        .random(in: 240...540)
+    }
+
+    // scheduleNapStep runs napStep after delay, replacing any step already waiting.
+    private func scheduleNapStep(after delay: TimeInterval) {
+        napTimer?.invalidate()
+        napTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated { self?.napStep() }
+        }
+    }
+
+    // napStep settles a dozing Tug onto his paws, or has a settled Tug look up once, then schedules the
+    // next look up. It does nothing once he is awake, and waits while another animation plays.
+    private func napStep() {
+        napTimer = nil
+        guard shownNap, coordinator.isNapping() else {
+            return
+        }
+        guard tugStage == nil else {
+            scheduleNapStep(after: 5)
+            return
+        }
+        let next: () -> Void = { [weak self] in
+            self?.scheduleNapStep(after: Self.lookDelay())
+        }
+        guard let lying = Art.napGlyph(.lying), let dozing = Art.napGlyph(.dozing) else {
+            return
+        }
+        if napPose == .dozing {
+            napPose = .lying
+            playChange(
+                TugMotion.settle, seconds: TugMotion.settleSeconds, from: .dozing, to: .lying, image: lying,
+                jump: .zero, then: next
+            )
+        } else if !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+            playChange(
+                TugMotion.lookUp, seconds: TugMotion.lookSeconds, from: .lying, to: .lying, image: lying,
+                extra: [.dozing: dozing], jump: .zero, then: next
+            )
+        } else {
+            next()
+        }
+    }
+
+    // imageRect returns where the button draws its image, on screen.
+    private static func imageRect(of button: NSStatusBarButton) -> CGRect? {
+        guard let cell = button.cell, let window = button.window else {
+            return nil
+        }
+        return window.convertToScreen(button.convert(cell.imageRect(forBounds: button.bounds), to: nil))
+    }
+
+    // blank returns an empty image of size, which holds the icon's place while Tug is animated.
+    private static func blank(_ size: NSSize) -> NSImage {
+        let image = NSImage(size: size)
+        image.accessibilityDescription = "Sheepdog"
+        return image
     }
 }

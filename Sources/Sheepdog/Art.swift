@@ -87,6 +87,71 @@ enum Art {
         return image
     }
 
+    // poseGlyph returns Tug in one of his animation drawings as a template, at the sitting glyph's
+    // scale, where 256 pixels make 18pt, so every drawing is the same size dog. Sitting is the idle glyph.
+    static func poseGlyph(_ shape: TugShape) -> NSImage? {
+        let name: String
+        switch shape {
+        case .lying:
+            name = "glyph-nap"
+        case .dozing:
+            name = "glyph-doze"
+        case .sitting:
+            name = "glyph-idle"
+        case .bow:
+            name = "glyph-bow"
+        case .leap:
+            name = "glyph-leap"
+        }
+        guard let image = image(name)?.copy() as? NSImage,
+              let height = image.representations.first?.pixelsHigh,
+              let width = image.representations.first?.pixelsWide
+        else {
+            return nil
+        }
+        image.size = NSSize(width: CGFloat(width) * 18 / 256, height: CGFloat(height) * 18 / 256)
+        image.isTemplate = true
+        image.accessibilityDescription = "Sheepdog"
+        return image
+    }
+
+    // napGlyph returns Tug napping for the menu bar, lying with Zs over him or dozing, on a canvas as
+    // tall as the sitting glyph with him on its floor, so he lies on the same ground he sits on. Both nap drawings share
+    // the canvas width with Tug at its right edge, so swapping them never moves the menu bar.
+    static func napGlyph(_ shape: TugShape = .lying) -> NSImage? {
+        guard let dog = poseGlyph(shape), let lying = poseGlyph(.lying), let dozing = poseGlyph(.dozing) else {
+            return nil
+        }
+        let width = max(lying.size.width, dozing.size.width)
+        let image = NSImage(size: NSSize(width: width, height: 18), flipped: false) { _ in
+            dog.draw(in: NSRect(origin: NSPoint(x: width - dog.size.width, y: 0), size: dog.size))
+            if shape == .lying {
+                drawZs(width: width)
+            }
+            return true
+        }
+        image.isTemplate = true
+        image.accessibilityDescription = "Sheepdog, napping"
+        return image
+    }
+
+    // sleepZs are the Zs over a sleeping Tug, smallest first: point size, center as a share of the
+    // canvas width, and baseline. They rise over his head and stay inside the 18pt canvas.
+    private static let sleepZs: [(size: CGFloat, x: CGFloat, baseline: CGFloat)] = [
+        (4.5, 0.64, 8.4), (5.5, 0.77, 10.6), (6.5, 0.91, 12.8),
+    ]
+
+    // drawZs draws the sleep Zs on a nap canvas width points wide.
+    private static func drawZs(width: CGFloat) {
+        for z in sleepZs {
+            let base = NSFont.systemFont(ofSize: z.size, weight: .heavy)
+            let rounded = base.fontDescriptor.withDesign(.rounded)
+            let font = rounded.flatMap { NSFont(descriptor: $0, size: z.size) } ?? base
+            let text = NSAttributedString(string: "z", attributes: [.font: font, .foregroundColor: NSColor.black])
+            text.draw(at: NSPoint(x: z.x * width - text.size().width / 2, y: z.baseline))
+        }
+    }
+
     // outfitGlyph returns a stage's menu bar template with the outfit's prop on Tug's head. The prop art
     // has the glyph's width and 40 more rows of headroom, and a thin gap is cut from the dog around it so
     // the prop reads as its own shape at 18pt.
@@ -118,28 +183,6 @@ enum Art {
         canvas.isTemplate = true
         canvas.accessibilityDescription = "Sheepdog, dressed for \(outfit.label)"
         return canvas
-    }
-
-    // napGlyph returns the idle glyph with a small zzz above Tug's head, so a nap shows in the menu bar.
-    static func napGlyph() -> NSImage? {
-        guard let dog = glyph(for: .idle),
-              let zzz = NSImage(systemSymbolName: "zzz", accessibilityDescription: nil)?
-                .withSymbolConfiguration(.init(pointSize: 8, weight: .bold))
-        else {
-            return nil
-        }
-        let size = NSSize(width: dog.size.width + zzz.size.width - 2, height: dog.size.height)
-        let image = NSImage(size: size, flipped: false) { _ in
-            dog.draw(in: NSRect(origin: .zero, size: dog.size))
-            zzz.draw(in: NSRect(
-                x: size.width - zzz.size.width, y: size.height - zzz.size.height,
-                width: zzz.size.width, height: zzz.size.height
-            ))
-            return true
-        }
-        image.isTemplate = true
-        image.accessibilityDescription = "Sheepdog, napping"
-        return image
     }
 }
 
