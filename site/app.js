@@ -11,11 +11,17 @@
     ["Lightning", "#0a0d1a", "#131a30", "#fffbe0", "#b3ad8a", "#4f8bff", "#ff7361", "#ffd400"],
     ["Thunder", "#07141a", "#0e222b", "#e6fbff", "#8fb8c2", "#5fd4e6", "#ff7361", "#1f3fbf"],
     ["Strawhat", "#13100c", "#211c15", "#f7efe2", "#ad9f88", "#d9c7a3", "#ff7361", "#d22b2b"],
-    ["Grapes", "#16081f", "#261236", "#f7eeff", "#c3a9db", "#c77dff", "#ff8a75", "#7b2cbf"],
-    ["Rose", "#1a0a12", "#2c1222", "#fff0f6", "#d6a6be", "#ff5fa2", "#ffb347", "#d6336c"],
+    ["Bubblegum", "#1a0a12", "#2c1222", "#fff0f6", "#d6a6be", "#ff5fa2", "#ffb347", "#d6336c"],
     ["Berserker", "#1a0f08", "#2c1b10", "#fff1e0", "#cfa98a", "#ff8c1a", "#ff6b6b", "#5c3317"],
     ["PickleJuice", "#10130a", "#1c2112", "#f4ffe0", "#b4c29a", "#c6f432", "#ff7361", "#8fd400"],
-    ["Trunk", "#f7ecd6", "#fff8ea", "#14181c", "#5c564a", "#7a4b1e", "#b3261e", "#ff8c42"]
+    ["Trunk", "#f7ecd6", "#fff8ea", "#14181c", "#5c564a", "#7a4b1e", "#b3261e", "#ff8c42"],
+    ["MintChip", "#1a110b", "#2a1c13", "#effff8", "#b9c2b0", "#4ff0bf", "#ffb347", "#3fd9a8"],
+    ["Rose", "#1a070b", "#2b0f16", "#fff0f0", "#d4a5ad", "#ff4d5e", "#ffb347", "#8b1a2b"],
+    ["LondonFog", "#101418", "#1b2229", "#eef3f8", "#9eabb8", "#8fb4d9", "#ff7361", "#5b6b7b"],
+    ["Volcano Taffy", "#1c0e0c", "#2e1814", "#fff3ee", "#d6aa9c", "#ff7f50", "#ffd166", "#e85d3f"],
+    ["Gambit", "#150b1c", "#26152f", "#fbefff", "#c7a8d6", "#ff4fb0", "#ffb347", "#7a4a28"],
+    ["Pale Nimbus", "#000000", "#141414", "#ffffff", "#a3a3a3", "#ffffff", "#ff7361", "#888888"],
+    ["DangerRoom", "#0b1f4d", "#15306e", "#fff8d6", "#b4c0e0", "#ffcc00", "#ff9a85", "#ffcc00"]
   ];
 
   function lum(hex) {

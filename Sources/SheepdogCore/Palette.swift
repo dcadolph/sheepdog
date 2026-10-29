@@ -92,11 +92,17 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
     case lightning
     case thunder
     case strawhat
-    case grapes
-    case rose
+    case bubblegum
     case berserker
     case pickleJuice
     case trunk
+    case mintChip
+    case rose
+    case londonFog
+    case volcanoTaffy
+    case gambit
+    case paleNimbus
+    case dangerRoom
     case custom
 
     // presets are the built-in collars, every case but custom.
@@ -115,11 +121,17 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
         case .lightning: return "Lightning"
         case .thunder: return "Thunder"
         case .strawhat: return "Strawhat"
-        case .grapes: return "Grapes"
-        case .rose: return "Rose"
+        case .bubblegum: return "Bubblegum"
         case .berserker: return "Berserker"
         case .pickleJuice: return "PickleJuice"
         case .trunk: return "Trunk"
+        case .mintChip: return "MintChip"
+        case .rose: return "Rose"
+        case .londonFog: return "LondonFog"
+        case .volcanoTaffy: return "Volcano Taffy"
+        case .gambit: return "Gambit"
+        case .paleNimbus: return "Pale Nimbus"
+        case .dangerRoom: return "DangerRoom"
         case .custom: return "Custom"
         }
     }
@@ -142,9 +154,7 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
             return Self.make("#1f3fbf", "#07141a", "#0e222b", "#e6fbff", "#8fb8c2", "#5fd4e6", "#ff7361")
         case .strawhat:
             return Self.make("#d22b2b", "#13100c", "#211c15", "#f7efe2", "#ad9f88", "#d9c7a3", "#ff7361")
-        case .grapes:
-            return Self.make("#7b2cbf", "#16081f", "#261236", "#f7eeff", "#c3a9db", "#c77dff", "#ff8a75")
-        case .rose:
+        case .bubblegum:
             return Self.make("#d6336c", "#1a0a12", "#2c1222", "#fff0f6", "#d6a6be", "#ff5fa2", "#ffb347")
         case .berserker:
             return Self.make("#5c3317", "#1a0f08", "#2c1b10", "#fff1e0", "#cfa98a", "#ff8c1a", "#ff6b6b")
@@ -152,6 +162,20 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
             return Self.make("#8fd400", "#10130a", "#1c2112", "#f4ffe0", "#b4c29a", "#c6f432", "#ff7361")
         case .trunk:
             return Self.make("#ff8c42", "#f7ecd6", "#fff8ea", "#14181c", "#5c564a", "#7a4b1e", "#b3261e")
+        case .mintChip:
+            return Self.make("#3fd9a8", "#1a110b", "#2a1c13", "#effff8", "#b9c2b0", "#4ff0bf", "#ffb347")
+        case .rose:
+            return Self.make("#8b1a2b", "#1a070b", "#2b0f16", "#fff0f0", "#d4a5ad", "#ff4d5e", "#ffb347")
+        case .londonFog:
+            return Self.make("#5b6b7b", "#101418", "#1b2229", "#eef3f8", "#9eabb8", "#8fb4d9", "#ff7361")
+        case .volcanoTaffy:
+            return Self.make("#e85d3f", "#1c0e0c", "#2e1814", "#fff3ee", "#d6aa9c", "#ff7f50", "#ffd166")
+        case .gambit:
+            return Self.make("#7a4a28", "#150b1c", "#26152f", "#fbefff", "#c7a8d6", "#ff4fb0", "#ffb347")
+        case .paleNimbus:
+            return Self.make("#888888", "#000000", "#141414", "#ffffff", "#a3a3a3", "#ffffff", "#ff7361")
+        case .dangerRoom:
+            return Self.make("#ffcc00", "#0b1f4d", "#15306e", "#fff8d6", "#b4c0e0", "#ffcc00", "#ff9a85")
         case .custom:
             return CustomColors().palette
         }

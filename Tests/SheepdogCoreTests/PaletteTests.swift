@@ -42,8 +42,8 @@ func expectReadable(_ p: Palette, _ comment: String = "", sourceLocation: Source
 
 // testThemeCollars checks that only Jax keeps the drawing's collar and that every other collar differs.
 @Test func testThemeCollars() {
-    #expect(ThemeName.presets.count == 12)
-    #expect(ThemeName.allCases.count == 13)
+    #expect(ThemeName.presets.count == 18)
+    #expect(ThemeName.allCases.count == 19)
     #expect(ThemeName.jax.palette.collar == nil)
     let collars = ThemeName.presets.filter { $0 != .jax }.compactMap(\.palette.collar)
     #expect(collars.count == ThemeName.presets.count - 1)
@@ -80,7 +80,7 @@ func expectReadable(_ p: Palette, _ comment: String = "", sourceLocation: Source
     let got = try JSONDecoder().decode(AlertSettings.self, from: Data(unknown.utf8))
     #expect(got.theme == .jax)
     #expect(got.maxSnoozes == 4)
-    for removed in ["copper", "harbor", "wolf", "bubblegum"] {
+    for removed in ["copper", "harbor", "wolf", "grapes"] {
         let json = #"{"theme":"\#(removed)","maxSnoozes":3}"#
         let kept = try JSONDecoder().decode(AlertSettings.self, from: Data(json.utf8))
         #expect(kept.theme == .jax)

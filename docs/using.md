@@ -118,8 +118,9 @@ dialog, and **Update Now** there installs the same way the card does.
 
 ## Tug's collar
 
-Twelve collars in Settings, Look: Jax, Black Diamond, Golden Spark, Rubie, Lightning, Thunder,
-Strawhat, Grapes, Rose, Berserker, PickleJuice and Trunk. Each one colors the collar, the
+Eighteen collars in Settings, Look: Jax, Black Diamond, Golden Spark, Rubie, Lightning, Thunder,
+Strawhat, Bubblegum, Berserker, PickleJuice, Trunk, MintChip, Rose, LondonFog, Volcano Taffy,
+Gambit, Pale Nimbus and DangerRoom. Each one colors the collar, the
 alarm, the countdown pill and the hand-back card, and every one is checked for contrast. Pick **Custom** to choose your
 own: a background and a ring and buttons color are required, the collar and the already-started
 color are optional. Tug works out the text, surface and muted colors so everything stays readable,
@@ -203,7 +204,7 @@ Internet Accounts** button.
 | Hours         | Keeps Tug quiet, or down to the countdown, outside your working hours.     |
 | Hover         | The glyph says what is next, and each menu item says what it does.         |
 | Backup        | Exports settings to a file and imports them on any Mac. Sign-ins stay out. |
-| Collar        | Twelve collars for Tug that also color the alarm, pill and hand-back card, or Custom. |
+| Collar        | Eighteen collars for Tug that also color the alarm, pill and hand-back card, or Custom. |
 | Outfits       | Holiday outfits for Tug. Dress Tug up for holidays turns them on.          |
 | Tunes         | Holiday tunes for the alarm, in barks. Bark holiday tunes turns them on.   |
 | Updates       | Checks GitHub once a day for a newer release and offers to install it.     |
