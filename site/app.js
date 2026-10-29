@@ -17,7 +17,7 @@
     ["Trunk", "#f7ecd6", "#fff8ea", "#14181c", "#5c564a", "#7a4b1e", "#b3261e", "#ff8c42"],
     ["MintChip", "#1a110b", "#2a1c13", "#effff8", "#b9c2b0", "#4ff0bf", "#ffb347", "#3fd9a8"],
     ["Rose", "#1a070b", "#2b0f16", "#fff0f0", "#d4a5ad", "#ff4d5e", "#ffb347", "#8b1a2b"],
-    ["LondonFog", "#101418", "#1b2229", "#eef3f8", "#9eabb8", "#8fb4d9", "#ff7361", "#5b6b7b"],
+    ["FogDog", "#101418", "#1b2229", "#eef3f8", "#9eabb8", "#8fb4d9", "#ff7361", "#5b6b7b"],
     ["PaleNimbus", "#000000", "#141414", "#ffffff", "#a3a3a3", "#ffffff", "#ff7361", "#888888"],
     ["Gambit", "#150b1c", "#26152f", "#fbefff", "#c7a8d6", "#ff4fb0", "#ffb347", "#7a4a28"],
     ["VolcanoTaffy", "#1c0e0c", "#2e1814", "#fff3ee", "#d6aa9c", "#ff7f50", "#ffd166", "#e85d3f"],

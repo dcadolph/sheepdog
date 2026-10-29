@@ -127,7 +127,7 @@ public enum ThemeName: String, Sendable, Codable, CaseIterable, Identifiable {
         case .trunk: return "Trunk"
         case .mintChip: return "MintChip"
         case .rose: return "Rose"
-        case .londonFog: return "LondonFog"
+        case .londonFog: return "FogDog"
         case .volcanoTaffy: return "VolcanoTaffy"
         case .gambit: return "Gambit"
         case .paleNimbus: return "PaleNimbus"
