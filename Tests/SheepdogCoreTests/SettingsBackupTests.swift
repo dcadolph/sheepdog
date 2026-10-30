@@ -32,8 +32,8 @@ let backupDecodeCases: [BackupDecodeCase] = [
     ),
     BackupDecodeCase( // Test 2: Another app's file is refused.
         name: "other app",
-        json: #"{"app":"moorings","version":1,"exported":"2026-10-23T18:00:00Z","settings":{}}"#,
-        wantMaxSnoozes: nil, want: .notSheepdog("moorings")
+        json: #"{"app":"otherapp","version":1,"exported":"2026-10-23T18:00:00Z","settings":{}}"#,
+        wantMaxSnoozes: nil, want: .notSheepdog("otherapp")
     ),
     BackupDecodeCase( // Test 3: A newer format is refused.
         name: "newer version",
