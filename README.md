@@ -115,18 +115,29 @@ codesign -dv Sheepdog.app 2>&1 | grep TeamIdentifier
 `spctl` should print `accepted` with `source=Notarized Developer ID`, and the team identifier
 should be `U7L4P2YHWJ`.
 
-Once a day Sheepdog asks GitHub for the latest release. When a newer one exists, the menu shows
-a line that opens its release page, and a card offers **Update now**, **Remind me later** and
-**Skip this version**. The card never shows during a countdown, a call or off hours. Update now
-appears only when Sheepdog runs from Applications. For a Homebrew install it runs `brew update`
-and then `brew upgrade --cask sheepdog` in the background, logging to
-`~/Library/Caches/com.dcadolph.sheepdog/sheepdog-update.log`. If Homebrew does not know of the
-release yet, it stops with "Homebrew has no newer Sheepdog yet." in that log, Sheepdog keeps
-running, and the button turns into **Open release page**. Otherwise it downloads the release's
-disk image, checks that the app on it is signed by team `U7L4P2YHWJ`, and installs it. Nothing
-installs until you press it, and the check sends no version or identifier. Turn it off in
-settings with **Check for updates**. To check right away, pick **Check for Updates…** in Tug's
-menu.
+Every six hours Sheepdog asks GitHub for the latest release, and the check sends no version or
+identifier. The first check waits a minute after launch. When a newer release is out and
+**Install updates automatically** is on, Sheepdog downloads the release zip and its `SHA256SUMS`
+file from GitHub's release files and checks the zip's hash. It unpacks the zip and checks that the
+app inside carries a valid Apple Developer ID signature from team `U7L4P2YHWJ`, matches the
+running app's signing requirement, is notarized by Apple, and is the expected newer version for
+this macOS. Any failed check stops the update and names the step.
+
+It installs at a quiet moment. That means never during an alarm, a call, off hours, a meeting
+under way or within 15 minutes of the next meeting, or while a Sheepdog window is open, and only
+after 30 seconds without keyboard or mouse input. Then it swaps the app in Applications and
+starts again. If it finds no quiet moment before you quit, it installs on the next launch. If the
+new version does not start, Sheepdog puts the previous version back, never tries that version
+again, and a card says so.
+
+Settings, General has two switches, **Check for updates** and **Install updates automatically**,
+both on by default. With installs off, Tug's menu shows "Sheepdog X is available" and opens the
+release page. **Check for Updates…** in Tug's menu checks at once, and **Update Now** there
+installs right away without waiting for a quiet moment. It installs only when Sheepdog runs from
+Applications. Otherwise the button is **View Release**. After an update a card says what
+changed. Homebrew still installs it with `brew install --cask dcadolph/tap/sheepdog`. The cask
+is marked `auto_updates`, so `brew upgrade` leaves Sheepdog to update itself, and
+`brew upgrade --greedy --cask sheepdog` forces it.
 
 ## Build from source
 

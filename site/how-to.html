@@ -130,16 +130,15 @@
 <h3>Steps</h3>
 <ol>
   <li>Download the disk image from the <a href="/">home page</a>, open it and double-click Sheepdog. Click <b>Install</b> and it copies itself into Applications, starts from there, ejects the disk image and moves it to the Trash. With Homebrew, run <code>brew install --cask dcadolph/tap/sheepdog</code> instead.</li>
-  <li>Once a day sheepdog asks GitHub for the latest release. When a newer one is out, a card offers <b>Update now</b>, <b>Remind me later</b> and <b>Skip this version</b>.</li>
-  <li><b>Update now</b> upgrades a Homebrew install with Homebrew. Otherwise it downloads the disk image, checks that the app on it is signed by the same developer, and installs it.</li>
+  <li>Every six hours sheepdog asks GitHub for the latest release. When a newer one is out, it downloads, verifies and installs it for you at a quiet moment.</li>
   <li>To move to another Mac, open <b>Settings…</b>, then <b>General</b>, and click <b>Export settings…</b>. On the other Mac, click <b>Import settings…</b> and pick the file.</li>
 </ol>
 <h3>Questions</h3>
 <details><summary>I dragged Sheepdog to Applications instead.</summary><p>That works too. It asks once before moving the disk image to the Trash.</p></details>
-<details><summary>When does the update card show?</summary><p>Never during a countdown, a call or off hours. Remind me later asks again in a week, then every 30 days, three times at most. Skip this version keeps it quiet until the next release, and the menu still shows a line that opens the release page.</p></details>
-<details><summary>The card says Open release page instead of Update now.</summary><p>Update now shows only when Sheepdog runs from Applications and the last try did not fail. Open release page lets you download it by hand.</p></details>
-<details><summary>How do I check for an update now?</summary><p>Pick <b>Check for Updates…</b> in Tug's menu. A dialog says whether a newer Sheepdog is out, and <b>Update Now</b> installs it.</p></details>
-<details><summary>What does the update check send?</summary><p>Nothing about you. It sends no version or identifier. Turn it off with Check for updates in the General tab.</p></details>
+<details><summary>When does an update install?</summary><p>At a quiet moment. Never during an alarm, a call, off hours, a meeting under way or within 15 minutes of the next meeting, or while a Sheepdog window is open, and only after 30 seconds without keyboard or mouse input. If there is no quiet moment before you quit, it installs on the next launch. Before installing, sheepdog checks the download's hash, its Apple Developer ID signature and notarization. If the new version does not start, sheepdog puts the previous one back and a card says so.</p></details>
+<details><summary>How do I turn automatic updates off?</summary><p>Open <b>Settings…</b>, then <b>General</b>, and turn off <b>Install updates automatically</b>. Tug's menu then shows "Sheepdog X is available" and opens the release page. Turn off <b>Check for updates</b> to stop the checks too. With Homebrew, <code>brew upgrade</code> leaves sheepdog to update itself, and <code>brew upgrade --greedy --cask sheepdog</code> forces it.</p></details>
+<details><summary>How do I check for an update now?</summary><p>Pick <b>Check for Updates…</b> in Tug's menu. A dialog says whether a newer Sheepdog is out. <b>Update Now</b> there installs it right away, but only when Sheepdog runs from Applications. Otherwise the button is <b>View Release</b>.</p></details>
+<details><summary>What does the update check send?</summary><p>Nothing about you. It sends no version or identifier. The download itself comes from GitHub's release files.</p></details>
 <details><summary>What is in the exported file?</summary><p>Your warnings, sounds, filters, working hours and Slack channels. Sign-ins stay in your Keychain, so connect your calendars again after importing on a new Mac.</p></details>
 <details><summary>How do I check a download is real?</summary><p>The README's <a href="https://github.com/dcadolph/sheepdog#verify-the-download">Verify the download</a> section has the commands.</p></details>
 </main>

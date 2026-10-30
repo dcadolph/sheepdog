@@ -93,28 +93,42 @@ disk image to the Trash. A downloaded copy started from anywhere else, such as D
 offers **Move to Applications**. Homebrew users can run
 `brew install --cask dcadolph/tap/sheepdog` instead.
 
-Once a day Sheepdog asks GitHub for the latest release. When a newer one is out, Tug's menu shows
-a line such as "Sheepdog 1.6.0 is available" that opens its release page, and a card in the top
-right corner offers three choices.
+Every six hours Sheepdog asks GitHub for the latest release. The first check waits a minute
+after launch. The check sends no version or identifier.
 
-- **Update now** installs the new version. A Homebrew install runs `brew update` and
-  `brew upgrade --cask sheepdog` in the background. Any other install downloads the release's
-  disk image, checks that the app on it is signed by the same developer, and installs it. Either
-  way Sheepdog quits and the new version starts.
-- **Remind me later** puts the card away. It comes back a week later, then every 30 days, three
-  times at most.
-- **Skip this version** keeps the card away until the next release. The menu line stays.
+When a newer release is out and **Install updates automatically** is on, Sheepdog downloads the
+release zip and its `SHA256SUMS` file from GitHub's release files and checks the zip's hash
+against it. It unpacks the zip and checks that the app inside carries a valid Apple Developer ID
+signature from team `U7L4P2YHWJ`, matches the running app's signing requirement, is notarized by
+Apple, and is the expected newer version that runs on this macOS. Any failed check stops the
+update and names the step.
 
-The card never shows during a countdown, the alarm, a call, a hand-back card or off hours. It
-offers **Update now** only when Sheepdog runs from Applications, and **Open release page**
-otherwise. If an update fails, the button turns into **Open release page** so you can download it
-by hand. A Homebrew update fails when Homebrew does not know of the release yet, and the log at
-`~/Library/Caches/com.dcadolph.sheepdog/sheepdog-update.log` then says "Homebrew has no newer
-Sheepdog yet." Try again later, after Homebrew refreshes its tap.
+It then installs at a quiet moment. It never installs during an alarm (countdown, takeover or
+hand-back card), a call (microphone live), off hours, a meeting under way or within 15 minutes of
+the next meeting, or while a Sheepdog window is open. It also waits for 30 seconds without
+keyboard or mouse input. Then it swaps the app in Applications and starts again. If it finds no
+quiet moment before you quit, it installs on the next launch. If the new version does not start,
+Sheepdog puts the previous version back and never tries that version again, and a card says so.
 
-The check sends no version or identifier. Turn it off with **Check for updates** in Settings,
-under General. To check right away, pick **Check for Updates…** in Tug's menu. It answers in a
-dialog, and **Update Now** there installs the same way the card does.
+Two switches in Settings, under General, control this. **Check for updates** is on by default.
+**Install updates automatically** is on by default and grayed out while checks are off. With
+installs off, Tug's menu shows "Sheepdog 1.17.1 is available", and choosing it opens the release
+page.
+
+While an update is under way, the top of Tug's menu shows one status line: "Downloading 1.17.1",
+"1.17.1 ready, installs when you pause", "Installing 1.17.1", or "1.17.1 refused at" followed by the
+step. Hover for the reason. Choosing the refused line opens the release page.
+
+After an update a card says "Sheepdog updated to 1.17.1". The first time, it says "Sheepdog now
+installs updates on its own. Change that in Settings." with **Open Settings**. Later updates say
+"Updated from 1.17.0." with **What's New**.
+
+**Check for Updates…** in Tug's menu checks at once and answers in a dialog. **Update Now** there
+downloads, verifies and installs right away without waiting for a quiet moment. It installs only
+when Sheepdog runs from Applications. Otherwise the button is **View Release**.
+
+The Homebrew cask is marked `auto_updates`, so `brew upgrade` leaves Sheepdog to update itself.
+`brew upgrade --greedy --cask sheepdog` forces it.
 
 ## Tug's collar
 
@@ -211,7 +225,7 @@ card and that section say so too, with an **Open Internet Accounts** button.
 | Collar        | Eighteen collars for Tug that also color the alarm, pill and hand-back card, or Custom. |
 | Outfits       | Holiday outfits for Tug. Dress Tug up for holidays turns them on.          |
 | Tunes         | Holiday tunes for the alarm, in barks. Bark holiday tunes turns them on.   |
-| Updates       | Checks GitHub once a day for a newer release and offers to install it.     |
+| Updates       | Checks GitHub every six hours and installs a verified update.              |
 
 When a direct sign-in is refused, the message says why and what to do next, and the
 [For IT admins](https://macsheepdog.com/admins) page covers what an admin approves.
