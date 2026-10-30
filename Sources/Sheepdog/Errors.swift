@@ -16,18 +16,3 @@ enum LoopbackError: Error, Equatable {
     case noPort
 }
 
-// UpdaterError is a failure to install an update from the update card.
-enum UpdaterError: Error, Equatable {
-    // noBrew means Homebrew manages Sheepdog but its executable was not found.
-    case noBrew
-    // brew means the Homebrew upgrade failed, carrying the script's exit status.
-    case brew(status: Int32)
-    // download means the release's disk image did not download, carrying the HTTP status.
-    case download(status: Int)
-    // attach means the disk image could not be mounted.
-    case attach
-    // signature means the app on the disk image is not signed by the release team.
-    case signature
-    // version means the app on the disk image is not the version the card named.
-    case version
-}

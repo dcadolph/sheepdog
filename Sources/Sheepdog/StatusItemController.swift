@@ -159,12 +159,8 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         let settings = coordinator.settingsStore.settings
-        if let update = coordinator.availableUpdate {
-            let version = update.tag.hasPrefix("v") ? String(update.tag.dropFirst()) : update.tag
-            menu.addItem(action(
-                "Sheepdog \(version) is available", #selector(openUpdate),
-                tip: "Opens the release page on GitHub. Nothing installs by itself."
-            ))
+        if let line = updateLine() {
+            menu.addItem(line)
             menu.addItem(.separator())
         }
         if settings.useMacCalendar && coordinator.calendar.access != .granted {
@@ -399,9 +395,32 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         coordinator.checkForUpdateNow()
     }
 
+    // updateLine is the menu's update status: where an update in flight stands, or a newer release
+    // that is not installing on its own. It is nil when there is nothing to say.
+    private func updateLine() -> NSMenuItem? {
+        let name = { (tag: String) in tag.hasPrefix("v") ? String(tag.dropFirst()) : tag }
+        switch coordinator.updater.state {
+        case .downloading(let tag):
+            return action("Downloading \(name(tag))", #selector(openUpdate),
+                          tip: "Sheepdog is downloading and checking the release.")
+        case .verified(let tag):
+            return action("\(name(tag)) ready, installs when you pause", #selector(openUpdate),
+                          tip: "Never during an alarm, a call, off hours or within 15 minutes of a meeting.")
+        case .installing(let tag):
+            return action("Installing \(name(tag))", #selector(openUpdate), tip: "Sheepdog starts again in a moment.")
+        case .refused(let step, let tag):
+            return action("\(name(tag)) refused at \(step.rawValue)", #selector(openUpdate),
+                          tip: step.label + " Opens the release page.")
+        case .idle:
+            guard let update = coordinator.availableUpdate else { return nil }
+            return action("Sheepdog \(name(update.tag)) is available", #selector(openUpdate),
+                          tip: "Opens the release page on GitHub.")
+        }
+    }
+
     // openUpdate opens the newer release's page in the browser.
     @objc private func openUpdate() {
-        if let update = coordinator.availableUpdate {
+        if let update = coordinator.updater.release ?? coordinator.availableUpdate {
             NSWorkspace.shared.open(update.page)
         }
     }

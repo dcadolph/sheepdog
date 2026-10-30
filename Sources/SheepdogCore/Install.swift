@@ -73,12 +73,6 @@ public enum Install {
         images.filter { $0.image.hasSuffix(".dmg") && exists(trimmed($0.mount) + "/" + appName) }
     }
 
-    // homebrew reports whether Homebrew manages Sheepdog, by the presence of its Caskroom folder
-    // on Apple silicon or Intel.
-    public static func homebrew(exists: (String) -> Bool) -> Bool {
-        ["/opt/homebrew/Caskroom/sheepdog", "/usr/local/Caskroom/sheepdog"].contains { exists($0) }
-    }
-
     // releaseRequirement is the code requirement a downloaded Sheepdog must meet: the Developer ID
     // Application certificate of the team that signs every release.
     public static let releaseRequirement = "identifier \"com.dcadolph.sheepdog\" and anchor apple generic"
@@ -124,58 +118,6 @@ public enum Install {
         let need = parts.compactMap { $0 } + Array(repeating: 0, count: 3 - parts.count)
         let have = [os.majorVersion, os.minorVersion, os.patchVersion]
         return !have.lexicographicallyPrecedes(need)
-    }
-
-    // brewPath returns the Homebrew executable, Apple silicon first, or nil when neither exists.
-    public static func brewPath(exists: (String) -> Bool) -> String? {
-        ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"].first { exists($0) }
-    }
-
-    // brewScript returns the shell script that refreshes Homebrew, upgrades the cask, quits the
-    // Sheepdog whose process id is its first argument, waits for it to exit, and opens the new copy.
-    // It refreshes first because Homebrew refreshes a tap only about once a day, so a release can be
-    // out before brew knows of it. A failed upgrade, or one that leaves the app's version unchanged,
-    // leaves Sheepdog running and exits with an error. It quits by process id because pkill skips its
-    // own ancestors, and Sheepdog starts the script, and with a signal because an Apple event can ask
-    // for Automation consent.
-    public static func brewScript(brew: String, app: String) -> String {
-        let version = "/usr/bin/defaults read \(shellQuoted(app + "/Contents/Info")) CFBundleShortVersionString"
-        return [
-            "#!/bin/sh",
-            "pid=\"$1\"",
-            "before=$(\(version) 2>/dev/null)",
-            "\(shellQuoted(brew)) update --quiet",
-            "if ! \(shellQuoted(brew)) upgrade --cask sheepdog; then",
-            "  echo",
-            "  echo 'Sheepdog was not updated.'",
-            "  exit 1",
-            "fi",
-            "if [ \"$(\(version) 2>/dev/null)\" = \"$before\" ]; then",
-            "  echo",
-            "  echo 'Homebrew has no newer Sheepdog yet.'",
-            "  exit 1",
-            "fi",
-            "/bin/kill \"$pid\"",
-            "waited=0",
-            "while /bin/kill -0 \"$pid\" 2>/dev/null && [ \"$waited\" -lt 75 ]; do",
-            "  sleep 0.2",
-            "  waited=$((waited + 1))",
-            "done",
-            "/usr/bin/open \(shellQuoted(app))",
-            "echo 'Sheepdog is up to date.'",
-            "",
-        ].joined(separator: "\n")
-    }
-
-    // dmgURL is the release disk image download for a tag, used exactly as given.
-    public static func dmgURL(tag: String) -> URL {
-        URL(string: "https://github.com/dcadolph/sheepdog/releases/download/\(tag)/"
-            + "sheepdog_\(tag)_macos_universal.dmg")!
-    }
-
-    // shellQuoted wraps a value in single quotes, escaping any single quote inside it.
-    static func shellQuoted(_ value: String) -> String {
-        "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 
     // inside reports whether path is folder or below it.

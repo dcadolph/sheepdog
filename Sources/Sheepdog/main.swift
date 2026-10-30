@@ -27,14 +27,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // applicationDidFinishLaunching builds the menu bar item and starts the loop. The install offer comes
     // before the hand-off so a newer copy opened from a disk image replaces a running one instead of
-    // deferring to it, and before the login item so a disk image path is never registered.
+    // deferring to it, and before the login item so a disk image path is never registered. An update
+    // staged before the last Quit installs before anything else starts.
     func applicationDidFinishLaunching(_ notification: Notification) {
         if installer.offerMove() || handOffToRunningCopy() {
             return
         }
         installer.offerTrash()
-        NSApp.mainMenu = Self.makeMainMenu()
+        _ = Coordinator.marker.begin(build: Coordinator.build, pid: ProcessInfo.processInfo.processIdentifier)
         let coordinator = Coordinator(settingsStore: settingsStore, accounts: accounts)
+        if coordinator.installStaged() {
+            return
+        }
+        coordinator.settleAttempt()
+        NSApp.mainMenu = Self.makeMainMenu()
         let setupWindow = SetupWindow(
             store: settingsStore, accounts: accounts, loginItem: loginItem, coordinator: coordinator,
             onAllowAccess: { StatusItemController.openCalendarPrivacy() }
@@ -51,10 +57,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             setupWindow?.showIfPending()
         }
         coordinator.onShowCalendars = { [weak self] in self?.showSettings(tab: .calendars) }
+        coordinator.onShowSettings = { [weak self] in self?.showSettings(tab: .general) }
         self.coordinator = coordinator
         self.statusItem = statusItem
         self.setupWindow = setupWindow
+        Coordinator.marker.finish(build: Coordinator.build)
+        coordinator.releaseMessage()
         coordinator.start()
+    }
+
+    // applicationWillTerminate records a clean quit, so the next launch can tell it from a crash.
+    func applicationWillTerminate(_ notification: Notification) {
+        Coordinator.marker.quit()
     }
 
     // applicationShouldHandleReopen opens the settings window when Sheepdog is opened again while it

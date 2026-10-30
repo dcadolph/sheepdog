@@ -36,17 +36,10 @@ final class AlertModel {
     var messagingTeam = false
     // teamChannel is the index of the channel picked in the Let them know row.
     var teamChannel = 0
-    // updateVersion is the newer version the update card names, or nil while the card is closed.
-    var updateVersion: String?
+    // notice is what the notice card says, or nil while the card is closed.
+    var notice: Notice?
     // setupHints are the calendar setup hints the setup card shows, empty while the card is closed.
     var setupHints: [SetupHint] = []
-    // updateCanInstall reports that this copy can install the update itself, so the card offers
-    // Update now instead of the release page.
-    var updateCanInstall = false
-    // updateBusy reports that the update is being installed.
-    var updateBusy = false
-    // updateFailed reports that installing the update failed, so the card falls back to the release page.
-    var updateFailed = false
     // drawsStill reports that the views are being drawn to an image, where AppKit-backed text
     // fields render as placeholders, so the note field draws its text directly.
     var drawsStill = false
@@ -77,12 +70,10 @@ final class AlertModel {
     var onDoneHandBack: () -> Void = {}
     // onClearHandBacks is called when the user acknowledges every handed back note at once.
     var onClearHandBacks: () -> Void = {}
-    // onOpenUpdate is called when the user presses Update now or opens the release page.
-    var onOpenUpdate: () -> Void = {}
-    // onRemindUpdate is called when the user asks to be reminded about the update later.
-    var onRemindUpdate: () -> Void = {}
-    // onSkipUpdate is called when the user skips the update's version.
-    var onSkipUpdate: () -> Void = {}
+    // onNoticeAction is called when the user presses the notice card's button.
+    var onNoticeAction: () -> Void = {}
+    // onDismissNotice is called when the user dismisses the notice card.
+    var onDismissNotice: () -> Void = {}
     // onOpenSetup is called when the user opens the Calendars settings from the setup card.
     var onOpenSetup: () -> Void = {}
     // onLaterSetup is called when the user asks to be reminded about calendar setup later.
@@ -97,4 +88,24 @@ final class AlertModel {
         }
         return now >= meeting.start
     }
+}
+
+// Notice is one thing the notice card tells the user once, such as an update that installed.
+struct Notice: Equatable {
+    // title is the card's heading.
+    var title: String
+    // body is the line under the heading.
+    var body: String
+    // button names the card's action.
+    var button: String
+    // action is what the button opens.
+    var action: NoticeAction
+}
+
+// NoticeAction is what a notice card's button does.
+enum NoticeAction: Equatable {
+    // settings opens Settings on the General tab.
+    case settings
+    // page opens a release page.
+    case page(URL)
 }

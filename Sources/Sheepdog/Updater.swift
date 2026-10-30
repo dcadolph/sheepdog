@@ -1,152 +1,383 @@
-import AppKit
-import os
+import CryptoKit
+import Foundation
 
 import SheepdogCore
 
-// Updater installs a newer release when the user presses Update now on the update card. A Homebrew
-// install upgrades through brew in the background. A disk image install downloads the release's image,
-// checks who signed the app on it, and starts that copy, which installs itself.
+// Downloader fetches a URL into a local file.
+protocol Downloader: Sendable {
+    // download writes the body of url to file and refuses a body over limit bytes.
+    func download(_ url: URL, to file: URL, limit: Int) async throws
+}
+
+// Trust judges an unpacked bundle and returns the step that refused it, or nil when it may install.
+protocol Trust: Sendable {
+    // verify checks the bundle against the release's version, such as 1.17.0.
+    func verify(bundle: URL, version: String) -> UpdateVerdict?
+}
+
+// DownloadError names why a download stopped short of a file.
+enum DownloadError: Error, Equatable {
+    // status is a response other than 200.
+    case status(Int)
+    // tooLarge is a body over the limit.
+    case tooLarge
+}
+
+// URLSessionDownloader downloads with URLSession, writing the body as it arrives so the limit holds
+// before the file grows past it.
+struct URLSessionDownloader: Downloader {
+    // download writes the body of url to file and refuses a body over limit bytes.
+    func download(_ url: URL, to file: URL, limit: Int) async throws {
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 15
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard status == 200 else {
+            throw DownloadError.status(status)
+        }
+        guard response.expectedContentLength <= Int64(limit) else {
+            throw DownloadError.tooLarge
+        }
+        FileManager.default.createFile(atPath: file.path, contents: nil)
+        let out = try FileHandle(forWritingTo: file)
+        defer { try? out.close() }
+        var chunk = Data()
+        chunk.reserveCapacity(1 << 16)
+        var total = 0
+        for try await byte in bytes {
+            total += 1
+            guard total <= limit else {
+                throw DownloadError.tooLarge
+            }
+            chunk.append(byte)
+            if chunk.count == 1 << 16 {
+                try out.write(contentsOf: chunk)
+                chunk.removeAll(keepingCapacity: true)
+            }
+        }
+        try out.write(contentsOf: chunk)
+    }
+}
+
+// CodeTrustCheck is the Mac's Trust: CodeTrust's checks against the running app.
+struct CodeTrustCheck: Trust {
+    // current is the running version.
+    let current: ReleaseVersion
+    // running is the running app's designated requirement, nil when the app is unsigned.
+    let running: String?
+
+    // verify runs CodeTrust's checks on the bundle.
+    func verify(bundle: URL, version: String) -> UpdateVerdict? {
+        CodeTrust.verify(bundle: bundle, version: version, current: current, running: running)
+    }
+}
+
+// UpdateState is where an update stands.
+enum UpdateState: Equatable, Sendable {
+    // idle is no update under way.
+    case idle
+    // downloading is the release of the tag being fetched and verified.
+    case downloading(String)
+    // verified is the release of the tag staged and waiting for a quiet moment.
+    case verified(String)
+    // installing is the release of the tag being swapped in.
+    case installing(String)
+    // refused is the release of the tag turned down at the named step.
+    case refused(UpdateVerdict, String)
+
+    // status is the state as the update log names it.
+    var status: String {
+        switch self {
+        case .idle: "idle"
+        case .downloading(let tag): "downloading \(tag)"
+        case .verified(let tag): "verified \(tag)"
+        case .installing(let tag): "installing \(tag)"
+        case .refused(let step, let tag): "refused(\(step.rawValue)) \(tag)"
+        }
+    }
+
+    // busy reports whether an update is past its check and not yet settled.
+    var busy: Bool {
+        switch self {
+        case .downloading, .verified, .installing: true
+        case .idle, .refused: false
+        }
+    }
+}
+
+// Updater checks for a newer release, downloads and verifies it, stages it, and hands it to install at
+// the first quiet moment. Every refusal names its step, and a tag is tried at most once per launch.
 @MainActor
 final class Updater {
-    // scriptName is the file name of the script a Homebrew upgrade runs.
-    static let scriptName = "sheepdog-update.sh"
-    // logName is the file name of the log a Homebrew upgrade writes its output to.
-    static let logName = "sheepdog-update.log"
+    // zipLimit caps the release zip.
+    static let zipLimit = 100 << 20
+    // sumsLimit caps SHA256SUMS.
+    static let sumsLimit = 64 << 10
+    // quietEvery is how often a staged update looks for a quiet moment.
+    static let quietEvery: TimeInterval = 5
+    // appName is the bundle a release zip holds.
+    nonisolated static let appName = Install.appName
 
-    // logger writes to the unified log under the com.dcadolph.sheepdog subsystem.
-    private let logger = Logger(subsystem: "com.dcadolph.sheepdog", category: "update")
+    // client asks GitHub for the latest release.
+    let client: any HTTPClient
+    // downloader fetches the release assets.
+    let downloader: any Downloader
+    // trust judges the unpacked bundle.
+    let trust: any Trust
+    // current is the running version.
+    let current: ReleaseVersion
+    // bundle is the running bundle the update replaces.
+    let bundle: URL
+    // cache is the folder downloads are staged in. Each fetch empties it first.
+    let cache: URL
+    // freeSpace returns the bytes free on the volume holding a folder.
+    var freeSpace: (URL) -> Int64 = Updater.available
+    // log writes one line per step.
+    var log: (String) -> Void = { _ in }
+    // changed is told each time state or release changes.
+    var changed: () -> Void = {}
+    // quiet reports whether now is a good moment to relaunch.
+    var quiet: () -> Bool = { false }
+    // install swaps the staged bundle of the tag in and relaunches.
+    var install: (URL, String) -> Void = { _, _ in }
 
-    // canUpdate reports whether this copy may update itself, which only an installed copy in
-    // /Applications may do, so a build run from anywhere else never replaces it.
-    static var canUpdate: Bool {
-        Installer.originalURL(Bundle.main.bundleURL).standardizedFileURL.path == Installer.destination.path
+    // state is where the update stands.
+    private(set) var state: UpdateState = .idle
+    // release is the newer release the last check found, nil when none.
+    private(set) var release: ReleaseInfo?
+    // staged is the verified bundle waiting to install.
+    private(set) var staged: URL?
+    // tried holds the tags already fetched or skipped, so none is fetched twice.
+    private var tried: Set<String>
+    // timer looks for a quiet moment while an update is staged.
+    private var timer: Timer?
+
+    // init builds an updater for the running version and bundle. skip lists tags never to fetch, such
+    // as one that already failed to start.
+    init(
+        client: any HTTPClient, downloader: any Downloader, trust: any Trust, current: ReleaseVersion, bundle: URL,
+        cache: URL, skip: Set<String> = []
+    ) {
+        self.client = client
+        self.downloader = downloader
+        self.trust = trust
+        self.current = current
+        self.bundle = bundle
+        self.cache = cache
+        tried = skip
     }
 
-    // brew runs the upgrade script in the background with its output in the update log. It runs the
-    // script directly rather than through Terminal, which types a .command file into the user's login
-    // shell, where shell startup can mangle it. On success the script quits and reopens Sheepdog, so
-    // this returns only when the upgrade could not start or failed.
-    func brew() async throws {
-        guard let brew = Install.brewPath(exists: { FileManager.default.isExecutableFile(atPath: $0) }) else {
-            throw UpdaterError.noBrew
+    // check asks GitHub for a newer release when automatic checks are on or the check is forced, and
+    // with install on fetches, verifies and stages it. It returns the newer release, nil when none.
+    @discardableResult
+    func check(automatic: Bool, install: Bool, forced: Bool = false) async throws -> ReleaseInfo? {
+        guard automatic || forced, !state.busy else {
+            return release
         }
-        let folder = try Self.folder()
-        let script = folder.appendingPathComponent(Self.scriptName)
-        let log = folder.appendingPathComponent(Self.logName)
-        let text = Install.brewScript(brew: brew, app: Installer.destination.path)
-        try Data(text.utf8).write(to: script, options: .atomic)
-        FileManager.default.createFile(atPath: log.path, contents: nil)
-        let output = try FileHandle(forWritingTo: log)
-        defer { try? output.close() }
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/bin/sh")
-        task.arguments = [script.path, String(ProcessInfo.processInfo.processIdentifier)]
-        task.standardInput = FileHandle.nullDevice
-        task.standardOutput = output
-        task.standardError = output
-        logger.notice("started the Homebrew upgrade for the update")
-        let status: Int32 = try await withCheckedThrowingContinuation { done in
-            task.terminationHandler = { done.resume(returning: $0.terminationStatus) }
-            do {
-                try task.run()
-            } catch {
-                done.resume(throwing: error)
-            }
+        let found = try await UpdateChecker(client: client, current: current).check()
+        release = found
+        changed()
+        if let found, install {
+            await fetch(found)
         }
-        guard status == 0 else {
-            throw UpdaterError.brew(status: status)
-        }
+        return found
     }
 
-    // install downloads the disk image of the release named by tag, mounts it, checks that the app on
-    // it is a signed Sheepdog of that version, and starts it to install itself. On any failure it
-    // detaches and deletes what it made.
-    func install(tag: String) async throws {
-        let image = try Self.folder().appendingPathComponent(Install.dmgURL(tag: tag).lastPathComponent)
-        try await download(Install.dmgURL(tag: tag), to: image)
-        var mount: String?
+    // fetch downloads the release, checks it against SHA256SUMS, unpacks it, verifies the bundle and
+    // stages it. A download that fails in transit leaves the tag free for the next check.
+    func fetch(_ release: ReleaseInfo) async {
+        let tag = release.tag
+        guard !tried.contains(tag), !state.busy else {
+            return
+        }
+        tried.insert(tag)
+        guard let version = ReleaseVersion(tag), version > current else {
+            return refuse(.metadata, tag)
+        }
+        log("metadata \(tag)")
+        guard let zip = release.zip, let sums = release.checksums else {
+            return refuse(.assets, tag)
+        }
+        guard Self.replaceable(bundle) else {
+            return refuse(.location, tag)
+        }
+        set(.downloading(tag))
+        let files = FileManager.default
+        let dir = cache.appendingPathComponent(tag, isDirectory: true)
+        try? files.removeItem(at: cache)
         do {
-            let volume = try await Task.detached { try Self.attach(image) }.value
-            mount = volume
-            let app = URL(fileURLWithPath: volume).appendingPathComponent(Install.appName)
-            let version = tag.hasPrefix("v") ? String(tag.dropFirst()) : tag
-            try await Task.detached { try Self.check(app, version: version) }.value
-            try await launch(app, image: image)
-            logger.notice("started the update from \(image.path, privacy: .public)")
+            try files.createDirectory(at: dir, withIntermediateDirectories: true)
         } catch {
-            if let mount {
-                Installer.run("/usr/bin/hdiutil", "detach", mount, "-force")
+            return refuse(.space, tag)
+        }
+        let zipFile = dir.appendingPathComponent(zip.lastPathComponent)
+        let sumsFile = dir.appendingPathComponent("SHA256SUMS")
+        do {
+            try await downloader.download(sums, to: sumsFile, limit: Self.sumsLimit)
+            try await downloader.download(zip, to: zipFile, limit: Self.zipLimit)
+        } catch is DownloadError {
+            return refuse(.assets, tag)
+        } catch {
+            log("download of \(tag) failed: \(error.localizedDescription)")
+            tried.remove(tag)
+            return set(.idle)
+        }
+        log("assets 2")
+        let size = ((try? files.attributesOfItem(atPath: zipFile.path))?[.size] as? Int64) ?? 0
+        guard min(freeSpace(bundle.deletingLastPathComponent()), freeSpace(dir)) >= 2 * size else {
+            return refuse(.space, tag)
+        }
+        let trust = self.trust
+        let name = String(tag.dropFirst(tag.hasPrefix("v") ? 1 : 0))
+        let outcome = await Task.detached {
+            Self.verify(zip: zipFile, sums: sumsFile, into: dir, version: name, trust: trust)
+        }.value
+        switch outcome {
+        case .refused(let step):
+            refuse(step, tag)
+        case .staged(let app):
+            log("checksum ok")
+            for step in [UpdateVerdict.signature, .requirement, .notarization, .plist] {
+                log("\(step.rawValue) ok")
             }
-            try? FileManager.default.removeItem(at: image)
-            throw error
+            staged = app
+            set(.verified(tag))
+            timer?.invalidate()
+            timer = Timer.scheduledTimer(withTimeInterval: Self.quietEvery, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.tick() }
+            }
+            timer?.tolerance = 1
         }
     }
 
-    // download fetches url into file, replacing any earlier copy.
-    private func download(_ url: URL, to file: URL) async throws {
-        var request = URLRequest(url: url)
-        request.timeoutInterval = 60
-        let (temp, response) = try await URLSession.shared.download(for: request)
-        defer { try? FileManager.default.removeItem(at: temp) }
-        guard let status = (response as? HTTPURLResponse)?.statusCode, status == 200 else {
-            throw UpdaterError.download(status: (response as? HTTPURLResponse)?.statusCode ?? 0)
+    // tick installs the staged update when now is quiet.
+    func tick() {
+        guard case .verified = state, quiet() else {
+            return
         }
-        if FileManager.default.fileExists(atPath: file.path) {
-            try FileManager.default.removeItem(at: file)
-        }
-        try FileManager.default.moveItem(at: temp, to: file)
+        installNow()
     }
 
-    // attach mounts the disk image without showing it in the Finder and returns its volume. It runs off
-    // the main thread because hdiutil verifies the image first.
-    private nonisolated static func attach(_ image: URL) throws -> String {
+    // installNow hands the staged update to install without waiting for a quiet moment.
+    func installNow() {
+        guard case .verified(let tag) = state, let staged else {
+            return
+        }
+        stopWaiting()
+        set(.installing(tag))
+        log("swap \(tag)")
+        install(staged, tag)
+    }
+
+    // refuse records that the release of the tag was turned down at step.
+    func refuse(_ step: UpdateVerdict, _ tag: String) {
+        stopWaiting()
+        staged = nil
+        log("refused \(tag) at \(step.rawValue)")
+        set(.refused(step, tag))
+    }
+
+    // stopWaiting stops looking for a quiet moment.
+    private func stopWaiting() {
+        timer?.invalidate()
+        timer = nil
+    }
+
+    // set moves to state and tells changed.
+    private func set(_ next: UpdateState) {
+        state = next
+        changed()
+    }
+
+    // Outcome is what verify found.
+    enum Outcome: Sendable, Equatable {
+        // staged is the unpacked bundle that passed every check.
+        case staged(URL)
+        // refused is the step that turned the download down.
+        case refused(UpdateVerdict)
+    }
+
+    // verify checks the zip against SHA256SUMS, unpacks it into dir and runs trust on the bundle.
+    nonisolated static func verify(zip: URL, sums: URL, into dir: URL, version: String, trust: any Trust) -> Outcome {
+        guard let text = try? String(contentsOf: sums, encoding: .utf8), let hex = sha256(zip),
+            Checksums.matches(hex, name: zip.lastPathComponent, in: Checksums.parse(text))
+        else {
+            return .refused(.checksum)
+        }
+        let out = dir.appendingPathComponent("unpacked", isDirectory: true)
+        try? FileManager.default.removeItem(at: out)
+        let app = out.appendingPathComponent(appName)
+        guard unzip(zip, into: out),
+            FileManager.default.fileExists(atPath: app.path)
+        else {
+            return .refused(.assets)
+        }
+        if let step = trust.verify(bundle: app, version: version) {
+            return .refused(step)
+        }
+        return .staged(app)
+    }
+
+    // unzip unpacks the zip into folder with ditto and reports whether ditto succeeded.
+    nonisolated static func unzip(_ zip: URL, into folder: URL) -> Bool {
         let task = Process()
-        let out = Pipe()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/hdiutil")
-        task.arguments = ["attach", "-nobrowse", "-noautoopen", "-plist", image.path]
-        task.standardOutput = out
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        task.arguments = ["-x", "-k", zip.path, folder.path]
+        task.standardOutput = FileHandle.nullDevice
         task.standardError = FileHandle.nullDevice
-        try task.run()
-        let data = out.fileHandleForReading.readDataToEndOfFile()
+        guard (try? task.run()) != nil else {
+            return false
+        }
         task.waitUntilExit()
-        guard task.terminationStatus == 0,
-              let root = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
-              let entities = root["system-entities"] as? [[String: Any]],
-              let mount = entities.compactMap({ $0["mount-point"] as? String }).first
-        else { throw UpdaterError.attach }
-        return mount
+        return task.terminationStatus == 0
     }
 
-    // launch starts the copy on the image as a second instance, handing it the image to install from.
-    private func launch(_ app: URL, image: URL) async throws {
-        let config = NSWorkspace.OpenConfiguration()
-        config.createsNewApplicationInstance = true
-        config.arguments = [Installer.updateFromFlag, image.path]
-        _ = try await NSWorkspace.shared.openApplication(at: app, configuration: config)
-    }
-
-    // check verifies that app meets the release signing requirement and carries version.
-    nonisolated static func check(_ app: URL, version: String) throws {
-        guard Install.signed(app.path, requirement: Install.releaseRequirement) else {
-            throw UpdaterError.signature
+    // sha256 returns the lowercase hex digest of the file, or nil when it cannot be read.
+    nonisolated static func sha256(_ file: URL) -> String? {
+        guard let handle = try? FileHandle(forReadingFrom: file) else {
+            return nil
         }
-        let found = Bundle(url: app)?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-        guard found == version else {
-            throw UpdaterError.version
+        defer { try? handle.close() }
+        var hasher = SHA256()
+        while let data = try? handle.read(upToCount: 1 << 20), !data.isEmpty {
+            hasher.update(data: data)
         }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
-    // folder returns the app's caches folder, where downloads and the upgrade script are kept.
-    private static func folder() throws -> URL {
-        let caches = try FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil,
-                                                 create: true)
-        let folder = caches.appendingPathComponent(bundleID)
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        return folder
+    // replaceable reports whether the bundle can be swapped in place: the installed copy in
+    // /Applications, outside App Translocation, in a folder this user can write. A build run from
+    // anywhere else never replaces itself.
+    nonisolated static func replaceable(_ bundle: URL) -> Bool {
+        bundle.standardizedFileURL.path == "/Applications/" + Install.appName
+            && !bundle.path.contains("/AppTranslocation/")
+            && access(bundle.deletingLastPathComponent().path, W_OK) == 0
     }
 
-    // bundleID is Sheepdog's bundle identifier.
-    private static var bundleID: String {
-        Bundle.main.bundleIdentifier ?? "com.dcadolph.sheepdog"
+    // available returns the bytes free for important use on the volume holding the folder, or zero
+    // when it cannot be read.
+    nonisolated static func available(_ folder: URL) -> Int64 {
+        let values = try? folder.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+        return values?.volumeAvailableCapacityForImportantUsage ?? 0
+    }
+
+    // swap puts staged in place of bundle, keeps the old bundle at previous and returns where the old
+    // bundle ended up: previous, or beside the bundle when it could not be moved there.
+    nonisolated static func swap(bundle: URL, staged: URL, previous: URL) throws -> URL {
+        let files = FileManager.default
+        let backupName = "Sheepdog.previous.app"
+        let beside = bundle.deletingLastPathComponent().appendingPathComponent(backupName)
+        try? files.removeItem(at: beside)
+        _ = try files.replaceItemAt(
+            bundle, withItemAt: staged, backupItemName: backupName,
+            options: [.usingNewMetadataOnly, .withoutDeletingBackupItem])
+        do {
+            try? files.removeItem(at: previous)
+            try files.createDirectory(at: previous.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try files.moveItem(at: beside, to: previous)
+            return previous
+        } catch {
+            return beside
+        }
     }
 }

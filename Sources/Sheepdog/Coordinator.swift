@@ -53,7 +53,7 @@ final class Coordinator {
     private(set) var napUntil: Date? = UserDefaults.standard.object(forKey: Coordinator.napKey) as? Date
     // napKey is the user defaults key holding the nap's end.
     private static let napKey = "napUntil"
-    // log records update check failures.
+    // log records each update step under the com.dcadolph.sheepdog subsystem.
     private let log = Logger(subsystem: "com.dcadolph.sheepdog", category: "updates")
     // launched is when the app started, so the first update check waits out the login.
     private let launched = Date()
@@ -65,15 +65,23 @@ final class Coordinator {
     private static let updateTagKey = "updateLatestTag"
     // updatePageKey is the user defaults key holding that release's page.
     private static let updatePageKey = "updateLatestPage"
-    // nudgeKey is the user defaults key holding the update card's schedule.
-    private static let nudgeKey = "updateNudge"
-    // nudge is when the update card last showed and whether its version was skipped. It is not part
-    // of the settings backup.
-    private var nudge: UpdateNudge = UserDefaults.standard.data(forKey: Coordinator.nudgeKey)
-        .flatMap { try? JSONDecoder().decode(UpdateNudge.self, from: $0) } ?? UpdateNudge()
-    // updateCardOpen reports that the update card was shown and not yet answered. A blocked card hides
-    // and comes back when the way is clear.
-    private var updateCardOpen = false
+    // stagedKey is the user defaults key holding the tag of a verified update waiting for a quiet moment.
+    private static let stagedKey = "updateStaged"
+    // attemptKey is the user defaults key holding the tag just swapped in, read on the next launch.
+    private static let attemptKey = "updateAttempt"
+    // failedKey is the user defaults key holding the tags that were swapped in and never started.
+    private static let failedKey = "updateFailed"
+    // toldKey is the user defaults key recording that the user was told updates install on their own.
+    private static let toldKey = "autoUpdateTold"
+    // lastRunKey is the user defaults key holding the version of the last launch.
+    private static let lastRunKey = "lastRunVersion"
+    // oldNudgeKey is the user defaults key the update card's schedule was kept under before 1.17.0.
+    private static let oldNudgeKey = "updateNudge"
+    // releasesPage is Sheepdog's releases page on GitHub.
+    private static let releasesPage = URL(string: "https://github.com/dcadolph/sheepdog/releases")!
+    // noticeOpen reports that the notice card holds a notice not yet answered. A blocked card hides and
+    // comes back when the way is clear.
+    private var noticeOpen: Bool { model.notice != nil }
     // setupNudgeKey is the user defaults key holding the setup card's schedule.
     private static let setupNudgeKey = "setupNudge"
     // setupNudge is when the setup card last showed and whether it was silenced. It is not part of the
@@ -90,10 +98,22 @@ final class Coordinator {
     // setupFlowOpen reports that the setup window is pending or showing. It holds the macOS Calendar
     // prompt until the user asks for it and keeps the cards off the window.
     var setupFlowOpen = false
-    // updater installs the update when the user presses Update now.
-    private let updater = Updater()
-    // fromHomebrew reports that Homebrew manages this install.
-    private static let fromHomebrew = Install.homebrew { FileManager.default.fileExists(atPath: $0) }
+    // onShowSettings opens Settings on the General tab.
+    var onShowSettings: (() -> Void)?
+    // support is Sheepdog's Application Support folder, which holds the launch marker and the bundle
+    // an update replaced.
+    static let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("com.dcadolph.sheepdog", isDirectory: true)
+    // marker records each launch, so the relaunch helper can roll back a build that never starts.
+    static let marker = LaunchMarker(folder: support)
+    // updateCache is where downloads are staged.
+    private static let updateCache = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("com.dcadolph.sheepdog", isDirectory: true)
+        .appendingPathComponent("updates", isDirectory: true)
+    // build is this build's CFBundleVersion, which the launch marker records.
+    static let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""
+    // updater checks for, verifies and installs newer releases.
+    private(set) lazy var updater = makeUpdater()
     // runningVersion is this build's version, or nil outside the app bundle.
     private static let runningVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
         as? String).flatMap(ReleaseVersion.init)
@@ -137,13 +157,12 @@ final class Coordinator {
         model.onCopyHandBack = { [weak self] in self?.copyHandBack() }
         model.onDoneHandBack = { [weak self] in self?.doneHandBack() }
         model.onClearHandBacks = { [weak self] in self?.clearHandBacks() }
-        model.onOpenUpdate = { [weak self] in self?.openUpdate() }
-        model.onRemindUpdate = { [weak self] in self?.closeUpdateCard() }
-        model.onSkipUpdate = { [weak self] in self?.skipUpdate() }
+        model.onNoticeAction = { [weak self] in self?.answerNotice(act: true) }
+        model.onDismissNotice = { [weak self] in self?.answerNotice(act: false) }
         model.onOpenSetup = { [weak self] in self?.openSetup() }
         model.onLaterSetup = { [weak self] in self?.answerSetup(silence: false) }
         model.onSilenceSetup = { [weak self] in self?.answerSetup(silence: true) }
-        model.updateCanInstall = Updater.canUpdate
+        UserDefaults.standard.removeObject(forKey: Self.oldNudgeKey)
         calendar.onChange = { [weak self] in self?.refresh() }
         accounts.onChange = { [weak self] in self?.refresh() }
         mic.onStart = { [weak self] in self?.micStarted() }
@@ -166,11 +185,12 @@ final class Coordinator {
         self.timer = timer
     }
 
-    // checkForUpdateIfDue asks GitHub for the latest release when a check is due. The time is recorded before
-    // the request, so a failure waits for the next day instead of retrying every tick.
+    // checkForUpdateIfDue asks GitHub for the latest release when a check is due, and with installs on
+    // fetches, verifies and stages it. The time is recorded before the request, so a failure waits for
+    // the next check instead of retrying every tick.
     private func checkForUpdateIfDue(now: Date) {
         let defaults = UserDefaults.standard
-        guard settings.checkForUpdates, !checkingUpdate, let current = Self.runningVersion,
+        guard settings.checkForUpdates, !checkingUpdate, !updater.state.busy, Self.runningVersion != nil,
             UpdateSchedule.isDue(
                 lastChecked: defaults.object(forKey: Self.updateCheckedKey) as? Date, launched: launched, now: now
             )
@@ -179,13 +199,14 @@ final class Coordinator {
         }
         defaults.set(now, forKey: Self.updateCheckedKey)
         checkingUpdate = true
+        let install = settings.checkForUpdates && settings.installUpdates
         Task { [weak self] in
-            let checker = UpdateChecker(client: URLSessionClient(), current: current)
+            guard let self else { return }
             do {
-                let found = try await checker.check()
-                self?.finishUpdateCheck(found)
+                let found = try await self.updater.check(automatic: true, install: install)
+                self.finishUpdateCheck(found)
             } catch {
-                self?.finishUpdateCheck(nil, failure: error)
+                self.finishUpdateCheck(nil, failure: error)
             }
         }
     }
@@ -193,26 +214,28 @@ final class Coordinator {
     // checkForUpdateNow asks GitHub for the latest release at once, whatever the schedule or the automatic
     // check setting says, and answers in a dialog.
     func checkForUpdateNow() {
-        guard !checkingUpdate, let current = Self.runningVersion else {
+        guard !checkingUpdate, Self.runningVersion != nil else {
             return
         }
         UserDefaults.standard.set(Date(), forKey: Self.updateCheckedKey)
         checkingUpdate = true
         Task { [weak self] in
-            let checker = UpdateChecker(client: URLSessionClient(), current: current)
+            guard let self else { return }
             do {
-                let found = try await checker.check()
-                self?.finishUpdateCheck(found)
-                self?.reportUpdateCheck(found)
+                let found = try await self.updater.check(
+                    automatic: self.settings.checkForUpdates, install: false, forced: true)
+                self.finishUpdateCheck(found)
+                self.reportUpdateCheck(found)
             } catch {
-                self?.finishUpdateCheck(nil, failure: error)
-                self?.reportUpdateCheck(nil, failed: true)
+                self.finishUpdateCheck(nil, failure: error)
+                self.reportUpdateCheck(nil, failed: true)
             }
         }
     }
 
-    // reportUpdateCheck tells the user what a check they asked for found, and installs a newer release when
-    // they choose to.
+    // reportUpdateCheck tells the user what a check they asked for found. Update Now downloads, verifies
+    // and installs the release at once, without waiting for a quiet moment, and opens the release page
+    // when it is refused.
     private func reportUpdateCheck(_ found: ReleaseInfo?, failed: Bool = false) {
         let running = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
         NSApp.activate()
@@ -227,10 +250,10 @@ final class Coordinator {
             return
         }
         let version = found.tag.hasPrefix("v") ? String(found.tag.dropFirst()) : found.tag
-        let installs = Updater.canUpdate
+        let installs = Updater.replaceable(updater.bundle)
         alert.messageText = "Sheepdog \(version) is available."
         alert.informativeText = installs
-            ? "You have \(running). Sheepdog updates itself and starts again."
+            ? "You have \(running). Sheepdog checks the download's Apple signature, updates itself and starts again."
             : "You have \(running). The release page has the download."
         alert.addButton(withTitle: installs ? "Update Now" : "View Release")
         alert.addButton(withTitle: "Later")
@@ -242,22 +265,13 @@ final class Coordinator {
             return
         }
         Task { [weak self] in
-            do {
-                try await self?.installRelease(found)
-            } catch {
-                self?.log.error("update install failed: \(String(describing: error), privacy: .public)")
+            guard let self else { return }
+            await self.updater.fetch(found)
+            if case .verified = self.updater.state {
+                self.updater.installNow()
+            } else {
                 NSWorkspace.shared.open(found.page)
             }
-        }
-    }
-
-    // installRelease installs a release through Homebrew when Homebrew manages this copy and from the
-    // release's disk image otherwise.
-    private func installRelease(_ release: ReleaseInfo) async throws {
-        if Self.fromHomebrew {
-            try await updater.brew()
-        } else {
-            try await updater.install(tag: release.tag)
         }
     }
 
@@ -265,12 +279,145 @@ final class Coordinator {
     private func finishUpdateCheck(_ found: ReleaseInfo?, failure: Error? = nil) {
         checkingUpdate = false
         if let failure {
-            log.info("update check failed: \(String(describing: failure), privacy: .public)")
+            log.info("update: check failed: \(String(describing: failure), privacy: .public)")
             return
         }
         let defaults = UserDefaults.standard
         defaults.set(found?.tag, forKey: Self.updateTagKey)
         defaults.set(found?.page.absoluteString, forKey: Self.updatePageKey)
+    }
+
+    // makeUpdater builds the updater for the running bundle, skipping tags that failed to start.
+    private func makeUpdater() -> Updater {
+        let current = Self.runningVersion ?? ReleaseVersion("0.0.0")!
+        let failed = UserDefaults.standard.stringArray(forKey: Self.failedKey) ?? []
+        let updater = Updater(
+            client: URLSessionClient(), downloader: URLSessionDownloader(),
+            trust: CodeTrustCheck(current: current, running: CodeTrust.runningRequirement()), current: current,
+            bundle: Installer.originalURL(Bundle.main.bundleURL), cache: Self.updateCache, skip: Set(failed))
+        updater.log = { [log] line in log.notice("update: \(line, privacy: .public)") }
+        updater.changed = { [weak self] in
+            guard let self else { return }
+            if case .verified(let tag) = self.updater.state {
+                UserDefaults.standard.set(tag, forKey: Self.stagedKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: Self.stagedKey)
+            }
+            self.onTick?()
+        }
+        updater.quiet = { [weak self] in self?.quietMoment(now: Date()) ?? false }
+        updater.install = { [weak self] staged, tag in self?.installUpdate(staged, tag: tag) }
+        return updater
+    }
+
+    // quietMoment reports whether a relaunch would interrupt nothing: no alarm, card, call or open
+    // Sheepdog window, on duty, no meeting within 15 minutes or under way, and no input for 30 seconds.
+    private func quietMoment(now: Date) -> Bool {
+        let anyInput = CGEventType(rawValue: ~0)!
+        let alerting = active.map { $0.stage != .idle } ?? false
+        let busy = alerting || windows.isShowingTakeover || model.handBack != nil || setupCardOpen
+            || setupFlowOpen || mic.isRunning
+            || NSApp.windows.contains { $0.isVisible && $0.styleMask.contains(.titled) }
+        return UpdateGate.quiet(
+            idleSeconds: CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: anyInput),
+            busy: busy, offDuty: settings.workingHours.isOffDuty(now: now, calendar: .current),
+            meetings: (meetings + testMeetings).map { (start: $0.start, end: $0.end) }, now: now)
+    }
+
+    // installUpdate swaps the staged bundle in, starts the helper that relaunches it and rolls back a
+    // build that never starts, and quits.
+    private func installUpdate(_ staged: URL, tag: String) {
+        let bundle = updater.bundle
+        let previous = Self.support.appendingPathComponent("previous", isDirectory: true)
+            .appendingPathComponent(Updater.appName)
+        let build =
+            (NSDictionary(contentsOf: staged.appendingPathComponent("Contents/Info.plist"))?["CFBundleVersion"]
+                as? String) ?? ""
+        let backup: URL
+        do {
+            backup = try Updater.swap(bundle: bundle, staged: staged, previous: previous)
+        } catch {
+            log.error("update: swap failed: \(error.localizedDescription, privacy: .public)")
+            updater.refuse(.location, tag)
+            return
+        }
+        let defaults = UserDefaults.standard
+        defaults.set(tag, forKey: Self.attemptKey)
+        defaults.removeObject(forKey: Self.stagedKey)
+        var plan = Relaunch.Plan(bundle: bundle)
+        plan.previous = backup
+        plan.failed = Self.support.appendingPathComponent("failed-\(tag).app")
+        plan.marker = Self.marker.marker
+        plan.build = build
+        do {
+            try Relaunch.start(plan)
+        } catch {
+            log.error("update: relaunch failed: \(error.localizedDescription, privacy: .public)")
+        }
+        log.notice("update: relaunch into \(tag, privacy: .public) build \(build, privacy: .public)")
+        NSApp.terminate(nil)
+    }
+
+    // installStaged installs a verified update that found no quiet moment before the last Quit,
+    // verifying it again first, and reports whether Sheepdog is quitting to relaunch it.
+    func installStaged() -> Bool {
+        let defaults = UserDefaults.standard
+        guard let tag = defaults.string(forKey: Self.stagedKey) else { return false }
+        defaults.removeObject(forKey: Self.stagedKey)
+        let staged = Self.updateCache.appendingPathComponent(tag, isDirectory: true)
+            .appendingPathComponent("unpacked", isDirectory: true).appendingPathComponent(Updater.appName)
+        guard settings.checkForUpdates, settings.installUpdates, let version = ReleaseVersion(tag),
+            let current = Self.runningVersion, version > current, Updater.replaceable(updater.bundle),
+            FileManager.default.fileExists(atPath: staged.path)
+        else { return false }
+        let name = String(tag.dropFirst(tag.hasPrefix("v") ? 1 : 0))
+        if let step = updater.trust.verify(bundle: staged, version: name) {
+            log.notice("update: staged \(tag, privacy: .public) refused at \(step.rawValue, privacy: .public)")
+            return false
+        }
+        log.notice("update: installing \(tag, privacy: .public) staged before the last quit")
+        installUpdate(staged, tag: tag)
+        return true
+    }
+
+    // settleAttempt reads how the last install went. A tag this build is not at never started, so it is
+    // never fetched again, and the notice card says so.
+    func settleAttempt() {
+        let defaults = UserDefaults.standard
+        guard let tag = defaults.string(forKey: Self.attemptKey) else { return }
+        defaults.removeObject(forKey: Self.attemptKey)
+        guard ReleaseVersion(tag) != Self.runningVersion else { return }
+        var failed = defaults.stringArray(forKey: Self.failedKey) ?? []
+        failed.append(tag)
+        defaults.set(failed, forKey: Self.failedKey)
+        let running = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let name = String(tag.dropFirst(tag.hasPrefix("v") ? 1 : 0))
+        log.error("update: \(tag, privacy: .public) did not start, back on \(running, privacy: .public)")
+        model.notice = Notice(
+            title: "Sheepdog \(name) did not start",
+            body: "Tug went back to \(running) and will not try \(name) again.",
+            button: "Open Release Page", action: .page(Self.releasesPage.appendingPathComponent("tag/\(tag)")))
+    }
+
+    // releaseMessage says once that Sheepdog was updated, on the first launch of a new version. The
+    // first automatic update also says updates now install on their own.
+    func releaseMessage() {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+        let defaults = UserDefaults.standard
+        let last = defaults.string(forKey: Self.lastRunKey)
+        defaults.set(version, forKey: Self.lastRunKey)
+        guard let last, last != version, !version.isEmpty, model.notice == nil else { return }
+        if !defaults.bool(forKey: Self.toldKey), settings.checkForUpdates, settings.installUpdates {
+            defaults.set(true, forKey: Self.toldKey)
+            model.notice = Notice(
+                title: "Sheepdog updated to \(version)",
+                body: "Sheepdog now installs updates on its own. Change that in Settings.",
+                button: "Open Settings", action: .settings)
+            return
+        }
+        model.notice = Notice(
+            title: "Sheepdog updated to \(version)", body: "Updated from \(last).", button: "What's New",
+            action: .page(Self.releasesPage.appendingPathComponent("tag/v\(version)")))
     }
 
     // requestCalendarAccessIfNeeded asks for macOS Calendar access once, when that source is on.
@@ -459,7 +606,7 @@ final class Coordinator {
         )
         render(now: now, chime: chime)
         renderHandBack()
-        renderUpdateCard(now: now)
+        renderNotice(now: now)
         renderSetupCard(now: now)
         onTick?()
     }
@@ -830,77 +977,39 @@ final class Coordinator {
         tick()
     }
 
-    // renderUpdateCard shows the update card when it is due, and keeps an open card hidden while a
-    // countdown, the takeover, a call, off hours or the hand-back card is in the way.
-    private func renderUpdateCard(now: Date) {
-        guard let update = availableUpdate else {
-            updateCardOpen = false
-            model.updateVersion = nil
-            windows.hideUpdate()
+    // renderNotice shows the notice card, and keeps it hidden while a countdown, the takeover, a call,
+    // off hours, the hand-back card or the setup card is in the way.
+    private func renderNotice(now: Date) {
+        guard noticeOpen else {
+            windows.hideNotice()
             return
         }
-        let before = nudge
-        nudge.see(update.tag, now: now)
         let alerting = active.map { $0.stage != .idle } ?? false
         let blocked = alerting || windows.isShowingTakeover || mic.isRunning || model.handBack != nil
             || setupCardOpen || setupFlowOpen || settings.workingHours.isOffDuty(now: now, calendar: .current)
-        if !updateCardOpen && nudge.due(now: now, blocked: blocked) {
-            nudge.shown(now: now)
-            updateCardOpen = true
-        }
-        if nudge != before {
-            saveNudge()
-        }
-        let version = update.tag.hasPrefix("v") ? String(update.tag.dropFirst()) : update.tag
-        model.updateVersion = updateCardOpen ? version : nil
-        if updateCardOpen && !blocked {
-            windows.showUpdate()
+        if blocked {
+            windows.hideNotice()
         } else {
-            windows.hideUpdate()
+            windows.showNotice()
         }
     }
 
-    // openUpdate installs the update when this copy can, through Homebrew when Homebrew manages it and
-    // from the release's disk image otherwise. It opens the release page instead when this copy cannot
-    // install, or after an install failed.
-    private func openUpdate() {
-        guard let update = availableUpdate else {
-            closeUpdateCard()
-            return
-        }
-        guard Updater.canUpdate, !model.updateFailed else {
-            NSWorkspace.shared.open(update.page)
-            closeUpdateCard()
-            return
-        }
-        model.updateBusy = true
-        Task { [weak self] in
-            do {
-                try await self?.installRelease(update)
-            } catch {
-                self?.log.error("update install failed: \(String(describing: error), privacy: .public)")
-                self?.model.updateFailed = true
+    // answerNotice puts the notice card away, and with act set does what its button names first.
+    private func answerNotice(act: Bool) {
+        if act, let notice = model.notice {
+            switch notice.action {
+            case .settings:
+                onShowSettings?()
+            case .page(let url):
+                NSWorkspace.shared.open(url)
             }
-            self?.model.updateBusy = false
         }
-    }
-
-    // skipUpdate stops the card for this version. The next version starts fresh.
-    private func skipUpdate() {
-        nudge.skip()
-        saveNudge()
-        closeUpdateCard()
-    }
-
-    // closeUpdateCard puts the card away until its next reminder is due.
-    private func closeUpdateCard() {
-        updateCardOpen = false
-        model.updateVersion = nil
-        windows.hideUpdate()
+        model.notice = nil
+        windows.hideNotice()
     }
 
     // renderSetupCard shows the setup card when it is due, and keeps an open card hidden while a
-    // countdown, the takeover, a call, a nap, off hours, the hand-back card or the update card is in
+    // countdown, the takeover, a call, a nap, off hours, the hand-back card or the notice card is in
     // the way.
     private func renderSetupCard(now: Date) {
         guard !setupHints.isEmpty else {
@@ -909,7 +1018,7 @@ final class Coordinator {
         }
         let alerting = active.map { $0.stage != .idle } ?? false
         let blocked = alerting || windows.isShowingTakeover || mic.isRunning || model.handBack != nil
-            || updateCardOpen || setupFlowOpen || isNapping(now: now)
+            || noticeOpen || setupFlowOpen || isNapping(now: now)
             || settings.workingHours.isOffDuty(now: now, calendar: .current)
         if !setupCardOpen && setupNudge.due(now: now, blocked: blocked) {
             setupCardOpen = true
@@ -950,13 +1059,6 @@ final class Coordinator {
     private func saveSetupNudge() {
         if let data = try? JSONEncoder().encode(setupNudge) {
             UserDefaults.standard.set(data, forKey: Self.setupNudgeKey)
-        }
-    }
-
-    // saveNudge keeps the update card's schedule across restarts.
-    private func saveNudge() {
-        if let data = try? JSONEncoder().encode(nudge) {
-            UserDefaults.standard.set(data, forKey: Self.nudgeKey)
         }
     }
 }

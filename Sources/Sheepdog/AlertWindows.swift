@@ -9,7 +9,7 @@ final class KeyPanel: NSPanel {
     override var canBecomeMain: Bool { true }
 }
 
-// AlertWindows owns the takeover panels, the countdown pill, the hand-back card, the update card and
+// AlertWindows owns the takeover panels, the countdown pill, the hand-back card, the notice card and
 // the setup card.
 @MainActor
 final class AlertWindows {
@@ -21,8 +21,8 @@ final class AlertWindows {
     private var pill: NSPanel?
     // handBack is the card that gives back a held note.
     private var handBack: NSPanel?
-    // updateCard is the card that says a newer Sheepdog is out.
-    private var updateCard: NSPanel?
+    // noticeCard is the card that tells the user something once.
+    private var noticeCard: NSPanel?
     // setupCard is the card that says Tug may be missing a calendar.
     private var setupCard: NSPanel?
     // previousApp is the app that was in front before the takeover took focus.
@@ -135,16 +135,16 @@ final class AlertWindows {
         handBack?.orderOut(nil)
     }
 
-    // showUpdate floats the update card where the hand-back card goes. No two cards show together.
-    func showUpdate() {
-        let panel = updateCard ?? makeCard(UpdateCardView(model: model))
-        updateCard = panel
+    // showNotice floats the notice card where the hand-back card goes. No two cards show together.
+    func showNotice() {
+        let panel = noticeCard ?? makeCard(NoticeCardView(model: model))
+        noticeCard = panel
         float(panel)
     }
 
-    // hideUpdate removes the update card.
-    func hideUpdate() {
-        updateCard?.orderOut(nil)
+    // hideNotice removes the notice card.
+    func hideNotice() {
+        noticeCard?.orderOut(nil)
     }
 
     // showSetup floats the setup card where the hand-back card goes.

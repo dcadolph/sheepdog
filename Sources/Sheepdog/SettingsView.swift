@@ -112,7 +112,11 @@ struct SettingsView: View {
             }
             Section("General") {
                 Toggle("Check for updates", isOn: $store.settings.checkForUpdates)
-                    .help("Once a day Sheepdog asks GitHub for the latest release. It sends no version or identifier.")
+                    .help("Every six hours Sheepdog asks GitHub for the latest release. It sends no version or identifier.")
+                Toggle("Install updates automatically", isOn: $store.settings.installUpdates)
+                    .disabled(!store.settings.checkForUpdates)
+                    .help("Download a new release, verify its Apple signature and notarization, and restart into it "
+                        + "when you pause, never during an alarm, a call, off hours or within 15 minutes of a meeting.")
                 Toggle("Start Sheepdog at login", isOn: Binding(
                     get: { loginItem.isEnabled || loginItem.needsApproval },
                     set: { loginItem.setEnabled($0) }

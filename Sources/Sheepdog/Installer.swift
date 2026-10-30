@@ -9,9 +9,6 @@ import SheepdogCore
 final class Installer {
     // installedFromFlag is the launch argument that hands the image path to the relaunched copy.
     static let installedFromFlag = "--installed-from"
-    // updateFromFlag is the launch argument that names the image Update now downloaded, so the copy
-    // on it installs without asking again.
-    static let updateFromFlag = "--update-from"
     // askedKey is the defaults key for the image files already offered to the Trash.
     static let askedKey = "installerAsked"
     // declinedKey is the defaults key for the bundle paths whose move was declined.
@@ -38,9 +35,6 @@ final class Installer {
             if declined.contains(bundle.path) {
                 return false
             }
-        }
-        if let image, Self.updateOkayed(image) {
-            return install(bundle, image: image)
         }
         NSApp.activate()
         let alert = NSAlert()
@@ -80,15 +74,6 @@ final class Installer {
         logger.notice("installed into Applications from \(bundle.path, privacy: .public)")
         relaunch(image)
         return true
-    }
-
-    // updateOkayed reports whether this copy was started by Update now from image, which already
-    // stands for the user's yes.
-    private static func updateOkayed(_ image: MountedImage) -> Bool {
-        let args = ProcessInfo.processInfo.arguments
-        guard let i = args.firstIndex(of: Self.updateFromFlag), i + 1 < args.count else { return false }
-        let real = { (path: String) in URL(fileURLWithPath: path).resolvingSymlinksInPath().path }
-        return real(args[i + 1]) == real(image.image)
     }
 
     // offerTrash ejects a disk image that still holds Sheepdog once the installed copy runs. It
