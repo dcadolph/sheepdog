@@ -68,8 +68,10 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var holidayTunes: Bool = false
     // JoinOpens chooses whether each provider's links open in its app or the browser.
     public var joinOpens: JoinOpens = JoinOpens()
-    // CheckForUpdates reports whether Sheepdog asks GitHub once a day for a newer release.
+    // CheckForUpdates reports whether Sheepdog asks GitHub every six hours for a newer release.
     public var checkForUpdates: Bool = true
+    // InstallUpdates reports whether Sheepdog installs a newer release itself at a quiet moment.
+    public var installUpdates: Bool = true
     // WorkingHours limits barking to shifts on chosen weekdays.
     public var workingHours = WorkingHours()
 
@@ -109,6 +111,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
         joinOpens = try container.decodeIfPresent(JoinOpens.self, forKey: .joinOpens) ?? defaults.joinOpens
         checkForUpdates = try container.decodeIfPresent(Bool.self, forKey: .checkForUpdates)
             ?? defaults.checkForUpdates
+        installUpdates = try container.decodeIfPresent(Bool.self, forKey: .installUpdates)
+            ?? defaults.installUpdates
         workingHours = try container.decodeIfPresent(WorkingHours.self, forKey: .workingHours)
             ?? defaults.workingHours
     }
