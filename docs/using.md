@@ -150,8 +150,8 @@ On a new install the **Set up Sheepdog** window walks through five steps.
 
 1. **Welcome** says why Tug reads your calendars. Click **Allow calendar access** and macOS asks,
    or click **I don't use macOS Calendar** to skip it.
-2. **Connect calendars** shows **What Tug sees** and lets you connect Microsoft 365, iCloud,
-   Exchange on-prem or another CalDAV server.
+2. **Connect calendars** shows the calendars Tug reads through Apple Calendar and lets you sign
+   in directly to Microsoft 365, iCloud, Exchange on-prem or another CalDAV server.
 3. **When should Tug bark?** sets working hours, which start off, and the **Warn at** minutes.
 4. **Tug dresses up** has **Dress Tug up for holidays** and **Bark holiday tunes**, both off.
 5. **Done** has **Start Sheepdog at login** and **Test the alarm**.
@@ -162,8 +162,10 @@ outfits and tunes off once and shows only the last two steps, titled "What's new
 
 Later, Tug shows a card if he can't see a calendar, sees Outlook but no Microsoft calendar, or has
 not seen a meeting in a week. Choose **Open Calendars settings**, **Later** or **Don't ask
-again**. **What Tug sees**, in the Calendars tab, lists each calendar source with its calendar
-count and a **Check again** button.
+again**. **Connected through Apple Calendar**, in the Calendars tab, lists each account macOS
+Calendar holds with its calendar count, such as Exchange or iCloud, and updates by itself when an
+account is added or removed. **Direct sign-in (optional)** below it holds the accounts Sheepdog
+signs in to itself. "Not connected" there only means no direct sign-in.
 
 iCloud and Other CalDAV sign in directly from Settings, Calendars. The iCloud sheet asks for your
 Apple ID and an app-specific password. Make one at account.apple.com, under Sign-In and Security,
@@ -182,8 +184,8 @@ A meeting that arrives both through macOS Calendar and a direct sign-in shows on
 
 If your company blocks direct sign-in, add the work account in System Settings, Internet Accounts,
 with Calendars turned on, where your company allows that. Tug reads it through macOS Calendar, so
-he needs no approval of his own. The card and **What Tug sees** say so too, with an **Open
-Internet Accounts** button.
+he needs no approval of his own. It then shows under **Connected through Apple Calendar**. The
+card and that section say so too, with an **Open Internet Accounts** button.
 
 ## Settings and features
 

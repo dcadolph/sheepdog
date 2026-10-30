@@ -35,7 +35,7 @@ struct SettingsView: View {
     let onSourcesChanged: () -> Void
     // onTestAlarm runs a full takeover with a fake meeting.
     let onTestAlarm: () -> Void
-    // setupFacts gathers what Tug sees, for the What Tug sees section.
+    // setupFacts gathers what Tug sees, for the Connected through Apple Calendar section.
     let setupFacts: () -> SetupFacts
     // onAllowAccess opens Calendar privacy settings.
     let onAllowAccess: () -> Void
