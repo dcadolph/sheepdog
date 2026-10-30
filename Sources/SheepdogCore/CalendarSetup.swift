@@ -181,6 +181,30 @@ public enum CalendarSetup {
         }
         return found
     }
+
+    // readThroughApple returns the account kinds whose calendars Tug already reads through macOS Calendar, so
+    // a direct sign-in to them is optional. An Exchange source covers Microsoft 365 as well as Exchange.
+    public static func readThroughApple(_ facts: SetupFacts) -> Set<AccountKind> {
+        guard facts.macCalendarOn && facts.macCalendarAccess == .granted else {
+            return []
+        }
+        var kinds: Set<AccountKind> = []
+        for source in facts.sources where source.calendarCount > 0 {
+            switch source.kind {
+            case .icloud:
+                kinds.insert(.icloud)
+            case .exchange:
+                kinds.formUnion([.microsoft, .exchange])
+            case .google:
+                kinds.insert(.google)
+            case .caldav:
+                kinds.insert(.caldav)
+            case .local, .other:
+                break
+            }
+        }
+        return kinds
+    }
 }
 
 // SetupNudge remembers which hints the user was shown and when to remind them again.

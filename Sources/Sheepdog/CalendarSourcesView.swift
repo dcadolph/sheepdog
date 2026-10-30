@@ -29,8 +29,9 @@ struct CalendarSourcesView: View {
     var body: some View {
         appleCalendar
         Section {
+            let covered = CalendarSetup.readThroughApple(facts ?? setupFacts())
             ForEach(kinds) { kind in
-                AccountRow(kind: kind, accounts: accounts)
+                AccountRow(kind: kind, accounts: accounts, throughApple: covered.contains(kind))
             }
         } header: {
             Text("Direct sign-in (optional)")

@@ -165,7 +165,8 @@ not seen a meeting in a week. Choose **Open Calendars settings**, **Later** or *
 again**. **Connected through Apple Calendar**, in the Calendars tab, lists each account macOS
 Calendar holds with its calendar count, such as Exchange or iCloud, and updates by itself when an
 account is added or removed. **Direct sign-in (optional)** below it holds the accounts Sheepdog
-signs in to itself. "Not connected" there only means no direct sign-in.
+signs in to itself. A service Tug already reads through Apple Calendar says **Already read
+through Apple Calendar** there, and needs nothing more.
 
 iCloud and Other CalDAV sign in directly from Settings, Calendars. The iCloud sheet asks for your
 Apple ID and an app-specific password. Make one at account.apple.com, under Sign-In and Security,

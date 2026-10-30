@@ -554,6 +554,8 @@ struct AccountRow: View {
     let kind: AccountKind
     // accounts holds the sign-ins.
     let accounts: Accounts
+    // throughApple is true when Tug already reads this service through Apple Calendar.
+    var throughApple = false
     // openURL opens the admins page and System Settings.
     @Environment(\.openURL) private var openURL
 
@@ -564,7 +566,7 @@ struct AccountRow: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(kind.label)
-                    Text(Self.status(state, kind: kind))
+                    Text(Self.status(state, kind: kind, throughApple: throughApple))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -572,6 +574,9 @@ struct AccountRow: View {
                 switch state {
                 case .notConfigured:
                     EmptyView()
+                case .signedOut where throughApple:
+                    Button("Sign in directly…") { accounts.connect(kind) }
+                        .controlSize(.small)
                 case .signedOut:
                     Button("Connect…") { accounts.connect(kind) }
                 case .signingIn:
@@ -610,9 +615,12 @@ struct AccountRow: View {
         string: "x-apple.systempreferences:com.apple.Internet-Accounts-Settings.extension"
     )!
 
-    // status describes a state in a few words.
-    private static func status(_ state: AccountState, kind: AccountKind) -> String {
+    // status describes a state in a few words. A service Tug already reads through Apple Calendar says so
+    // instead of looking unconnected.
+    private static func status(_ state: AccountState, kind: AccountKind, throughApple: Bool) -> String {
         switch state {
+        case .notConfigured where throughApple, .signedOut where throughApple:
+            return "Already read through Apple Calendar"
         case .notConfigured:
             return "Not available in this build"
         case .signedOut:
@@ -692,13 +700,14 @@ struct PasswordSignInSheet: View {
         return !blank(username) && !password.isEmpty && (kind.server != nil || !blank(server))
     }
 
-    // connect checks the credentials and closes the sheet when they work.
+    // connect checks the credentials and closes the sheet when they work. An iCloud app-specific password
+    // never holds spaces, so any a paste brings along are dropped.
     private func connect() {
         checking = true
         problem = nil
         let address = server
         let name = username.trimmingCharacters(in: .whitespaces)
-        let secret = password
+        let secret = kind == .icloud ? password.trimmingCharacters(in: .whitespacesAndNewlines) : password
         Task {
             problem = await accounts.connectPassword(kind, server: address, username: name, password: secret)
             password = ""

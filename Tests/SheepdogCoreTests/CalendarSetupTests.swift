@@ -212,3 +212,54 @@ func testSetupNudgeDue(test: SetupNudgeCase) {
     let got = try JSONDecoder().decode(SetupNudge.self, from: data)
     #expect(got == nudge)
 }
+
+// ThroughAppleCase is one set of facts and the account kinds expected to be read through Apple Calendar.
+struct ThroughAppleCase: Sendable, CustomTestStringConvertible {
+    // Name labels the case in test output.
+    let name: String
+    // Facts is the observed setup.
+    let facts: SetupFacts
+    // WantKinds is the expected kinds.
+    let wantKinds: Set<AccountKind>
+
+    // testDescription labels the case in test output.
+    var testDescription: String { name }
+}
+
+// throughAppleCases cover each source kind and the switches that hide them.
+let throughAppleCases: [ThroughAppleCase] = [
+    ThroughAppleCase(name: "local only", facts: setupFacts(), wantKinds: []), // Test 0: Nothing covered.
+    ThroughAppleCase(name: "icloud and exchange",
+        facts: setupFacts {
+            $0.sources = [
+                SetupSource(kind: .icloud, title: "iCloud", calendarCount: 3),
+                SetupSource(kind: .exchange, title: "Exchange", calendarCount: 2),
+            ]
+        }, wantKinds: [.icloud, .microsoft, .exchange]), // Test 1: Exchange covers Microsoft too.
+    ThroughAppleCase(name: "google and caldav",
+        facts: setupFacts {
+            $0.sources = [
+                SetupSource(kind: .google, title: "Google", calendarCount: 1),
+                SetupSource(kind: .caldav, title: "Fastmail", calendarCount: 1),
+            ]
+        }, wantKinds: [.google, .caldav]), // Test 2: Each maps to its own kind.
+    ThroughAppleCase(name: "empty icloud",
+        facts: setupFacts { $0.sources = [SetupSource(kind: .icloud, title: "iCloud", calendarCount: 0)] },
+        wantKinds: []), // Test 3: A source without calendars covers nothing.
+    ThroughAppleCase(name: "mac calendar off",
+        facts: setupFacts {
+            $0.macCalendarOn = false
+            $0.sources = [SetupSource(kind: .icloud, title: "iCloud", calendarCount: 3)]
+        }, wantKinds: []), // Test 4: Off means not read.
+    ThroughAppleCase(name: "access denied",
+        facts: setupFacts {
+            $0.macCalendarAccess = .denied
+            $0.sources = [SetupSource(kind: .exchange, title: "Exchange", calendarCount: 2)]
+        }, wantKinds: []), // Test 5: No access means not read.
+]
+
+// testReadThroughApple checks which direct sign-ins Apple Calendar already covers.
+@Test(arguments: throughAppleCases)
+func testReadThroughApple(test: ThroughAppleCase) {
+    #expect(CalendarSetup.readThroughApple(test.facts) == test.wantKinds)
+}
