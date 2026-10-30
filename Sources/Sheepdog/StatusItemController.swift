@@ -37,8 +37,6 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private var shown: Stage = .idle
     // shownNap reports whether the menu bar icon currently draws the napping glyph.
     private var shownNap = false
-    // shownOutfit is the outfit the menu bar icon currently draws, or nil for none.
-    private var shownOutfit: Outfit?
     // shownHover is the hover text currently set on the menu bar icon.
     private var shownHover = ""
     // tugStage plays Tug's nap, wake or quit animation, nil when none is playing.
@@ -55,18 +53,16 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     func update() {
         let stage = coordinator.active?.stage ?? .idle
         let napping = coordinator.isNapping() && stage == .idle
-        let outfit = napping ? nil : Theme.outfit
-        if tugStage == nil, stage != shown || napping != shownNap || outfit != shownOutfit {
+        if tugStage == nil, stage != shown || napping != shownNap {
             let woke = drawn && shownNap && !napping && stage == .idle
             let fell = drawn && !shownNap && napping
             shown = stage
             shownNap = napping
-            shownOutfit = outfit
             if fell {
                 napPose = .dozing
             }
             let image = napping
-                ? (Art.napGlyph(napPose) ?? Self.image(for: stage)) : Self.image(for: stage, outfit: outfit)
+                ? (Art.napGlyph(napPose) ?? Self.image(for: stage)) : Self.image(for: stage)
             if !napping {
                 napTimer?.invalidate()
                 napTimer = nil
@@ -148,12 +144,9 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         return "\(date.formatted(.dateTime.weekday(.abbreviated))) \(time)"
     }
 
-    // image returns Tug's glyph for a stage, dressed in the outfit when there is one, or the system dog
-    // symbol outside the app bundle.
-    private static func image(for stage: Stage, outfit: Outfit? = nil) -> NSImage? {
-        if let outfit, let dressed = Art.outfitGlyph(for: stage, outfit: outfit) {
-            return dressed
-        }
+    // image returns Tug's plain glyph for a stage, or the system dog symbol outside the app bundle. Outfits
+    // stay off the menu bar, where a prop at 18pt reads as clutter.
+    private static func image(for stage: Stage) -> NSImage? {
         if let glyph = Art.glyph(for: stage) {
             return glyph
         }

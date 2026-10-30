@@ -152,38 +152,6 @@ enum Art {
         }
     }
 
-    // outfitGlyph returns a stage's menu bar template with the outfit's prop on Tug's head. The prop art
-    // has the glyph's width and 40 more rows of headroom, and a thin gap is cut from the dog around it so
-    // the prop reads as its own shape at 18pt.
-    static func outfitGlyph(for stage: Stage, outfit: Outfit) -> NSImage? {
-        guard let dog = glyph(for: stage), let source = image("glyph-idle"),
-              let prop = image("outfit-\(outfit.asset)-glyph")
-        else {
-            return nil
-        }
-        let dogRect = NSRect(origin: .zero, size: source.size)
-        let propRect = NSRect(origin: .zero, size: prop.size)
-        let canvas = NSImage(size: prop.size, flipped: false) { _ in
-            dog.draw(in: dogRect)
-            for radius in [4.0, 8.0] {
-                for step in 0..<16 {
-                    let angle = Double(step) * .pi / 8
-                    prop.draw(
-                        in: propRect.offsetBy(dx: radius * cos(angle), dy: radius * sin(angle)),
-                        from: .zero, operation: .destinationOut, fraction: 1
-                    )
-                }
-            }
-            prop.draw(in: propRect)
-            return true
-        }
-        canvas.size = NSSize(
-            width: dog.size.width, height: dog.size.height * prop.size.height / source.size.height
-        )
-        canvas.isTemplate = true
-        canvas.accessibilityDescription = "Sheepdog, dressed for \(outfit.label)"
-        return canvas
-    }
 }
 
 // TugImage shows a bundled drawing of Tug, falling back to the system dog symbol.

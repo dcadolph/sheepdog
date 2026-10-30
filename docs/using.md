@@ -135,8 +135,8 @@ heart headband for Valentine's Day (Feb 10 to 14), a green top hat for St. Patri
 17), bunny ears for Easter (the Saturday before through the Tuesday after), a vampire cape for
 Halloween (Oct 24 to 31), a turkey hat for Thanksgiving week (Monday to Sunday), and a Santa hat for
 Christmas (Dec 18 to 26). The outfit goes over any collar and shows on the alarm, the countdown
-pill, the hand-back card, Settings and the menu bar. Outfits start off. Turn on **Dress Tug up for
-holidays** in Settings, Look, or on the setup window's dress-up step.
+pill, the hand-back card and Settings. The menu bar keeps plain Tug. Outfits start off. Turn on
+**Dress Tug up for holidays** in Settings, Look, or on the setup window's dress-up step.
 
 In the same days the alarm barks a holiday tune instead of the plain bark: Auld Lang Syne, Let Me
 Call You Sweetheart, The Irish Washerwoman, In the Hall of the Mountain King, Over the River and

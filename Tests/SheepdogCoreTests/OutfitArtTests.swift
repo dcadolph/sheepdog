@@ -24,13 +24,11 @@ struct OutfitFile: Sendable, CustomTestStringConvertible {
     var testDescription: String { name }
 }
 
-// outfitFiles lists the three drawings every outfit needs: the full Tug overlay, the head overlay and
-// the menu bar prop.
+// outfitFiles lists the two drawings every outfit needs: the full Tug overlay and the head overlay.
 let outfitFiles: [OutfitFile] = Outfit.allCases.flatMap { outfit in
     [
         OutfitFile(name: "outfit-\(outfit.asset)", width: 704, height: 704),
         OutfitFile(name: "outfit-\(outfit.asset)-head", width: 256, height: 256),
-        OutfitFile(name: "outfit-\(outfit.asset)-glyph", width: 315, height: 296),
     ]
 }
 
