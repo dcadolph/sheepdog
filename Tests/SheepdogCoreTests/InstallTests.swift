@@ -289,6 +289,66 @@ func testInstallDMGURL(_ c: DMGCase) {
     #expect(script.contains("/usr/bin/open '/Users/o'\\''neil/Sheepdog.app'"))
 }
 
+// NotarizedCase is one spctl output and whether it counts as notarized.
+struct NotarizedCase: Sendable, CustomTestStringConvertible {
+    // Name labels the case in test output.
+    let name: String
+    // Output is the spctl output.
+    let output: String
+    // Want reports whether the output counts as notarized.
+    let want: Bool
+
+    // testDescription labels the case in test output.
+    var testDescription: String { name }
+}
+
+// notarizedCases cover accepted output with and without the notarized source line.
+let notarizedCases: [NotarizedCase] = [
+    NotarizedCase(name: "notarized", output: "/x/Sheepdog.app: accepted\nsource=Notarized Developer ID\n", want: true), // Test 0: Both lines.
+    NotarizedCase(name: "no source", output: "/x/Sheepdog.app: accepted\n", want: false), // Test 1: Accepted alone.
+    NotarizedCase(name: "other source", output: "/x/Sheepdog.app: accepted\nsource=Developer ID\n", want: false), // Test 2: Not notarized.
+    NotarizedCase(name: "rejected", output: "/x/Sheepdog.app: rejected\nsource=Notarized Developer ID\n", want: false), // Test 3: Rejected.
+    NotarizedCase(name: "empty", output: "", want: false), // Test 4: Empty.
+]
+
+// testInstallNotarized checks which spctl output counts as notarized.
+@Test(arguments: notarizedCases)
+func testInstallNotarized(test: NotarizedCase) {
+    #expect(Install.notarized(test.output) == test.want)
+}
+
+// RunsCase is one minimum version text and whether a bundle needing it runs on macOS 14.6.1.
+struct RunsCase: Sendable, CustomTestStringConvertible {
+    // Name labels the case in test output.
+    let name: String
+    // Minimum is the bundle's minimum system version, or nil when it names none.
+    let minimum: String?
+    // Want reports whether the bundle runs.
+    let want: Bool
+
+    // testDescription labels the case in test output.
+    var testDescription: String { name }
+}
+
+// runsCases cover missing, older, equal, newer and unreadable minimums.
+let runsCases: [RunsCase] = [
+    RunsCase(name: "nil", minimum: nil, want: true), // Test 0: No minimum.
+    RunsCase(name: "15", minimum: "15", want: false), // Test 1: Newer major.
+    RunsCase(name: "14.0", minimum: "14.0", want: true), // Test 2: Older minor.
+    RunsCase(name: "14.6.1", minimum: "14.6.1", want: true), // Test 3: Equal.
+    RunsCase(name: "14.6.2", minimum: "14.6.2", want: false), // Test 4: Newer patch.
+    RunsCase(name: "junk", minimum: "junk", want: false), // Test 5: Words.
+    RunsCase(name: "empty", minimum: "", want: false), // Test 6: Empty.
+    RunsCase(name: "four parts", minimum: "14.0.0.1", want: false), // Test 7: Too many parts.
+]
+
+// testInstallRuns checks the minimum system version rule on macOS 14.6.1.
+@Test(arguments: runsCases)
+func testInstallRuns(test: RunsCase) {
+    let os = OperatingSystemVersion(majorVersion: 14, minorVersion: 6, patchVersion: 1)
+    #expect(Install.runs(minimum: test.minimum, on: os) == test.want)
+}
+
 #if os(macOS)
 // testInstallSigned accepts code that meets a requirement and refuses what the release requirement
 // rules out: an Apple app, an ad hoc signed copy, and a missing path.

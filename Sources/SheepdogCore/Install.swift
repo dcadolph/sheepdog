@@ -102,6 +102,30 @@ public enum Install {
     }
     #endif
 
+    // notarizedSource is the spctl source line a notarized Developer ID bundle prints.
+    static let notarizedSource = "source=Notarized Developer ID"
+
+    // notarized reports whether spctl output accepts the bundle as notarized Developer ID code.
+    public static func notarized(_ output: String) -> Bool {
+        let lines = output.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }
+        return lines.contains { $0.hasSuffix(": accepted") } && lines.contains(notarizedSource)
+    }
+
+    // runs reports whether a bundle that needs minimum runs on os. A bundle that names no minimum
+    // runs anywhere, and one whose minimum cannot be read runs nowhere.
+    public static func runs(minimum: String?, on os: OperatingSystemVersion) -> Bool {
+        guard let minimum else {
+            return true
+        }
+        let parts = minimum.split(separator: ".").map { Int($0) }
+        guard !parts.isEmpty, parts.count <= 3, !parts.contains(nil) else {
+            return false
+        }
+        let need = parts.compactMap { $0 } + Array(repeating: 0, count: 3 - parts.count)
+        let have = [os.majorVersion, os.minorVersion, os.patchVersion]
+        return !have.lexicographicallyPrecedes(need)
+    }
+
     // brewPath returns the Homebrew executable, Apple silicon first, or nil when neither exists.
     public static func brewPath(exists: (String) -> Bool) -> String? {
         ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"].first { exists($0) }
