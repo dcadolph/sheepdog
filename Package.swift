@@ -17,5 +17,9 @@ let package = Package(
             dependencies: ["SheepdogCore"],
             resources: [.copy("Fixtures")]
         ),
+        .testTarget(
+            name: "SheepdogTests",
+            dependencies: ["Sheepdog", "SheepdogCore"]
+        ),
     ]
 )

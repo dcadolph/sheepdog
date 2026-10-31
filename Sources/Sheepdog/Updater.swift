@@ -240,14 +240,19 @@ final class Updater {
             for step in [UpdateVerdict.signature, .requirement, .notarization, .plist] {
                 log("\(step.rawValue) ok")
             }
-            staged = app
-            set(.verified(tag))
+            stage(app, tag: tag)
             timer?.invalidate()
             timer = Timer.scheduledTimer(withTimeInterval: Self.quietEvery, repeats: true) { [weak self] _ in
                 MainActor.assumeIsolated { self?.tick() }
             }
             timer?.tolerance = 1
         }
+    }
+
+    // stage records app as the verified bundle of the tag, waiting for install.
+    func stage(_ app: URL, tag: String) {
+        staged = app
+        set(.verified(tag))
     }
 
     // tick installs the staged update when now is quiet.
