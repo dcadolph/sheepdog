@@ -306,9 +306,7 @@ final class Coordinator {
             self.onTick?()
         }
         updater.quiet = { [weak self] in self?.quietMoment(now: Date()) ?? false }
-        updater.allowed = { [weak self] in
-            self.map { $0.settings.checkForUpdates && $0.settings.installUpdates } ?? false
-        }
+        updater.allowed = { [weak self] in self.map { Self.automaticInstallAllowed($0.settings) } ?? false }
         updater.install = { [weak self] staged, tag in self?.installUpdate(staged, tag: tag) }
         return updater
     }
@@ -369,9 +367,9 @@ final class Coordinator {
         defaults.removeObject(forKey: Self.stagedKey)
         let staged = Self.updateCache.appendingPathComponent(tag, isDirectory: true)
             .appendingPathComponent("unpacked", isDirectory: true).appendingPathComponent(Updater.appName)
-        guard settings.checkForUpdates, settings.installUpdates, let version = ReleaseVersion(tag),
-            let current = Self.runningVersion, version > current, Updater.replaceable(updater.bundle),
-            FileManager.default.fileExists(atPath: staged.path)
+        guard Self.stagedInstallWanted(
+            tag: tag, settings: settings, current: Self.runningVersion, replaceable: Updater.replaceable(updater.bundle),
+            exists: FileManager.default.fileExists(atPath: staged.path))
         else { return false }
         let name = String(tag.dropFirst(tag.hasPrefix("v") ? 1 : 0))
         if let step = updater.trust.verify(bundle: staged, version: name) {
@@ -381,6 +379,22 @@ final class Coordinator {
         log.notice("update: installing \(tag, privacy: .public) staged before the last quit")
         installUpdate(staged, tag: tag)
         return true
+    }
+
+    // automaticInstallAllowed reports whether settings let an update install without the user asking.
+    nonisolated static func automaticInstallAllowed(_ settings: AlertSettings) -> Bool {
+        settings.checkForUpdates && settings.installUpdates
+    }
+
+    // stagedInstallWanted reports whether an update staged before the last Quit should install at launch:
+    // automatic installs allowed, the tag newer than the running build, the bundle replaceable and the
+    // staged app still on disk.
+    nonisolated static func stagedInstallWanted(
+        tag: String, settings: AlertSettings, current: ReleaseVersion?, replaceable: Bool, exists: Bool
+    ) -> Bool {
+        guard automaticInstallAllowed(settings), let version = ReleaseVersion(tag), let current, version > current
+        else { return false }
+        return replaceable && exists
     }
 
     // settleAttempt reads how the last install went. A tag this build is not at never started, so it is
@@ -845,16 +859,31 @@ final class Coordinator {
 
     // judgeMic marks joined the one meeting the live mic counts as joining under MicJoin's rule.
     private func judgeMic(now: Date) {
-        guard let meeting = MicJoin.joined(
-            meetings + testMeetings, states: states, settings: settings, micRunning: mic.isRunning,
+        let judged = Self.micJoined(
+            meetings: meetings + testMeetings, states: states, settings: settings, micRunning: mic.isRunning,
             micStartedAt: mic.startedAt, now: now)
-        else {
-            return
+        states = judged.states
+        if let id = judged.joined {
+            markPlace(id, .joined)
         }
-        var state = states[meeting.id] ?? MeetingState()
+    }
+
+    // micJoined returns states with the one meeting the live mic counts as joining marked joined, and
+    // that meeting's id, leaving every other state untouched.
+    nonisolated static func micJoined(
+        meetings: [Meeting], states: [String: MeetingState], settings: AlertSettings, micRunning: Bool,
+        micStartedAt: Date?, now: Date
+    ) -> (states: [String: MeetingState], joined: String?) {
+        guard let meeting = MicJoin.joined(
+            meetings, states: states, settings: settings, micRunning: micRunning, micStartedAt: micStartedAt, now: now)
+        else {
+            return (states, nil)
+        }
+        var judged = states
+        var state = judged[meeting.id] ?? MeetingState()
         state.resolution = .joined
-        states[meeting.id] = state
-        markPlace(meeting.id, .joined)
+        judged[meeting.id] = state
+        return (judged, meeting.id)
     }
 
     // state returns what the user has done about a meeting.
