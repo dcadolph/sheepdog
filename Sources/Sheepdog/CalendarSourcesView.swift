@@ -24,6 +24,8 @@ struct CalendarSourcesView: View {
     let kinds: [AccountKind]
     // openURL opens System Settings at Internet Accounts.
     @Environment(\.openURL) private var openURL
+    // expanded holds the titles of the sources whose calendar list is open.
+    @State private var expanded: Set<String> = []
 
     // body lays out the Apple Calendar section above the direct sign-ins.
     var body: some View {
@@ -101,22 +103,45 @@ struct CalendarSourcesView: View {
     }
 
     // sourceRow shows a source with how many of its calendars Tug reads, and opens to a checkbox per
-    // calendar. A source without a calendar list, such as one in an offscreen render, shows the count.
+    // calendar. The row is a plain button because a DisclosureGroup's triangle in a grouped form has no
+    // press action for VoiceOver. A source without a calendar list, such as one in an offscreen render,
+    // shows the count.
     @ViewBuilder
     private func sourceRow(_ source: SetupSource) -> some View {
         let hidden = source.calendars.filter { store.settings.hiddenCalendarIDs.contains($0.id) }.count
-        let label = LabeledContent(
-            Self.sourceLabel(source), value: CalendarChoice.summary(total: source.calendarCount, hidden: hidden))
+        let summary = CalendarChoice.summary(total: source.calendarCount, hidden: hidden)
         if source.calendars.isEmpty {
-            label
+            LabeledContent(Self.sourceLabel(source), value: summary)
         } else {
-            DisclosureGroup {
+            let open = expanded.contains(source.title)
+            Button {
+                if open {
+                    expanded.remove(source.title)
+                } else {
+                    expanded.insert(source.title)
+                }
+            } label: {
+                HStack {
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(open ? 90 : 0))
+                    Text(Self.sourceLabel(source))
+                    Spacer()
+                    Text(summary)
+                        .foregroundStyle(.secondary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(Self.sourceLabel(source)), \(summary)")
+            .accessibilityValue(open ? "Expanded" : "Collapsed")
+            if open {
                 ForEach(source.calendars, id: \.id) { calendar in
                     Toggle(calendar.title, isOn: shown(calendar.id))
                         .toggleStyle(.checkbox)
+                        .padding(.leading, 20)
                 }
-            } label: {
-                label
             }
         }
     }
