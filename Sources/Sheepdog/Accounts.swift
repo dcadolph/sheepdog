@@ -48,6 +48,11 @@ final class Accounts {
     @ObservationIgnored private var lastRead = Date.distantPast
     // reading reports a read in progress.
     @ObservationIgnored private var reading = false
+    // generation counts each service's attaches and disconnects, so a read that started before one
+    // never writes after it.
+    @ObservationIgnored private var generation: [AccountKind: Int] = [:]
+    // forget deletes a service's stored sign-in.
+    @ObservationIgnored private var forget: (AccountKind) -> Void = { Keychain.delete($0) }
     // client sends API requests.
     @ObservationIgnored private let client = URLSessionClient()
     // interval is how often the services are read.
@@ -85,6 +90,14 @@ final class Accounts {
     // init shows the given states without reading the Keychain, for offscreen renders.
     init(fixture: [AccountKind: AccountState]) {
         states = fixture
+        forget = { _ in }
+    }
+
+    // attachForTesting connects session as the kind's account without the Keychain.
+    func attachForTesting(_ session: any AccountSession, kind: AccountKind) {
+        generation[kind, default: 0] += 1
+        sessions[kind] = session
+        states[kind] = .connected(nil)
     }
 
     // entries returns the cached events of every connected service, Microsoft first.
@@ -176,7 +189,8 @@ final class Accounts {
 
     // disconnect forgets a service's account and its events.
     func disconnect(_ kind: AccountKind) {
-        Keychain.delete(kind)
+        generation[kind, default: 0] += 1
+        forget(kind)
         sessions[kind] = nil
         cache[kind] = nil
         problems[kind] = nil
@@ -203,20 +217,33 @@ final class Accounts {
         let from = now.addingTimeInterval(-3600)
         let to = now.addingTimeInterval(lookahead)
         let current = sessions
+        let started = generation
         Task {
             for (kind, session) in current {
                 do {
-                    cache[kind] = try await session.entries(from: from, to: to)
+                    let read = try await session.entries(from: from, to: to)
+                    let address = await session.record.address
+                    guard generation[kind] == started[kind] else {
+                        log.notice("stale read dropped: \(kind.rawValue, privacy: .public)")
+                        continue
+                    }
+                    cache[kind] = read
                     problems[kind] = nil
                     refusals[kind] = nil
-                    states[kind] = .connected(await session.record.address)
-                } catch let error as AuthError {
-                    log.error("account needs sign-in: \(kind.rawValue, privacy: .public): \(String(describing: error), privacy: .public)")
-                    problems[kind] = Self.describe(error)
-                    states[kind] = .needsSignIn(await session.record.address)
+                    states[kind] = .connected(address)
                 } catch {
-                    log.error("calendar read failed: \(kind.rawValue, privacy: .public): \(String(describing: error), privacy: .public)")
+                    let address = await session.record.address
+                    guard generation[kind] == started[kind] else {
+                        log.notice("stale read dropped: \(kind.rawValue, privacy: .public)")
+                        continue
+                    }
                     problems[kind] = Self.describe(error)
+                    if error is AuthError {
+                        log.error("account needs sign-in: \(kind.rawValue, privacy: .public): \(String(describing: error), privacy: .public)")
+                        states[kind] = .needsSignIn(address)
+                    } else {
+                        log.error("calendar read failed: \(kind.rawValue, privacy: .public): \(String(describing: error), privacy: .public)")
+                    }
                 }
             }
             reading = false
@@ -242,6 +269,7 @@ final class Accounts {
 
     // attach starts a session for a stored record, reusing a password sign-in's discovery when given.
     private func attach(_ record: AccountRecord, discovery: CalDAVCalendar.Discovery? = nil) {
+        generation[record.kind, default: 0] += 1
         if record.kind.usesPassword {
             var client: HTTPClient = self.client
             if case .password(let server, let username, let password) = record.credential {
