@@ -6,6 +6,8 @@ import Foundation
 final class MicMonitor {
     // onStart is called each time the microphone goes from idle to in use.
     var onStart: (() -> Void)?
+    // startedAt is when the microphone last went from idle to in use, nil while it is idle.
+    private(set) var startedAt: Date?
     // device is the input device being watched.
     private var device: AudioDeviceID?
     // wasRunning is the last observed in-use state.
@@ -51,8 +53,17 @@ final class MicMonitor {
         if let device, let runningListener {
             AudioObjectRemovePropertyListenerBlock(device, &Self.runningAddress, DispatchQueue.main, runningListener)
         }
+        let wasLive = wasRunning
         device = AudioDevices.defaultInput()
         wasRunning = isRunning
+        // A switch of default input while a call runs is the same call, so it keeps its start. A device
+        // that is already running when it becomes the default, or at launch, is dated from now, the
+        // earliest moment Sheepdog knows of it.
+        if !wasRunning {
+            startedAt = nil
+        } else if !wasLive || startedAt == nil {
+            startedAt = Date()
+        }
         guard let device else {
             return
         }
@@ -65,11 +76,15 @@ final class MicMonitor {
         AudioObjectAddPropertyListenerBlock(device, &Self.runningAddress, DispatchQueue.main, listener)
     }
 
-    // check fires onStart on an idle-to-in-use transition.
+    // check records the start and fires onStart on an idle-to-in-use transition, and clears the start
+    // when the microphone goes idle.
     private func check() {
         let running = isRunning
         defer { wasRunning = running }
-        if running && !wasRunning {
+        if !running {
+            startedAt = nil
+        } else if !wasRunning {
+            startedAt = Date()
             onStart?()
         }
     }

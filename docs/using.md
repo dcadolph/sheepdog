@@ -27,7 +27,8 @@ around Tug empties as the start gets closer and turns red once the meeting has s
   started. Each meeting gets two snoozes.
 - **I'm skipping this one** ends the alerts for that meeting.
 - The **X** stops the barking and leaves only the silent countdown pill for that meeting.
-- Starting a call that uses the mic counts as joining and quiets the alarm.
+- Starting a call once a meeting is about to begin counts as joining it and quiets its alarm. A call
+  that was already running when the meeting came up does not, so back-to-back meetings still bark.
 
 When the alarm closes, focus goes back to the app you were using.
 

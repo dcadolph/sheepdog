@@ -593,6 +593,7 @@ final class Coordinator {
             ? (alerting: [Meeting](), quiet: Set<String>())
             : settings.workingHours.gate(meetings, calendar: .current)
         let all = gated.alerting + testMeetings
+        judgeMic(now: now)
 
         let chime = all.contains { meeting in
             let state = states[meeting.id] ?? MeetingState()
@@ -835,17 +836,24 @@ final class Coordinator {
         tick()
     }
 
-    // micStarted resolves every meeting in its alert window as joined when a call app opens the mic.
+    // micStarted judges the mic as soon as a call app opens it.
     private func micStarted() {
-        let now = Date()
-        for meeting in meetings + testMeetings
-        where Escalation.isInAlertWindow(meeting, settings: settings, now: now) && states[meeting.id]?.resolution == nil {
-            var state = states[meeting.id] ?? MeetingState()
-            state.resolution = .joined
-            states[meeting.id] = state
-            markPlace(meeting.id, .joined)
-        }
+        judgeMic(now: Date())
         tick()
+    }
+
+    // judgeMic marks joined the one meeting the live mic counts as joining under MicJoin's rule.
+    private func judgeMic(now: Date) {
+        guard let meeting = MicJoin.joined(
+            meetings + testMeetings, states: states, settings: settings, micRunning: mic.isRunning,
+            micStartedAt: mic.startedAt, now: now)
+        else {
+            return
+        }
+        var state = states[meeting.id] ?? MeetingState()
+        state.resolution = .joined
+        states[meeting.id] = state
+        markPlace(meeting.id, .joined)
     }
 
     // state returns what the user has done about a meeting.

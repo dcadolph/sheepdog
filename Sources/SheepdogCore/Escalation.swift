@@ -76,12 +76,6 @@ public enum Escalation {
         now >= meeting.start.addingTimeInterval(settings.nagWindow)
     }
 
-    // isInAlertWindow reports whether the meeting is between its earliest alert and the end of its nag window.
-    public static func isInAlertWindow(_ meeting: Meeting, settings: AlertSettings, now: Date) -> Bool {
-        let opens = meeting.start.addingTimeInterval(-settings.earliestLead)
-        return now >= opens && !isExpired(meeting, settings: settings, now: now)
-    }
-
     // crossedWarning reports whether a warning lead fell in the interval (previous, now].
     public static func crossedWarning(for meeting: Meeting, settings: AlertSettings, previous: Date, now: Date) -> Bool {
         settings.warningLeads.contains { lead in
