@@ -306,6 +306,9 @@ final class Coordinator {
             self.onTick?()
         }
         updater.quiet = { [weak self] in self?.quietMoment(now: Date()) ?? false }
+        updater.allowed = { [weak self] in
+            self.map { $0.settings.checkForUpdates && $0.settings.installUpdates } ?? false
+        }
         updater.install = { [weak self] staged, tag in self?.installUpdate(staged, tag: tag) }
         return updater
     }

@@ -44,3 +44,21 @@ func newTestUpdater() throws -> Updater {
     #expect(installed == ["v1.1.0"])
     #expect(updater.state == .installing("v1.1.0"))
 }
+
+// testUpdaterTickWaitsWhenNotAllowed checks that turning automatic installs off stops a staged update
+// from installing on a quiet tick, while Update Now still installs it.
+@MainActor
+@Test func testUpdaterTickWaitsWhenNotAllowed() throws {
+    let updater = try newTestUpdater()
+    var installed: [String] = []
+    updater.quiet = { true }
+    updater.allowed = { false }
+    updater.install = { _, tag in installed.append(tag) }
+    updater.stage(URL(fileURLWithPath: "/tmp/Sheepdog.app"), tag: "v1.1.0")
+    updater.tick()
+    #expect(installed.isEmpty)
+    #expect(updater.state == .verified("v1.1.0"))
+    #expect(updater.staged != nil)
+    updater.installNow()
+    #expect(installed == ["v1.1.0"])
+}

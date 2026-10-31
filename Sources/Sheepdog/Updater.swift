@@ -138,6 +138,9 @@ final class Updater {
     var changed: () -> Void = {}
     // quiet reports whether now is a good moment to relaunch.
     var quiet: () -> Bool = { false }
+    // allowed reports whether automatic installs are still wanted. The explicit Update Now path
+    // ignores it.
+    var allowed: () -> Bool = { true }
     // install swaps the staged bundle of the tag in and relaunches.
     var install: (URL, String) -> Void = { _, _ in }
 
@@ -255,9 +258,9 @@ final class Updater {
         set(.verified(tag))
     }
 
-    // tick installs the staged update when now is quiet.
+    // tick installs the staged update when automatic installs are still wanted and now is quiet.
     func tick() {
-        guard case .verified = state, quiet() else {
+        guard case .verified = state, allowed(), quiet() else {
             return
         }
         installNow()
