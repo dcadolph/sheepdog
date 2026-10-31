@@ -50,37 +50,49 @@ final class CalendarProvider {
         return granted
     }
 
-    // entries returns events from shortly in the past through the lookahead window.
-    func entries(now: Date) -> [CalendarEntry] {
+    // entries returns events from shortly in the past through the lookahead window, leaving out the
+    // calendars whose ids are in hidden.
+    func entries(now: Date, hidden: Set<String>) -> [CalendarEntry] {
         guard access == .granted else {
+            return []
+        }
+        let all = store.calendars(for: .event)
+        let ids = Set(CalendarChoice.allowed(all: all.map(\.calendarIdentifier), hidden: hidden))
+        let allowed = all.filter { ids.contains($0.calendarIdentifier) }
+        // An empty list is not trusted to mean none, since nil means every calendar.
+        guard !allowed.isEmpty else {
             return []
         }
         let predicate = store.predicateForEvents(
             withStart: now.addingTimeInterval(-3600),
             end: now.addingTimeInterval(lookahead),
-            calendars: nil
+            calendars: allowed
         )
         return store.events(matching: predicate).map(Self.entry)
     }
 
-    // sources lists the accounts macOS Calendar has, each with its count of event calendars. It reads
-    // nothing before access is granted, so it never triggers a prompt.
+    // sources lists the accounts macOS Calendar has, each with its event calendars. It reads nothing
+    // before access is granted, so it never triggers a prompt.
     func sources() -> [SetupSource] {
         guard access == .granted else {
             return []
         }
-        var counts: [String: Int] = [:]
+        var calendars: [String: [SetupCalendar]] = [:]
         var byID: [String: EKSource] = [:]
         for calendar in store.calendars(for: .event) {
             guard let source = calendar.source else {
                 continue
             }
-            counts[source.sourceIdentifier, default: 0] += 1
+            calendars[source.sourceIdentifier, default: []].append(
+                SetupCalendar(id: calendar.calendarIdentifier, title: calendar.title))
             byID[source.sourceIdentifier] = source
         }
         return byID.compactMap { id, source in
             Self.kind(source).map {
-                SetupSource(kind: $0, title: source.title, calendarCount: counts[id] ?? 0)
+                let list = (calendars[id] ?? []).sorted {
+                    $0.title.localizedStandardCompare($1.title) == .orderedAscending
+                }
+                return SetupSource(kind: $0, title: source.title, calendarCount: list.count, calendars: list)
             }
         }
         .sorted { (Self.order($0.kind), $0.title) < (Self.order($1.kind), $1.title) }

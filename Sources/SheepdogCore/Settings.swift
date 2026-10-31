@@ -56,6 +56,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
     public var holdPlace: Bool = true
     // UseMacCalendar reports whether events come from the calendars in macOS Calendar.
     public var useMacCalendar: Bool = true
+    // HiddenCalendarIDs are the Apple Calendar calendars the user unchecked. Empty means every calendar.
+    public var hiddenCalendarIDs: Set<String> = []
     // SlackChannels are the channels the alarm's Let them know button can open.
     public var slackChannels: [SlackChannel] = []
     // Theme colors the takeover, the pill, and the hand-back card.
@@ -100,6 +102,8 @@ public struct AlertSettings: Sendable, Codable, Equatable {
         showPill = try container.decodeIfPresent(Bool.self, forKey: .showPill) ?? defaults.showPill
         holdPlace = try container.decodeIfPresent(Bool.self, forKey: .holdPlace) ?? defaults.holdPlace
         useMacCalendar = try container.decodeIfPresent(Bool.self, forKey: .useMacCalendar) ?? defaults.useMacCalendar
+        hiddenCalendarIDs = try container.decodeIfPresent(Set<String>.self, forKey: .hiddenCalendarIDs)
+            ?? defaults.hiddenCalendarIDs
         slackChannels = try container.decodeIfPresent([SlackChannel].self, forKey: .slackChannels)
             ?? defaults.slackChannels
         // An unknown theme, e.g. one from a newer build, falls back instead of failing every setting.

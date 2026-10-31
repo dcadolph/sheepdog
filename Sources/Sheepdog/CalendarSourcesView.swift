@@ -56,7 +56,7 @@ struct CalendarSourcesView: View {
                 }
             let seen = facts ?? setupFacts()
             ForEach(Array(seen.sources.enumerated()), id: \.offset) { _, source in
-                LabeledContent(Self.sourceLabel(source), value: Self.calendarCount(source.calendarCount))
+                sourceRow(source)
             }
             if seen.sources.isEmpty && seen.macCalendarOn && seen.macCalendarAccess == .granted {
                 Text("Apple Calendar has no calendars.")
@@ -100,6 +100,43 @@ struct CalendarSourcesView: View {
         }
     }
 
+    // sourceRow shows a source with how many of its calendars Tug reads, and opens to a checkbox per
+    // calendar. A source without a calendar list, such as one in an offscreen render, shows the count.
+    @ViewBuilder
+    private func sourceRow(_ source: SetupSource) -> some View {
+        let hidden = source.calendars.filter { store.settings.hiddenCalendarIDs.contains($0.id) }.count
+        let label = LabeledContent(
+            Self.sourceLabel(source), value: CalendarChoice.summary(total: source.calendarCount, hidden: hidden))
+        if source.calendars.isEmpty {
+            label
+        } else {
+            DisclosureGroup {
+                ForEach(source.calendars, id: \.id) { calendar in
+                    Toggle(calendar.title, isOn: shown(calendar.id))
+                        .toggleStyle(.checkbox)
+                }
+            } label: {
+                label
+            }
+        }
+    }
+
+    // shown binds a checkbox to whether a calendar is left off the hidden list, and rereads the calendars
+    // when it changes so the meeting list follows at once.
+    private func shown(_ id: String) -> Binding<Bool> {
+        Binding(
+            get: { !store.settings.hiddenCalendarIDs.contains(id) },
+            set: { on in
+                if on {
+                    store.settings.hiddenCalendarIDs.remove(id)
+                } else {
+                    store.settings.hiddenCalendarIDs.insert(id)
+                }
+                onSourcesChanged()
+            }
+        )
+    }
+
     // calendarChanges fires on the main queue when macOS Calendar's store changes or Sheepdog becomes active,
     // once per burst of changes.
     private static let calendarChanges: AnyPublisher<Notification, Never> = NotificationCenter.default
@@ -126,10 +163,5 @@ struct CalendarSourcesView: View {
             return source.title.isEmpty ? "Other" : source.title
         }
         return source.title.isEmpty || source.title == name ? name : "\(name) (\(source.title))"
-    }
-
-    // calendarCount says how many calendars a source holds.
-    private static func calendarCount(_ count: Int) -> String {
-        count == 1 ? "1 calendar" : "\(count) calendars"
     }
 }

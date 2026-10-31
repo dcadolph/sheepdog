@@ -24,12 +24,15 @@ public struct SetupSource: Sendable, Codable, Equatable {
     public var title: String
     // calendarCount is the number of calendars the source holds.
     public var calendarCount: Int
+    // calendars are the source's calendars, sorted by title.
+    public var calendars: [SetupCalendar]
 
     // init creates a source.
-    public init(kind: Kind, title: String, calendarCount: Int) {
+    public init(kind: Kind, title: String, calendarCount: Int, calendars: [SetupCalendar] = []) {
         self.kind = kind
         self.title = title
         self.calendarCount = calendarCount
+        self.calendars = calendars
     }
 }
 

@@ -165,3 +165,16 @@ func testSettingsBackupDecode(test: BackupDecodeCase) {
     #expect(got.joinOpens == settings.joinOpens)
     #expect(got == settings)
 }
+
+// testSettingsBackupHiddenCalendarsRoundTrip checks that unchecked calendars survive export and import,
+// and that an export without the field imports with every calendar on.
+@Test func testSettingsBackupHiddenCalendarsRoundTrip() throws {
+    var settings = AlertSettings()
+    settings.hiddenCalendarIDs = ["A1B2", "C3D4"]
+    let data = try SettingsBackup.encode(settings, exported: Date(timeIntervalSince1970: 1_792_000_000))
+    let got = try SettingsBackup.decode(data)
+    #expect(got.hiddenCalendarIDs == ["A1B2", "C3D4"])
+    #expect(got == settings)
+    let json = #"{"app":"Sheepdog","version":1,"exported":"2026-10-23T18:00:00Z","settings":{"maxSnoozes":7}}"#
+    #expect(try SettingsBackup.decode(Data(json.utf8)).hiddenCalendarIDs.isEmpty)
+}

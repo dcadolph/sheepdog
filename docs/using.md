@@ -183,6 +183,11 @@ account is added or removed. **Direct sign-in (optional)** below it holds the ac
 signs in to itself. A service Tug already reads through Apple Calendar says **Already read
 through Apple Calendar** there, and needs nothing more.
 
+Every calendar in Apple Calendar barks at first, including ones added later. To keep one quiet,
+open its account under **Connected through Apple Calendar** and uncheck it. The account's row then
+shows how many of its calendars Tug reads, such as "3 of 5 calendars". Direct sign-ins have no
+checkboxes yet.
+
 iCloud and Other CalDAV sign in directly from Settings, Calendars. The iCloud sheet asks for your
 Apple ID and an app-specific password. Make one at account.apple.com, under Sign-In and Security,
 with the same Apple ID that holds your iCloud calendars. Your Apple ID password will not work

@@ -472,7 +472,8 @@ final class Coordinator {
         let now = Date()
         lastRefresh = now
         requestCalendarAccessIfNeeded()
-        let local = settings.useMacCalendar ? calendar.entries(now: now) : []
+        let local = settings.useMacCalendar
+            ? calendar.entries(now: now, hidden: settings.hiddenCalendarIDs) : []
         meetings = EntryMerge.merge(accounts.entries + [local])
             .compactMap { Meeting(entry: $0, settings: settings) }
             .sorted { $0.start < $1.start }
